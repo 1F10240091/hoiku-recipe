@@ -168,4 +168,10 @@ export const api = {
   deleteInventory(id: string) {
     return request<void>(`/shopping/inventory/${id}`, { method: "DELETE" });
   },
+  submitFeedback(rating: number | null, comment: string) {
+    return request<{ id: string; rating: number | null; comment: string }>("/feedback", {
+      method: "POST",
+      body: JSON.stringify({ rating, comment }),
+    });
+  },
 };
