@@ -112,3 +112,17 @@ class Recipe(Base):
     instructions: Mapped[str] = mapped_column(Text, default="")
     cook_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Feedback(Base):
+    """ユーザーテスト・学祭アンケート用のフィードバック。
+
+    アプリの使い勝手・改善要望を収集する。ログイン不要で投稿できる。
+    """
+
+    __tablename__ = "feedback"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1〜5
+    comment: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

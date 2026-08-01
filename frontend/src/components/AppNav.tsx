@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/meal-plan", label: "AI 献立提案" },
   { href: "/recipes", label: "提案献立" },
   { href: "/shopping", label: "買い物リスト" },
+  { href: "/feedback", label: "フィードバック" },
 ];
 
 export default function AppNav() {
