@@ -1,0 +1,21 @@
+{
+  "name": "hoiku-recipe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "保育園児の親向け献立自動生成アプリ",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run setup:backend",
+    "setup:backend": "cd backend && python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt",
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "cd backend && .venv\\Scripts\\uvicorn app.main:app --reload --port 8000",
+    "build": "npm run build --workspace frontend",
+    "lint": "npm run lint --workspace frontend"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  }
+}
