@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import AppNav from "@/components/AppNav";
 import { api, type Child, type User } from "@/lib/api";
 
 export default function DashboardPage() {
@@ -92,13 +93,10 @@ export default function DashboardPage() {
   if (loading) return <main style={{ padding: 40 }}>読み込み中...</main>;
 
   return (
-    <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+    <main>
+      <AppNav />
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <nav style={{ display: "flex", gap: 16, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
-        <Link href="/dashboard">お子様・プロフィール</Link>
-        <Link href="/menus">献立表</Link>
-        <Link href="/meal-plan">AI 献立提案</Link>
-        <Link href="/recipes">提案献立</Link>
-        <Link href="/shopping">買い物リスト</Link>
         <button onClick={handleLogout} style={{ marginLeft: "auto", cursor: "pointer" }}>
           ログアウト
         </button>
@@ -225,6 +223,7 @@ export default function DashboardPage() {
       <Link href="/meal-plan" className="button" style={{ marginTop: 24 }}>
         献立を作成する
       </Link>
+      </div>
     </main>
   );
 }

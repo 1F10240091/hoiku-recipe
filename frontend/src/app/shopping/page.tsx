@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AppNav from "@/components/AppNav";
 import { api, type ShoppingItem } from "@/lib/api";
 
 export default function ShoppingPage() {
@@ -47,7 +48,9 @@ export default function ShoppingPage() {
   };
 
   return (
-    <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+    <main>
+      <AppNav />
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>買い物リスト</h1>
       {error && <p style={{ color: "#dc2626" }}>{error}</p>}
       {loading ? (
@@ -108,7 +111,7 @@ export default function ShoppingPage() {
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {inventory.map((item) => (
               <li
-                key={item.name}
+                key={item.id ?? item.name}
                 style={{
                   padding: "8px 0",
                   borderBottom: "1px solid var(--color-border)",
@@ -128,6 +131,7 @@ export default function ShoppingPage() {
             ))}
           </ul>
         )}
+      </div>
       </div>
     </main>
   );

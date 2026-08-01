@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AppNav from "@/components/AppNav";
 import { api, type Child, type GenerateResponse } from "@/lib/api";
 
 export default function MealPlanPage() {
@@ -30,7 +31,9 @@ export default function MealPlanPage() {
   };
 
   return (
-    <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+    <main>
+      <AppNav />
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>AI 献立提案</h1>
       <div className="card">
         <label style={{ display: "block", marginBottom: 8 }}>
@@ -86,6 +89,7 @@ export default function MealPlanPage() {
           </Link>
         </div>
       )}
+      </div>
     </main>
   );
 }
