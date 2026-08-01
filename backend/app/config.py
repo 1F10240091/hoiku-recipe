@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # レート制限（ログイン・登録へのブルートフォース対策）
+    rate_limit_enabled: bool = True
+    rate_limit_max_requests: int = 5
+    rate_limit_window_seconds: int = 60
+
     # AI 献立生成（Xiaomi MiMo / OpenAI 互換 API）
     ai_base_url: str = "https://api.xiaomimimo.com/v1"
     ai_model: str = "mimo-v2.5-pro"

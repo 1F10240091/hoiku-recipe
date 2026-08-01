@@ -1,9 +1,19 @@
 """Pydantic スキーマ定義。"""
 
+import re
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+# パスワード強度チェック: 8文字以上・英字・数字を含む
+_PASSWORD_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
+
+
+def validate_password_strength(value: str) -> str:
+    if not _PASSWORD_RE.match(value):
+        raise ValueError("パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください")
+    return value
 
 
 class ORMModel(BaseModel):
@@ -15,6 +25,11 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     display_name: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def check_password(cls, v: str) -> str:
+        return validate_password_strength(v)
 
 
 class LoginRequest(BaseModel):
@@ -36,6 +51,11 @@ class UserResponse(ORMModel):
 class UserUpdate(BaseModel):
     display_name: Optional[str] = None
     password: Optional[str] = Field(default=None, min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def check_password(cls, v: str) -> str:
+        return validate_password_strength(v)
 
 
 # --- お子様 ---

@@ -23,7 +23,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         detail="認証情報を確認できませんでした",
     )
     try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
+            issuer="hoiku-recipe",
+        )
         user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception

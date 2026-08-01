@@ -15,6 +15,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+    if (!passwordPattern.test(password)) {
+      setError("パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください");
+      return;
+    }
     try {
       const res = await api.register(email, password, name);
       localStorage.setItem("token", res.access_token);
@@ -45,13 +50,15 @@ export default function RegisterPage() {
         />
         <input
           type="password"
-          placeholder="パスワード（8文字以上）"
+          placeholder="パスワード"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={8}
           style={inputStyle}
         />
+        <p style={{ margin: 0, fontSize: 13, color: "var(--color-muted)" }}>
+          パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください。
+        </p>
         {error && <p style={{ color: "#dc2626" }}>{error}</p>}
         <button type="submit" className="button">
           登録する
