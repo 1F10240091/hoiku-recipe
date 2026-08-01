@@ -31,7 +31,7 @@ export default function MealPlanPage() {
   };
 
   return (
-    <main>
+    <main id="main-content">
       <AppNav />
       <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>AI 献立提案</h1>

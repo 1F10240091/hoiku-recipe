@@ -38,7 +38,7 @@ export default function MenusPage() {
   };
 
   return (
-    <main>
+    <main id="main-content">
       <AppNav />
       <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>献立表の取り込み</h1>
