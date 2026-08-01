@@ -90,6 +90,10 @@ class RecipeResponse(ORMModel):
     ingredients: dict
 
 
+class GenerateResponse(BaseModel):
+    meals: list[RecipeResponse]
+
+
 # --- 買い物リスト ---
 class ShoppingGenerateRequest(BaseModel):
     child_id: str
