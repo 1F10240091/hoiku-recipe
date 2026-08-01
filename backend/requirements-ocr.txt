@@ -1,0 +1,4 @@
+# 画像 OCR（easyocr）用の追加依存。
+# スキャン画像の献立表を読み取る場合のみ必要。
+# インストール: pip install -r requirements-ocr.txt
+easyocr>=1.7.0
