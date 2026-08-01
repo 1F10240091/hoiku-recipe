@@ -22,6 +22,12 @@ class ShoppingItemOut(BaseModel):
     source_recipes: list[str] = []
 
 
+class InventoryItemOut(BaseModel):
+    id: str
+    name: str
+    quantity: str | None = None
+
+
 class ShoppingListResponse(BaseModel):
     items: list[ShoppingItemOut]
     generated_at: datetime
@@ -68,12 +74,12 @@ def generate_shopping_list(
     return get_shopping_list(user=user, db=db)
 
 
-@router.get("/inventory", response_model=list[ShoppingItemOut])
+@router.get("/inventory", response_model=list[InventoryItemOut])
 def list_inventory(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[InventoryItem]:
     return db.query(InventoryItem).filter(InventoryItem.user_id == user.id).all()
 
 
-@router.post("/inventory", response_model=ShoppingItemOut, status_code=status.HTTP_201_CREATED)
+@router.post("/inventory", response_model=InventoryItemOut, status_code=status.HTTP_201_CREATED)
 def add_inventory_item(
     payload: InventoryCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> InventoryItem:
