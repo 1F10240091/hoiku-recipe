@@ -14,6 +14,7 @@ import pytest
 TEST_DB = Path(__file__).resolve().parent.parent / ".test_hoiku_recipe.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB}"
 os.environ["AI_API_KEY"] = ""  # テストではルールベースを使用
+os.environ["RATE_LIMIT_ENABLED"] = "false"  # テストではレート制限を無効化（専用テストで検証）
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
