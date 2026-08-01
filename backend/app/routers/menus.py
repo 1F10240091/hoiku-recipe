@@ -9,10 +9,10 @@ from app.database import get_db
 from app.models import NurseryMenu, User
 from app.routers.auth import get_current_user
 from app.schemas import NurseryMenuCreate, NurseryMenuResponse
+from app.services.menu_parser import parse_menu_text
+from app.services.ocr import OCRProcessingError, OCRUnsupportedError, extract_text
 
 router = APIRouter(prefix="/menus", tags=["menus"])
-
-OCR_SERVICE = "ocr_service_placeholder"
 
 
 @router.get("", response_model=list[NurseryMenuResponse])
@@ -26,21 +26,22 @@ async def upload_menu(
 ) -> NurseryMenu:
     """献立表の PDF/画像をアップロードし、OCR でテキスト化して保存する。
 
-    現在は OCR サービスの接続前のため、プレースホルダとして空の献立を保存する。
-    OCR サービス（Xiaomi MiMo 等）の実装は今後のタスクで行う。
+    抽出したテキストを日付・献立項目に構造化し、食材リストとして保存する。
     """
-    await file.read()
-    if file.content_type not in {"application/pdf", "image/png", "image/jpeg"}:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="対応形式は PDF / PNG / JPEG のみです",
-        )
+    data = await file.read()
+    try:
+        result = extract_text(filename=file.filename or "", content_type=file.content_type or "", data=data)
+    except OCRUnsupportedError as exc:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(exc)) from exc
+    except OCRProcessingError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
 
+    dishes = _collect_dishes(result.text)
     menu = NurseryMenu(
         user_id=user.id,
         date=date.today(),
-        menu_text=f"(OCR 未実装: {OCR_SERVICE})",
-        ingredients={},
+        menu_text=result.text,
+        ingredients={"dishes": dishes},
     )
     db.add(menu)
     db.commit()
@@ -63,3 +64,13 @@ def get_menu(menu_id: str, user: User = Depends(get_current_user), db: Session =
     if menu is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="献立が見つかりません")
     return menu
+
+
+def _collect_dishes(text: str) -> list[str]:
+    """献立テキストから料理名のリストを収集する。"""
+    dishes: list[str] = []
+    for entry in parse_menu_text(text):
+        for dish in entry.dishes:
+            if dish not in dishes:
+                dishes.append(dish)
+    return dishes
