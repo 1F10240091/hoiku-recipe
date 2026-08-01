@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AppNav from "@/components/AppNav";
 import { api, type SuggestedMeal } from "@/lib/api";
 
 export default function RecipesPage() {
@@ -16,7 +17,9 @@ export default function RecipesPage() {
   }, []);
 
   return (
-    <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+    <main>
+      <AppNav />
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>レシピ・買い物リスト</h1>
       {loading ? (
         <p>読み込み中...</p>
@@ -35,6 +38,7 @@ export default function RecipesPage() {
           </div>
         ))
       )}
+      </div>
     </main>
   );
 }

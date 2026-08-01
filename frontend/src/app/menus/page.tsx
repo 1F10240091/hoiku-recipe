@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AppNav from "@/components/AppNav";
 import { api, type NurseryMenu } from "@/lib/api";
 
 export default function MenusPage() {
@@ -37,7 +38,9 @@ export default function MenusPage() {
   };
 
   return (
-    <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+    <main>
+      <AppNav />
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>献立表の取り込み</h1>
       <div className="card">
         <p>保育園から配布された献立表（PDF または画像）をアップロードしてください。</p>
@@ -65,6 +68,7 @@ export default function MenusPage() {
       <Link href="/meal-plan" className="button">
         AI 献立提案へ進む
       </Link>
+      </div>
     </main>
   );
 }
