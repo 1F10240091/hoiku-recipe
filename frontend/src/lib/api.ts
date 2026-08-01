@@ -84,7 +84,7 @@ export interface Recipe {
   cook_time_minutes?: number | null;
 }
 
-export const api = {
+const realApi = {
   register(email: string, password: string, displayName?: string) {
     return request<TokenResponse>("/auth/register", {
       method: "POST",
@@ -175,3 +175,10 @@ export const api = {
     });
   },
 };
+
+import { demoApi } from "./demo-api";
+
+// デモモード判定（NEXT_PUBLIC_DEMO_MODE=true でバックエンドなしのデモとして動作）
+export const isDemoMode = () => process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+export const api = (isDemoMode() ? demoApi : realApi) as typeof realApi;
