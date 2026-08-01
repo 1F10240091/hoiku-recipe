@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, type Child } from "@/lib/api";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,10 +19,24 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
+
   if (loading) return <main style={{ padding: 40 }}>読み込み中...</main>;
 
   return (
     <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+      <nav style={{ display: "flex", gap: 16, marginBottom: 24, alignItems: "center" }}>
+        <Link href="/dashboard">お子様</Link>
+        <Link href="/menus">献立表</Link>
+        <Link href="/meal-plan">AI 献立提案</Link>
+        <Link href="/recipes">レシピ・買い物リスト</Link>
+        <button onClick={handleLogout} style={{ marginLeft: "auto", cursor: "pointer" }}>
+          ログアウト
+        </button>
+      </nav>
       <h1>お子様管理</h1>
       {error && <p style={{ color: "#dc2626" }}>{error}</p>}
       {children.length === 0 ? (
