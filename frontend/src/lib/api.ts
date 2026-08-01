@@ -39,8 +39,8 @@ export interface Child {
   id: string;
   name: string;
   birth_date: string | null;
-  allergies: { ingredient: string }[];
-  preferences: { ingredient: string; mode: string }[];
+  allergies: { id: string; ingredient: string }[];
+  preferences: { id: string; ingredient: string; mode: string }[];
 }
 
 export interface NurseryMenu {
@@ -100,11 +100,38 @@ export const api = {
   me() {
     return request<User>("/auth/me");
   },
+  updateMe(payload: { display_name?: string; password?: string }) {
+    return request<User>("/auth/me", { method: "PUT", body: JSON.stringify(payload) });
+  },
   listChildren() {
     return request<Child[]>("/children");
   },
   createChild(payload: Omit<Child, "id">) {
     return request<Child>("/children", { method: "POST", body: JSON.stringify(payload) });
+  },
+  updateChild(childId: string, payload: { name?: string; birth_date?: string | null }) {
+    return request<Child>(`/children/${childId}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  deleteChild(childId: string) {
+    return request<void>(`/children/${childId}`, { method: "DELETE" });
+  },
+  addAllergy(childId: string, ingredient: string) {
+    return request<Child>(`/children/${childId}/allergies`, {
+      method: "POST",
+      body: JSON.stringify({ ingredient }),
+    });
+  },
+  deleteAllergy(childId: string, allergyId: string) {
+    return request<Child>(`/children/${childId}/allergies/${allergyId}`, { method: "DELETE" });
+  },
+  addPreference(childId: string, ingredient: string, mode: string) {
+    return request<Child>(`/children/${childId}/preferences`, {
+      method: "POST",
+      body: JSON.stringify({ ingredient, mode }),
+    });
+  },
+  deletePreference(childId: string, preferenceId: string) {
+    return request<Child>(`/children/${childId}/preferences/${preferenceId}`, { method: "DELETE" });
   },
   listMenus() {
     return request<NurseryMenu[]>("/menus");
