@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import get_db
 from app.models import User
-from app.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
+from app.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse, UserUpdate
 from app.security import create_access_token, get_user_by_email, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -62,4 +62,15 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
 
 @router.get("/me", response_model=UserResponse)
 def me(user: User = Depends(get_current_user)) -> User:
+    return user
+
+
+@router.put("/me", response_model=UserResponse)
+def update_me(payload: UserUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
+    if payload.display_name is not None:
+        user.display_name = payload.display_name
+    if payload.password:
+        user.hashed_password = hash_password(payload.password)
+    db.commit()
+    db.refresh(user)
     return user

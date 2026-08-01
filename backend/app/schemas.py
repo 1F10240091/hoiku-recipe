@@ -33,14 +33,30 @@ class UserResponse(ORMModel):
     display_name: Optional[str] = None
 
 
+class UserUpdate(BaseModel):
+    display_name: Optional[str] = None
+    password: Optional[str] = Field(default=None, min_length=8)
+
+
 # --- お子様 ---
 class AllergyCreate(BaseModel):
+    ingredient: str
+
+
+class AllergyResponse(ORMModel):
+    id: str
     ingredient: str
 
 
 class PreferenceCreate(BaseModel):
     ingredient: str
     mode: str = "exclude"
+
+
+class PreferenceResponse(ORMModel):
+    id: str
+    ingredient: str
+    mode: str
 
 
 class ChildCreate(BaseModel):
@@ -59,8 +75,8 @@ class ChildResponse(ORMModel):
     id: str
     name: str
     birth_date: Optional[date] = None
-    allergies: list[AllergyCreate] = []
-    preferences: list[PreferenceCreate] = []
+    allergies: list[AllergyResponse] = []
+    preferences: list[PreferenceResponse] = []
 
 
 # --- 献立表（OCR） ---
