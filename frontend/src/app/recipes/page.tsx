@@ -10,7 +10,7 @@ export default function RecipesPage() {
 
   useEffect(() => {
     api
-      .listRecipes()
+      .listMealRecipes()
       .then(setRecipes)
       .finally(() => setLoading(false));
   }, []);

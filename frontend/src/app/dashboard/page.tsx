@@ -32,7 +32,8 @@ export default function DashboardPage() {
         <Link href="/dashboard">お子様</Link>
         <Link href="/menus">献立表</Link>
         <Link href="/meal-plan">AI 献立提案</Link>
-        <Link href="/recipes">レシピ・買い物リスト</Link>
+        <Link href="/recipes">提案献立</Link>
+        <Link href="/shopping">買い物リスト</Link>
         <button onClick={handleLogout} style={{ marginLeft: "auto", cursor: "pointer" }}>
           ログアウト
         </button>

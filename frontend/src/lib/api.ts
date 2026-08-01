@@ -61,6 +61,29 @@ export interface GenerateResponse {
   meals: SuggestedMeal[];
 }
 
+export interface ShoppingItem {
+  id?: string;
+  name: string;
+  quantity?: string | null;
+  unit?: string;
+  needed?: string;
+  source_recipes?: string[];
+}
+
+export interface ShoppingList {
+  items: ShoppingItem[];
+  generated_at: string;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  meal_type: string;
+  ingredients: { name: string; quantity?: string; unit?: string }[];
+  instructions: string;
+  cook_time_minutes?: number | null;
+}
+
 export const api = {
   register(email: string, password: string, displayName?: string) {
     return request<TokenResponse>("/auth/register", {
@@ -92,6 +115,9 @@ export const api = {
     return request<NurseryMenu>("/menus/upload", { method: "POST", body: formData });
   },
   listRecipes() {
+    return request<Recipe[]>("/recipe-master");
+  },
+  listMealRecipes() {
     return request<SuggestedMeal[]>("/recipes");
   },
   generateRecipe(childId: string, menuDate: string, days = 7) {
@@ -99,5 +125,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ child_id: childId, menu_date: menuDate, days }),
     });
+  },
+  getShoppingList() {
+    return request<ShoppingList>("/shopping/list");
+  },
+  listInventory() {
+    return request<ShoppingItem[]>("/shopping/inventory");
+  },
+  addInventory(name: string, quantity?: string) {
+    return request<ShoppingItem>("/shopping/inventory", {
+      method: "POST",
+      body: JSON.stringify({ name, quantity }),
+    });
+  },
+  deleteInventory(id: string) {
+    return request<void>(`/shopping/inventory/${id}`, { method: "DELETE" });
   },
 };
