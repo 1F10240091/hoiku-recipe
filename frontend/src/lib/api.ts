@@ -3,9 +3,13 @@ const API_BASE = "/api/v1";
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  const isFormData = options.body instanceof FormData;
+  if (!isFormData && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const token = localStorage.getItem("token");
   if (token) {
@@ -53,6 +57,10 @@ export interface SuggestedMeal {
   ingredients: Record<string, unknown>;
 }
 
+export interface GenerateResponse {
+  meals: SuggestedMeal[];
+}
+
 export const api = {
   register(email: string, password: string, displayName?: string) {
     return request<TokenResponse>("/auth/register", {
@@ -78,13 +86,18 @@ export const api = {
   listMenus() {
     return request<NurseryMenu[]>("/menus");
   },
+  uploadMenu(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<NurseryMenu>("/menus/upload", { method: "POST", body: formData });
+  },
   listRecipes() {
     return request<SuggestedMeal[]>("/recipes");
   },
-  generateRecipe(childId: string, menuDate: string) {
-    return request<SuggestedMeal>("/recipes/generate", {
+  generateRecipe(childId: string, menuDate: string, days = 7) {
+    return request<GenerateResponse>("/recipes/generate", {
       method: "POST",
-      body: JSON.stringify({ child_id: childId, menu_date: menuDate }),
+      body: JSON.stringify({ child_id: childId, menu_date: menuDate, days }),
     });
   },
 };
