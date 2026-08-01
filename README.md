@@ -20,12 +20,12 @@
 
 | 機能 | 内容 |
 |------|------|
-| **献立表の OCR 読み取り** | 保育園から配布された献立表 PDF をアプリに読み込み、メニュー名や食材を自動でデータ化 |
-| **子ども情報の登録** | 子どもの年齢・アレルギー・好き嫌いをデータベースとして一元管理 |
-| **冷蔵庫の在庫入力** | 主要な食材ボタン / 自由入力で在庫を記録 |
-| **AI 献立自動提案** | 園の昼食・在庫・アレルギー・好き嫌いを考慮し、夕食献立を AI が自動生成 |
-| **レシピ表示** | 提案された献立のレシピを表示し、調理をスムーズにサポート |
-| **買い物リスト生成** | 不足食材の必要分量をまとめたチェックリストを一瞬で作成 |
+| **献立表の OCR 読み取り** | 保育園から配布された献立表（PDF / 画像）をアプリに読み込み、メニュー名を自動でデータ化（スキャン PDF は全ページ画像 OCR にフォールバック） |
+| **子ども情報の登録** | 子どもの年齢・アレルギー・好き嫌いをデータベースとして一元管理・編集 |
+| **AI 献立自動提案** | 園の昼食・在庫・アレルギー・好き嫌い・前日の夕食を考慮し、レシピ DB から夕食献立を 1〜7 日分自動生成（Xiaomi MiMo / ルールベース） |
+| **レシピ表示** | 提案された献立のレシピ（使用食品・作り方）を表示 |
+| **買い物リスト生成** | 提案献立に必要な食材から在庫を差し引いた不足食材の買い物リストを自動作成 |
+| **フィードバック収集** | ユーザーテスト・学祭アンケート用の評価（1〜5）・コメント投稿 |
 
 ## 技術スタック
 
@@ -77,6 +77,26 @@ npm run dev
 | `npm run build` | フロントエンドのプロダクションビルド |
 | `npm run lint` | ESLint 実行 |
 
+## テスト
+
+バックエンドの API テストは pytest で実行します（認証・お子様・レシピ・献立生成・買い物リスト・献立表 OCR・セキュリティ・フィードバックの 40 件）。
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest tests -v
+```
+
+## セキュリティ対策
+
+| 対策 | 内容 |
+|------|------|
+| パスワード | bcrypt でハッシュ化。強度要件（8 文字以上・英字と数字を含む）をバックエンドとフロントの両方で検証 |
+| JWT | 発行者（iss）・有効期限（exp）を検証。秘密鍵は環境変数で設定 |
+| レート制限 | ログイン・登録への連続試行を IP ごとに制限（デフォルト 5 回 / 60 秒） |
+| 入力検証 | Pydantic / EmailStr による型・長さ・範囲のバリデーション |
+| DB アクセス | SQLAlchemy ORM 使用により SQL インジェクションを防止 |
+
 ## プロジェクト構成
 
 ```
@@ -85,20 +105,35 @@ hoiku-recipe/
 ├── docs/
 │   ├── proposal.md           # 提案書（背景・目的・機能）
 │   ├── design.md             # 詳細設計書（アーキテクチャ・API・DB）
-│   └── assignment.md         # タスク割当表・開発スケジュール
+│   ├── assignment.md         # タスク割当表・開発スケジュール
+│   └── user-manual.md        # ユーザーマニュアル
 ├── backend/
 │   ├── app/
 │   │   ├── main.py           # FastAPI エントリポイント
+│   │   ├── config.py         # 環境設定（JWT・AI・レート制限）
 │   │   ├── database.py       # DB 接続設定
+│   │   ├── middleware.py     # レート制限ミドルウェア
 │   │   ├── models.py         # SQLAlchemy モデル
 │   │   ├── schemas.py        # Pydantic スキーマ
-│   │   └── routers/
-│   │       ├── auth.py       # 認証 API
-│   │       ├── children.py   # お子様管理 API
-│   │       ├── menus.py      # 献立表 OCR API
-│   │       ├── recipes.py    # AI 献立提案 API
-│   │       └── shopping.py   # 買い物リスト API
-│   └── requirements.txt
+│   │   ├── security.py       # パスワード・JWT ユーティリティ
+│   │   ├── routers/
+│   │   │   ├── auth.py       # 認証 API
+│   │   │   ├── children.py   # お子様管理 API
+│   │   │   ├── menus.py      # 献立表 OCR API
+│   │   │   ├── recipes.py    # AI 献立提案 API
+│   │   │   ├── recipe_master.py # レシピマスタ CRUD
+│   │   │   ├── shopping.py   # 買い物リスト API
+│   │   │   └── feedback.py   # フィードバック API
+│   │   └── services/
+│   │       ├── ocr.py        # OCR（PDF / 画像）
+│   │       ├── menu_parser.py # 献立テキスト構造化
+│   │       ├── menu_generator.py # AI 献立生成
+│   │       ├── shopping_list.py # 買い物リスト集計
+│   │       └── seed_data.py  # レシピシード 23 件
+│   ├── tests/                # pytest テスト
+│   ├── requirements.txt
+│   ├── requirements-ocr.txt  # easyocr 等（画像 OCR のみ）
+│   └── requirements-dev.txt  # pytest 等
 └── frontend/
     ├── src/
     │   ├── app/              # Next.js App Router
@@ -106,10 +141,13 @@ hoiku-recipe/
     │   │   ├── page.tsx      # トップページ
     │   │   ├── login/        # ログイン画面
     │   │   ├── register/     # 新規登録画面
-    │   │   ├── dashboard/    # お子様管理ダッシュボード
-    │   │   ├── meal-plan/    # 献立作成画面
-    │   │   └── recipes/      # レシピ・買い物リスト画面
-    │   ├── components/       # 共通コンポーネント
+    │   │   ├── dashboard/    # お子様・プロフィール管理
+    │   │   ├── meal-plan/    # AI 献立生成画面
+    │   │   ├── menus/        # 献立表 OCR 取り込み
+    │   │   ├── recipes/      # 提案献立一覧
+    │   │   ├── shopping/     # 買い物リスト・冷蔵庫
+    │   │   └── feedback/     # フィードバック
+    │   ├── components/       # 共通コンポーネント（AppNav 等）
     │   └── lib/              # API クライアント等
     ├── package.json
     └── next.config.js
@@ -120,6 +158,7 @@ hoiku-recipe/
 - [提案書](./docs/proposal.md) — プロジェクトの背景・目的・機能・市場分析
 - [詳細設計書](./docs/design.md) — アーキテクチャ・API・データベース設計
 - [タスク割当表](./docs/assignment.md) — メンバー別タスク・開発スケジュール
+- [ユーザーマニュアル](./docs/user-manual.md) — 画面ごとの使い方ガイド
 
 ## ライセンス
 
