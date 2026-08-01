@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -63,6 +63,7 @@ class Preference(Base):
 
 class NurseryMenu(Base):
     __tablename__ = "nursery_menus"
+    __table_args__ = (Index("ix_nursery_menus_user_date", "user_id", "date"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
@@ -84,6 +85,7 @@ class InventoryItem(Base):
 
 class SuggestedMeal(Base):
     __tablename__ = "suggested_meals"
+    __table_args__ = (Index("ix_suggested_meals_user_date", "user_id", "date"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)

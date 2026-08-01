@@ -17,7 +17,7 @@ export default function RecipesPage() {
   }, []);
 
   return (
-    <main>
+    <main id="main-content">
       <AppNav />
       <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <h1>レシピ・買い物リスト</h1>

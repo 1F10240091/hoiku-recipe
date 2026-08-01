@@ -15,7 +15,11 @@ export default function AppNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="app-nav" aria-label="メインナビゲーション">
+    <>
+      <a href="#main-content" className="skip-link">
+        メインコンテンツへスキップ
+      </a>
+      <nav className="app-nav" aria-label="メインナビゲーション">
       <div className="app-nav__inner">
         <Link href="/dashboard" className="app-nav__brand">
           Hoiku-Recipe
@@ -33,6 +37,7 @@ export default function AppNav() {
           })}
         </ul>
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }

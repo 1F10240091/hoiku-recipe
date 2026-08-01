@@ -57,6 +57,23 @@ a {
   margin: 16px 0;
 }
 
+/* --- アクセシビリティ --- */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 16px;
+  z-index: 100;
+  padding: 8px 16px;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  border-radius: 0 0 8px 8px;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 /* --- 共通ナビゲーション --- */
 .app-nav {
   background: var(--color-white);

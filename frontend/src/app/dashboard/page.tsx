@@ -90,10 +90,10 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) return <main style={{ padding: 40 }}>読み込み中...</main>;
+  if (loading) return <main id="main-content" style={{ padding: 40 }}>読み込み中...</main>;
 
   return (
-    <main>
+    <main id="main-content">
       <AppNav />
       <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
       <nav style={{ display: "flex", gap: 16, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
