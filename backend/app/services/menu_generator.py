@@ -1,9 +1,14 @@
 """AI 献立生成サービス。
 
-Xiaomi MiMo（OpenAI 互換 Chat Completions API）を使い、保育園の昼食・
-冷蔵庫の在庫・アレルギー・好き嫌いを考慮した夕食献立を生成する。
+レシピマスタ（DB）に登録された料理から、保育園の昼食・冷蔵庫の在庫・
+アレルギー・好き嫌い・前日の夕食を考慮した夕食献立を選定する。
 
-API キー未設定時は、ルールベースのフォールバックで献立を組み立てる。
+選定方式:
+- Xiaomi MiMo（OpenAI 互換 API）が利用可能なら、レシピカタログと制約を
+  渡して「どのレシピを選ぶか」を決めさせる。
+- API キー未設定時はルールベースで DB から順に選定する。
+- どちらの場合も選定結果を DB の食材情報と照合し、アレルゲンが
+  含まれないことを最終確認する。
 """
 
 from __future__ import annotations
@@ -16,6 +21,7 @@ from datetime import date, timedelta
 import httpx
 
 from app.config import get_settings
+from app.models import Recipe
 
 
 @dataclass
@@ -26,21 +32,8 @@ class GeneratedMenu:
     menu_text: str
     dishes: list[str] = field(default_factory=list)
     engine: str = "rule_based"
+    recipe_ids: list[str] = field(default_factory=list)
 
-
-# ルールベース用の夕食献立プール（アレルギー食材タグ付き）
-_MENU_POOL: list[dict] = [
-    {"name": "和風ハンバーグ・みそ汁・おひたし", "ingredients": ["ハンバーグ", "みそ", "豆腐", "ほうれん草"]},
-    {"name": "鮭の塩焼き・野菜の煮物・ごはん", "ingredients": ["さけ", "ごはん"]},
-    {"name": "カレーライス・コールスローサラダ", "ingredients": ["ごはん", "にんじん"]},
-    {"name": "鶏の照り焼き・味噌汁・ごはん", "ingredients": ["鶏肉", "みそ", "ごはん"]},
-    {"name": "肉じゃが・キャベツの浅漬け・ごはん", "ingredients": ["ごはん"]},
-    {"name": "豚の生姜焼き・ほうれん草のごま和え・ごはん", "ingredients": ["豚肉", "ごはん", "ほうれん草", "ごま"]},
-    {"name": "ハヤシライス・フルーツ", "ingredients": ["ごはん"]},
-    {"name": "焼き鮭・小松菜のおひたし・豆腐の味噌汁・ごはん", "ingredients": ["さけ", "みそ", "豆腐", "ごはん"]},
-    {"name": "野菜たっぷりうどん・いなりずし", "ingredients": ["うどん", "油揚げ"]},
-    {"name": "豆腐ハンバーグ・ひじきの煮物・みそ汁・ごはん", "ingredients": ["豆腐", "みそ", "ごはん"]},
-]
 
 # 表記ゆれ（ひらがな⇔漢字⇔カタカナ）の同義語辞書
 _SYNONYMS: dict[str, list[str]] = {
@@ -55,6 +48,11 @@ _SYNONYMS: dict[str, list[str]] = {
     "ごま": ["ごま", "ゴマ", "胡麻"],
 }
 
+# 献立を構成する際の標準的な組み合わせ（主菜・汁物・副菜・主食）
+_DEFAULT_SOUP = "みそ汁"
+_DEFAULT_SIDE = "おひたし"
+_DEFAULT_STAPLE = "ごはん"
+
 
 def _matches_ingredient(ingredient: str, target: str) -> bool:
     """食材名（表記ゆれ対応）が対象文字列に含まれるか判定する。"""
@@ -62,16 +60,20 @@ def _matches_ingredient(ingredient: str, target: str) -> bool:
     return any(alias in target for alias in aliases)
 
 
-def _shared_dishes(dishes_a: list[str], dishes_b: list[str]) -> list[str]:
-    """2 つの献立に共通して含まれる主菜レベルの料理を返す。
+def _recipe_has_allergen(recipe: Recipe, allergens: list[str]) -> bool:
+    """レシピの使用食品にアレルゲンが含まれるか判定する。"""
+    if not allergens:
+        return False
+    recipe_ingredients = " ".join(str(i.get("name", "")) for i in recipe.ingredients)
+    return any(any(_matches_ingredient(a, ing) for a in allergens) for ing in [recipe_ingredients])
 
-    「ごはん」のような毎回必ず付く主食・汁物は重複判定から除外し、
-    主菜（メインのおかず）の重複だけを検出する。
-    """
+
+def _shared_names(a: list[str], b: list[str]) -> bool:
+    """2 つの料理名リストに共通する主菜レベルの料理があるか判定する。"""
     ignore = {"ごはん", "白ごはん", "みそ汁", "味噌汁", "スープ", "おひたし"}
-    a = {d for d in dishes_a if d not in ignore}
-    b = {d for d in dishes_b if d not in ignore}
-    return sorted(a & b)
+    sa = {d for d in a if d not in ignore}
+    sb = {d for d in b if d not in ignore}
+    return bool(sa & sb)
 
 
 def generate_menus(
@@ -84,8 +86,9 @@ def generate_menus(
     nursery_menus: list[str],
     yesterday_menu: str | None = None,
     inventory: list[str] | None = None,
+    recipes: list[Recipe] | None = None,
 ) -> list[GeneratedMenu]:
-    """指定日数分の夕食献立を生成する。
+    """指定日数分の夕食献立をレシピマスタから選定する。
 
     Args:
         child_name: お子様の名前。
@@ -97,12 +100,14 @@ def generate_menus(
         yesterday_menu: 前日の夕食献立テキスト。週の境目（日曜→月曜など）を
             またいでも漏れなく重複を避けるため、開始日前日の夕食を渡す。
         inventory: 冷蔵庫の在庫食材リスト。
+        recipes: レシピマスタ。None の場合は DB から全件取得する。
 
     Returns:
         日付ごとの GeneratedMenu のリスト。
     """
     settings = get_settings()
     inventory = inventory or []
+    recipe_list = recipes if recipes is not None else []
 
     if settings.ai_api_key:
         try:
@@ -115,6 +120,7 @@ def generate_menus(
                 nursery_menus=nursery_menus,
                 yesterday_menu=yesterday_menu,
                 inventory=inventory,
+                recipes=recipe_list,
             )
         except Exception:
             # AI 接続失敗時はルールベースにフォールバック
@@ -128,6 +134,7 @@ def generate_menus(
         preferences=preferences,
         nursery_menus=nursery_menus,
         yesterday_menu=yesterday_menu,
+        recipes=recipe_list,
     )
 
 
@@ -140,48 +147,59 @@ def _generate_rule_based(
     preferences: list[str],
     nursery_menus: list[str],
     yesterday_menu: str | None,
+    recipes: list[Recipe],
 ) -> list[GeneratedMenu]:
-    """API キー未設定時のルールベース献立生成。
+    """レシピマスタからルールベースで献立を選定する。
 
-    アレルギー・好き嫌いを除外し、保育園の昼食および前日の夕食と
-    重複しない献立をプールから順に選ぶ。
+    アレルギー・好き嫌いを除外し、保育園の昼食・前日の夕食・今週内の
+    既選献立と主菜が重複しない組み合わせを順に選ぶ。
     """
-    excluded = [a.lower() for a in allergies + preferences]
+    allergens = [a.lower() for a in allergies + preferences]
     nursery_text = " ".join(nursery_menus)
     yesterday_dishes = _extract_dishes(yesterday_menu) if yesterday_menu else []
 
-    selected: list[str] = []
-    for item in _MENU_POOL:
-        name = item["name"]
-        dishes = name.split("・")
-        # アレルギー・好き嫌いの食材を食材タグで判定（表記ゆれ対応）
-        if any(any(_matches_ingredient(tag, ing) for tag in item["ingredients"]) for ing in excluded):
+    mains = [r for r in recipes if r.meal_type == "main"]
+    soup = next((r for r in recipes if r.meal_type == "soup" and not _recipe_has_allergen(r, allergens)), None)
+    sides = [r for r in recipes if r.meal_type == "side" and not _recipe_has_allergen(r, allergens)]
+    staple = next((r for r in recipes if r.meal_type == "staple" and not _recipe_has_allergen(r, allergens)), None)
+
+    selected: list[list[Recipe]] = []
+    for main in mains:
+        if _recipe_has_allergen(main, allergens):
             continue
-        # 保育園の昼食と重複しない
-        if any(name_part in nursery_text for name_part in dishes):
+        if any(_matches_ingredient(main.name, part) for part in nursery_text.split("・")):
             continue
-        # 前日の夕食と主菜が重複しない（週の境目をまたぐ場合も対象）
-        if _shared_dishes(dishes, yesterday_dishes):
+        if _shared_names([main.name], yesterday_dishes):
             continue
-        # 今週内で既に選んだ献立と主菜が重複しない
-        if any(_shared_dishes(dishes, prev.split("・")) for prev in selected):
+        if any(_shared_names([main.name], [prev[0].name]) for prev in selected):
             continue
-        selected.append(name)
+        combo = [main]
+        if soup:
+            combo.append(soup)
+        if sides:
+            combo.append(sides[len(selected) % len(sides)])
+        if staple and staple.name != main.name:
+            combo.append(staple)
+        selected.append(combo)
 
     if not selected:
-        selected = ["白ごはん・具だくさん味噌汁・焼き魚"]
+        # すべての主菜が使えない場合は、アレルゲン判定済みの最小構成で代替
+        fallback = [r for r in recipes if not _recipe_has_allergen(r, allergens)]
+        combo = [fallback[0]] if fallback else []
+        selected = [combo] * days
 
     result: list[GeneratedMenu] = []
     for i in range(days):
         d = start_date + timedelta(days=i)
-        name = selected[i % len(selected)]
-        dishes = name.split("・")
+        combo = selected[i % len(selected)]
+        dishes = [r.name for r in combo]
         result.append(
             GeneratedMenu(
                 date=d,
-                menu_text=f"{child_name} さんの夕食（{d}）\n{name}",
+                menu_text=f"{child_name} さんの夕食（{d}）\n{'・'.join(dishes)}",
                 dishes=dishes,
                 engine="rule_based",
+                recipe_ids=[r.id for r in combo],
             )
         )
     return result
@@ -211,16 +229,23 @@ def _generate_with_mimo(
     nursery_menus: list[str],
     yesterday_menu: str | None,
     inventory: list[str],
+    recipes: list[Recipe],
 ) -> list[GeneratedMenu]:
-    """Xiaomi MiMo（OpenAI 互換 API）で献立を生成する。"""
+    """Xiaomi MiMo（OpenAI 互換 API）にレシピカタログから選定させる。"""
     settings = get_settings()
+
+    catalog = "\n".join(
+        f"- {r.name}（{r.meal_type} / 使用食品: {', '.join(i.get('name', '') for i in r.ingredients)}）"
+        for r in recipes
+    )
 
     system_prompt = (
         "あなたは保育園に通う 3〜6 歳児を持つ保護者向けに、夕食献立を提案する栄養士です。\n"
-        "必ず JSON 配列のみを出力してください。料理名は箇条書き（・区切り）にします。\n"
-        "出力形式: [{\"date\": \"YYYY-MM-DD\", \"menu_text\": \"献立名・料理1・料理2\"}]\n"
-        "アレルギー食材・除外希望の食材を必ず使いません。\n"
-        "保育園の昼食・前日の夕食・同じ週内の他の日と、主菜が重複しないようにします。"
+        "与えられたレシピカタログの料理名だけを使って献立を選定してください。\n"
+        "カタログに無い料理名を出力しないでください。\n"
+        "必ず JSON 配列のみを出力してください。\n"
+        "出力形式: [{\"date\": \"YYYY-MM-DD\", \"dishes\": [\"料理名1\", \"料理名2\"]}]\n"
+        "1 日の献立は主菜・汁物・副菜・主食の組み合わせにしてください。"
     )
 
     user_prompt = (
@@ -231,7 +256,8 @@ def _generate_with_mimo(
         f"保育園の昼食: {' / '.join(nursery_menus) or 'なし'}\n"
         f"前日の夕食（重複禁止）: {yesterday_menu or 'なし'}\n"
         f"冷蔵庫の在庫: {inventory or 'なし'}\n"
-        f"保育園の昼食・前日の夕食と主菜が重複しないバランスの良い夕食献立を {days} 日分生成してください。"
+        f"レシピカタログ:\n{catalog}\n"
+        f"アレルゲンを避け、保育園の昼食・前日の夕食と主菜が重複しない献立を {days} 日分選定してください。"
     )
 
     payload = {
@@ -258,13 +284,20 @@ def _generate_with_mimo(
     menus: list[GeneratedMenu] = []
     for i, entry in enumerate(entries[:days]):
         d = start_date + timedelta(days=i)
-        dishes = [d for d in str(entry.get("menu_text", "")).split("・") if d]
+        dishes = [str(x) for x in entry.get("dishes", []) if x]
+        # カタログに無い料理は除外し、DB のレシピと照合
+        by_name = {r.name: r for r in recipes}
+        combo = [by_name[d] for d in dishes if d in by_name]
+        if not combo:
+            continue
+        safe_combo = [r for r in combo if not _recipe_has_allergen(r, [a.lower() for a in allergies + preferences])]
         menus.append(
             GeneratedMenu(
                 date=d,
-                menu_text=f"{child_name} さんの夕食（{d}）\n{entry.get('menu_text', '')}",
-                dishes=dishes,
+                menu_text=f"{child_name} さんの夕食（{d}）\n{'・'.join(r.name for r in safe_combo)}",
+                dishes=[r.name for r in safe_combo],
                 engine="mimo",
+                recipe_ids=[r.id for r in safe_combo],
             )
         )
     if not menus:

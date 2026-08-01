@@ -83,7 +83,7 @@ class GenerateRequest(BaseModel):
     days: int = Field(default=1, ge=1, le=7)
 
 
-class RecipeResponse(ORMModel):
+class MealResponse(ORMModel):
     id: str
     date: date
     menu_text: str
@@ -91,7 +91,39 @@ class RecipeResponse(ORMModel):
 
 
 class GenerateResponse(BaseModel):
-    meals: list[RecipeResponse]
+    meals: list[MealResponse]
+
+
+# --- レシピマスタ ---
+class Ingredient(BaseModel):
+    name: str
+    quantity: str = ""
+    unit: str = ""
+
+
+class RecipeCreate(BaseModel):
+    name: str
+    meal_type: str = "main"
+    ingredients: list[Ingredient] = []
+    instructions: str = ""
+    cook_time_minutes: int | None = Field(default=None, ge=1)
+
+
+class RecipeUpdate(BaseModel):
+    name: str | None = None
+    meal_type: str | None = None
+    ingredients: list[Ingredient] | None = None
+    instructions: str | None = None
+    cook_time_minutes: int | None = Field(default=None, ge=1)
+
+
+class RecipeResponse(ORMModel):
+    id: str
+    name: str
+    meal_type: str
+    ingredients: list[Ingredient]
+    instructions: str
+    cook_time_minutes: int | None
 
 
 # --- 買い物リスト ---

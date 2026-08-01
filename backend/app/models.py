@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -90,4 +90,23 @@ class SuggestedMeal(Base):
     date: Mapped[date] = mapped_column(Date, nullable=False)
     menu_text: Mapped[str] = mapped_column(Text, nullable=False)
     ingredients: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Recipe(Base):
+    """料理レシピマスタ（全ユーザー共通）。
+
+    使用食品（ingredients）と作り方（instructions）をセットで保持する。
+    - ingredients: [{name, quantity, unit}] → アレルゲン判定・買い物リスト集計に使用
+    - instructions: 作り方手順 → 保護者向け表示に使用
+    """
+
+    __tablename__ = "recipes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    name: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
+    meal_type: Mapped[str] = mapped_column(String(20), nullable=False, default="main")  # main | side | soup | staple
+    ingredients: Mapped[list] = mapped_column(JSON, default=list)
+    instructions: Mapped[str] = mapped_column(Text, default="")
+    cook_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -1,25 +1,25 @@
 """AI 献立提案 API。
 
-保育園の昼食・冷蔵庫の在庫・アレルギー・好き嫌いを考慮した夕食献立を生成する。
-AI エンジンは Xiaomi MiMo（OpenAI 互換 API）を使用し、API キー未設定時は
-ルールベースにフォールバックする。
+保育園の昼食・冷蔵庫の在庫・アレルギー・好き嫌い・前日の夕食を考慮した
+夕食献立を生成する。AI エンジンは Xiaomi MiMo（OpenAI 互換 API）を使用し、
+API キー未設定時はルールベースにフォールバックする。
 """
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Child, InventoryItem, NurseryMenu, SuggestedMeal, User
+from app.models import Child, InventoryItem, NurseryMenu, Recipe, SuggestedMeal, User
 from app.routers.auth import get_current_user
-from app.schemas import GenerateRequest, GenerateResponse, RecipeResponse
+from app.schemas import GenerateRequest, GenerateResponse, MealResponse
 from app.services.menu_generator import generate_menus
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 
-@router.get("", response_model=list[RecipeResponse])
+@router.get("", response_model=list[MealResponse])
 def list_recipes(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[SuggestedMeal]:
     return db.query(SuggestedMeal).filter(SuggestedMeal.user_id == user.id).order_by(SuggestedMeal.date.desc()).all()
 
@@ -44,6 +44,9 @@ def generate_recipe(
     ]
     inventory = [item.name for item in db.query(InventoryItem).filter(InventoryItem.user_id == user.id).all()]
 
+    # レシピマスタを DB から取得（アレルゲン照合・選定の真実源）
+    recipes = db.query(Recipe).all()
+
     # 前日の夕食を取得（週の境目をまたぐ場合も重複を避けるため開始日前日の献立を探す）
     yesterday = (
         db.query(SuggestedMeal)
@@ -62,6 +65,7 @@ def generate_recipe(
         nursery_menus=nursery_menus,
         yesterday_menu=yesterday_menu,
         inventory=inventory,
+        recipes=recipes,
     )
 
     meals: list[SuggestedMeal] = []
@@ -70,7 +74,7 @@ def generate_recipe(
             user_id=user.id,
             date=menu.date,
             menu_text=menu.menu_text,
-            ingredients={"dishes": menu.dishes, "engine": menu.engine},
+            ingredients={"dishes": menu.dishes, "engine": menu.engine, "recipe_ids": menu.recipe_ids},
         )
         db.add(meal)
         meals.append(meal)
@@ -81,7 +85,7 @@ def generate_recipe(
     return GenerateResponse(meals=meals)
 
 
-@router.get("/{meal_id}", response_model=RecipeResponse)
+@router.get("/{meal_id}", response_model=MealResponse)
 def get_recipe(meal_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> SuggestedMeal:
     meal = db.query(SuggestedMeal).filter(SuggestedMeal.id == meal_id, SuggestedMeal.user_id == user.id).first()
     if meal is None:
