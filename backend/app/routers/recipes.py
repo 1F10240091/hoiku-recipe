@@ -44,6 +44,15 @@ def generate_recipe(
     ]
     inventory = [item.name for item in db.query(InventoryItem).filter(InventoryItem.user_id == user.id).all()]
 
+    # 前日の夕食を取得（週の境目をまたぐ場合も重複を避けるため開始日前日の献立を探す）
+    yesterday = (
+        db.query(SuggestedMeal)
+        .filter(SuggestedMeal.user_id == user.id, SuggestedMeal.date < payload.menu_date)
+        .order_by(SuggestedMeal.date.desc())
+        .first()
+    )
+    yesterday_menu = yesterday.menu_text if yesterday else None
+
     generated = generate_menus(
         child_name=child.name,
         start_date=payload.menu_date,
@@ -51,6 +60,7 @@ def generate_recipe(
         allergies=allergies,
         preferences=preferences,
         nursery_menus=nursery_menus,
+        yesterday_menu=yesterday_menu,
         inventory=inventory,
     )
 
