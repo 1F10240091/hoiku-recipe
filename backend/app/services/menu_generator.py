@@ -65,7 +65,7 @@ def _recipe_has_allergen(recipe: Recipe, allergens: list[str]) -> bool:
     if not allergens:
         return False
     recipe_ingredients = " ".join(str(i.get("name", "")) for i in recipe.ingredients)
-    return any(any(_matches_ingredient(a, ing) for a in allergens) for ing in [recipe_ingredients])
+    return any(_matches_ingredient(a, recipe_ingredients) for a in allergens)
 
 
 def _shared_names(a: list[str], b: list[str]) -> bool:
@@ -294,6 +294,8 @@ def _generate_with_mimo(
         if not combo:
             continue
         safe_combo = [r for r in combo if not _recipe_has_allergen(r, [a.lower() for a in allergies + preferences])]
+        if not safe_combo:
+            continue
         menus.append(
             GeneratedMenu(
                 date=d,
