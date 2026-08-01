@@ -33,3 +33,6 @@ Thumbs.db
 # --- ログ ---
 *.log
 logs/
+
+# --- テスト ---
+.test_*.db
