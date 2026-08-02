@@ -84,6 +84,23 @@ export interface Recipe {
   cook_time_minutes?: number | null;
 }
 
+export interface RecipeSearchParams {
+  keyword?: string;
+  meal_type?: string;
+  ingredient?: string;
+  max_cook_time?: number;
+  page?: number;
+  per_page?: number;
+}
+
+export interface RecipeSearchResponse {
+  recipes: Recipe[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}
+
 const realApi = {
   register(email: string, password: string, displayName?: string) {
     return request<TokenResponse>("/auth/register", {
@@ -101,16 +118,28 @@ const realApi = {
     return request<User>("/auth/me");
   },
   updateMe(payload: { display_name?: string; password?: string }) {
-    return request<User>("/auth/me", { method: "PUT", body: JSON.stringify(payload) });
+    return request<User>("/auth/me", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
   },
   listChildren() {
     return request<Child[]>("/children");
   },
   createChild(payload: Omit<Child, "id">) {
-    return request<Child>("/children", { method: "POST", body: JSON.stringify(payload) });
+    return request<Child>("/children", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
-  updateChild(childId: string, payload: { name?: string; birth_date?: string | null }) {
-    return request<Child>(`/children/${childId}`, { method: "PUT", body: JSON.stringify(payload) });
+  updateChild(
+    childId: string,
+    payload: { name?: string; birth_date?: string | null },
+  ) {
+    return request<Child>(`/children/${childId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
   },
   deleteChild(childId: string) {
     return request<void>(`/children/${childId}`, { method: "DELETE" });
@@ -122,7 +151,9 @@ const realApi = {
     });
   },
   deleteAllergy(childId: string, allergyId: string) {
-    return request<Child>(`/children/${childId}/allergies/${allergyId}`, { method: "DELETE" });
+    return request<Child>(`/children/${childId}/allergies/${allergyId}`, {
+      method: "DELETE",
+    });
   },
   addPreference(childId: string, ingredient: string, mode: string) {
     return request<Child>(`/children/${childId}/preferences`, {
@@ -131,7 +162,9 @@ const realApi = {
     });
   },
   deletePreference(childId: string, preferenceId: string) {
-    return request<Child>(`/children/${childId}/preferences/${preferenceId}`, { method: "DELETE" });
+    return request<Child>(`/children/${childId}/preferences/${preferenceId}`, {
+      method: "DELETE",
+    });
   },
   listMenus() {
     return request<NurseryMenu[]>("/menus");
@@ -139,10 +172,30 @@ const realApi = {
   uploadMenu(file: File) {
     const formData = new FormData();
     formData.append("file", file);
-    return request<NurseryMenu>("/menus/upload", { method: "POST", body: formData });
+    return request<NurseryMenu>("/menus/upload", {
+      method: "POST",
+      body: formData,
+    });
   },
   listRecipes() {
     return request<Recipe[]>("/recipe-master");
+  },
+  searchRecipes(params: RecipeSearchParams = {}) {
+    const sp = new URLSearchParams();
+    if (params.keyword) sp.set("keyword", params.keyword);
+    if (params.meal_type) sp.set("meal_type", params.meal_type);
+    if (params.ingredient) sp.set("ingredient", params.ingredient);
+    if (params.max_cook_time)
+      sp.set("max_cook_time", String(params.max_cook_time));
+    if (params.page) sp.set("page", String(params.page));
+    if (params.per_page) sp.set("per_page", String(params.per_page));
+    const qs = sp.toString();
+    return request<RecipeSearchResponse>(
+      `/recipe-master/search${qs ? `?${qs}` : ""}`,
+    );
+  },
+  getRecipe(recipeId: string) {
+    return request<Recipe>(`/recipe-master/${recipeId}`);
   },
   listMealRecipes() {
     return request<SuggestedMeal[]>("/recipes");
@@ -169,10 +222,13 @@ const realApi = {
     return request<void>(`/shopping/inventory/${id}`, { method: "DELETE" });
   },
   submitFeedback(rating: number | null, comment: string) {
-    return request<{ id: string; rating: number | null; comment: string }>("/feedback", {
-      method: "POST",
-      body: JSON.stringify({ rating, comment }),
-    });
+    return request<{ id: string; rating: number | null; comment: string }>(
+      "/feedback",
+      {
+        method: "POST",
+        body: JSON.stringify({ rating, comment }),
+      },
+    );
   },
 };
 

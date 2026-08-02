@@ -14,6 +14,7 @@ import type {
   GenerateResponse,
   NurseryMenu,
   Recipe,
+  RecipeSearchResponse,
   ShoppingItem,
   ShoppingList,
   SuggestedMeal,
@@ -23,7 +24,11 @@ import type {
 
 const DEMO_TOKEN = "demo-token";
 const DEMO_EMAIL = "demo@example.com";
-const DEMO_USER: User = { id: "demo-user", email: DEMO_EMAIL, display_name: "デモユーザー" };
+const DEMO_USER: User = {
+  id: "demo-user",
+  email: DEMO_EMAIL,
+  display_name: "デモユーザー",
+};
 
 function load<T>(key: string, fallback: T): T {
   try {
@@ -70,7 +75,11 @@ function safeRecipes(allergens: string[]): DemoRecipe[] {
 }
 
 export const demoApi = {
-  async register(_email: string, _password: string, displayName?: string): Promise<TokenResponse> {
+  async register(
+    _email: string,
+    _password: string,
+    displayName?: string,
+  ): Promise<TokenResponse> {
     localStorage.setItem("token", DEMO_TOKEN);
     DEMO_USER.display_name = displayName ?? DEMO_USER.display_name;
     return delay({ access_token: DEMO_TOKEN, token_type: "bearer" });
@@ -85,8 +94,12 @@ export const demoApi = {
     return delay(DEMO_USER);
   },
 
-  async updateMe(payload: { display_name?: string; password?: string }): Promise<User> {
-    if (payload.display_name != null) DEMO_USER.display_name = payload.display_name;
+  async updateMe(payload: {
+    display_name?: string;
+    password?: string;
+  }): Promise<User> {
+    if (payload.display_name != null)
+      DEMO_USER.display_name = payload.display_name;
     return delay({ ...DEMO_USER });
   },
 
@@ -106,12 +119,16 @@ export const demoApi = {
     return delay(child);
   },
 
-  async updateChild(childId: string, payload: { name?: string; birth_date?: string | null }): Promise<Child> {
+  async updateChild(
+    childId: string,
+    payload: { name?: string; birth_date?: string | null },
+  ): Promise<Child> {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
     const child = list.find((c) => c.id === childId);
     if (child) {
       if (payload.name != null) child.name = payload.name;
-      if (payload.birth_date !== undefined) child.birth_date = payload.birth_date;
+      if (payload.birth_date !== undefined)
+        child.birth_date = payload.birth_date;
       save("demo_children", list);
     }
     return delay(child ?? list[0]);
@@ -119,7 +136,10 @@ export const demoApi = {
 
   async deleteChild(childId: string): Promise<void> {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
-    save("demo_children", list.filter((c) => c.id !== childId));
+    save(
+      "demo_children",
+      list.filter((c) => c.id !== childId),
+    );
     return delay(undefined);
   },
 
@@ -143,7 +163,11 @@ export const demoApi = {
     return delay(child ?? list[0]);
   },
 
-  async addPreference(childId: string, ingredient: string, mode: string): Promise<Child> {
+  async addPreference(
+    childId: string,
+    ingredient: string,
+    mode: string,
+  ): Promise<Child> {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
     const child = list.find((c) => c.id === childId);
     if (child) {
@@ -153,11 +177,16 @@ export const demoApi = {
     return delay(child ?? list[0]);
   },
 
-  async deletePreference(childId: string, preferenceId: string): Promise<Child> {
+  async deletePreference(
+    childId: string,
+    preferenceId: string,
+  ): Promise<Child> {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
     const child = list.find((c) => c.id === childId);
     if (child) {
-      child.preferences = child.preferences.filter((p) => p.id !== preferenceId);
+      child.preferences = child.preferences.filter(
+        (p) => p.id !== preferenceId,
+      );
       save("demo_children", list);
     }
     return delay(child ?? list[0]);
@@ -185,21 +214,81 @@ export const demoApi = {
     return delay(DEMO_RECIPES);
   },
 
+  async searchRecipes(params: {
+    keyword?: string;
+    meal_type?: string;
+    ingredient?: string;
+    max_cook_time?: number;
+    page?: number;
+    per_page?: number;
+  }): Promise<RecipeSearchResponse> {
+    let list = DEMO_RECIPES;
+    if (params.keyword) {
+      const kw = params.keyword.toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.name.toLowerCase().includes(kw) ||
+          r.instructions.toLowerCase().includes(kw),
+      );
+    }
+    if (params.meal_type) {
+      list = list.filter((r) => r.meal_type === params.meal_type);
+    }
+    if (params.ingredient) {
+      const ing = params.ingredient.toLowerCase();
+      list = list.filter((r) =>
+        r.ingredients.some((i) => i.name.toLowerCase().includes(ing)),
+      );
+    }
+    if (params.max_cook_time) {
+      list = list.filter(
+        (r) =>
+          r.cook_time_minutes == null ||
+          r.cook_time_minutes <= params.max_cook_time!,
+      );
+    }
+    const per_page = params.per_page ?? 20;
+    const page = params.page ?? 1;
+    const total = list.length;
+    const start = (page - 1) * per_page;
+    return delay({
+      recipes: list.slice(start, start + per_page),
+      total,
+      page,
+      per_page,
+      total_pages: Math.ceil(total / per_page),
+    });
+  },
+
+  async getRecipe(recipeId: string): Promise<Recipe> {
+    const recipe = DEMO_RECIPES.find((r) => r.id === recipeId);
+    if (!recipe) throw new Error("レシピが見つかりません");
+    return delay(recipe);
+  },
+
   async listMealRecipes(): Promise<SuggestedMeal[]> {
     return delay(load<SuggestedMeal[]>("demo_meals", []));
   },
 
-  async generateRecipe(childId: string, menuDate: string, days = 7): Promise<GenerateResponse> {
+  async generateRecipe(
+    childId: string,
+    menuDate: string,
+    days = 7,
+  ): Promise<GenerateResponse> {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
     const child = list.find((c) => c.id === childId);
     const name = child?.name ?? "ゆうた";
     const allergens = [
       ...(child?.allergies.map((a) => a.ingredient) ?? []),
-      ...(child?.preferences.filter((p) => p.mode === "exclude").map((p) => p.ingredient) ?? []),
+      ...(child?.preferences
+        .filter((p) => p.mode === "exclude")
+        .map((p) => p.ingredient) ?? []),
     ];
 
     // 保育園の昼食と重複しない主菜を選ぶ
-    const mainRecipes = safeRecipes(allergens).filter((r) => r.meal_type === "main");
+    const mainRecipes = safeRecipes(allergens).filter(
+      (r) => r.meal_type === "main",
+    );
     const soup = safeRecipes(allergens).find((r) => r.meal_type === "soup");
     const side = safeRecipes(allergens).find((r) => r.meal_type === "side");
     const staple = safeRecipes(allergens).find((r) => r.meal_type === "staple");
@@ -231,7 +320,9 @@ export const demoApi = {
   async getShoppingList(): Promise<ShoppingList> {
     const meals = load<SuggestedMeal[]>("demo_meals", []);
     const inventory = load<ShoppingItem[]>("demo_inventory", []);
-    const usedIds = meals.flatMap((m) => (m.ingredients.recipe_ids as string[]) ?? []);
+    const usedIds = meals.flatMap(
+      (m) => (m.ingredients.recipe_ids as string[]) ?? [],
+    );
     const usedRecipes = DEMO_RECIPES.filter((r) => usedIds.includes(r.id));
     const invNames = new Set(inventory.map((i) => i.name));
     const items: ShoppingItem[] = [];
@@ -260,7 +351,11 @@ export const demoApi = {
 
   async addInventory(name: string, quantity?: string): Promise<ShoppingItem> {
     const list = load<ShoppingItem[]>("demo_inventory", []);
-    const item: ShoppingItem = { id: uid("inv"), name, quantity: quantity ?? null };
+    const item: ShoppingItem = {
+      id: uid("inv"),
+      name,
+      quantity: quantity ?? null,
+    };
     list.push(item);
     save("demo_inventory", list);
     return delay(item);
@@ -268,12 +363,18 @@ export const demoApi = {
 
   async deleteInventory(id: string): Promise<void> {
     const list = load<ShoppingItem[]>("demo_inventory", []);
-    save("demo_inventory", list.filter((i) => i.id !== id));
+    save(
+      "demo_inventory",
+      list.filter((i) => i.id !== id),
+    );
     return delay(undefined);
   },
 
   async submitFeedback(rating: number | null, comment: string) {
-    const list = load<{ id: string; rating: number | null; comment: string }[]>("demo_feedback", []);
+    const list = load<{ id: string; rating: number | null; comment: string }[]>(
+      "demo_feedback",
+      [],
+    );
     list.push({ id: uid("fb"), rating, comment });
     save("demo_feedback", list);
     return delay({ id: "fb-demo", rating, comment });

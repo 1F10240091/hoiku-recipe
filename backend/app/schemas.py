@@ -162,6 +162,14 @@ class RecipeResponse(ORMModel):
     cook_time_minutes: int | None
 
 
+class RecipeSearchResponse(BaseModel):
+    recipes: list[RecipeResponse]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+
+
 # --- 買い物リスト ---
 class ShoppingGenerateRequest(BaseModel):
     child_id: str

@@ -64,3 +64,63 @@ def test_filter_by_meal_type(auth_client):
     assert res.status_code == 200
     assert len(res.json()) > 0
     assert all(r["meal_type"] == "main" for r in res.json())
+
+
+# --- レシピ検索 ---
+
+
+def test_search_recipes_by_keyword(auth_client):
+    res = auth_client.get("/api/v1/recipe-master/search", params={"keyword": "ごはん"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total"] > 0
+    assert any("ごはん" in r["name"] for r in body["recipes"])
+
+
+def test_search_recipes_by_ingredient(auth_client):
+    res = auth_client.get("/api/v1/recipe-master/search", params={"ingredient": "にんじん"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total"] > 0
+    assert any(
+        "にんじん" in (ing["name"] for ing in r["ingredients"]) or "にんじん" in str(r["ingredients"])
+        for r in body["recipes"]
+    )
+
+
+def test_search_recipes_by_max_cook_time(auth_client):
+    res = auth_client.get("/api/v1/recipe-master/search", params={"max_cook_time": 10})
+    assert res.status_code == 200
+    body = res.json()
+    for r in body["recipes"]:
+        if r["cook_time_minutes"] is not None:
+            assert r["cook_time_minutes"] <= 10
+
+
+def test_search_recipes_pagination(auth_client):
+    res = auth_client.get("/api/v1/recipe-master/search", params={"per_page": 5, "page": 1})
+    assert res.status_code == 200
+    body = res.json()
+    assert len(body["recipes"]) <= 5
+    assert body["total"] >= 1
+    assert body["total_pages"] >= 1
+
+
+def test_search_recipes_combined_filters(auth_client):
+    res = auth_client.get(
+        "/api/v1/recipe-master/search",
+        params={"meal_type": "main", "keyword": "カレー"},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert all(r["meal_type"] == "main" for r in body["recipes"])
+
+
+def test_search_recipes_no_match(auth_client):
+    res = auth_client.get(
+        "/api/v1/recipe-master/search", params={"keyword": "存在しないレシピXYZ123"}
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total"] == 0
+    assert body["recipes"] == []

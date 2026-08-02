@@ -1,12 +1,12 @@
-"""レシピマスタ API（一覧・作成・更新・削除）。"""
+"""レシピマスタ API（一覧・検索・作成・更新・削除）。"""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Recipe
 from app.routers.auth import get_current_user
-from app.schemas import RecipeCreate, RecipeResponse, RecipeUpdate
+from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
 
 router = APIRouter(prefix="/recipe-master", tags=["recipe-master"])
 
@@ -19,6 +19,53 @@ def list_recipes(
     if meal_type:
         query = query.filter(Recipe.meal_type == meal_type)
     return query.order_by(Recipe.name).all()
+
+
+@router.get("/search", response_model=RecipeSearchResponse)
+def search_recipes(
+    keyword: str | None = Query(default=None, description="レシピ名・作り方の部分一致検索"),
+    meal_type: str | None = Query(default=None, description="main | side | soup | staple"),
+    ingredient: str | None = Query(default=None, description="材料名の部分一致検索"),
+    max_cook_time: int | None = Query(default=None, ge=1, description="最大調理時間（分）"),
+    page: int = Query(default=1, ge=1),
+    per_page: int = Query(default=20, ge=1, le=100),
+    user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RecipeSearchResponse:
+    query = db.query(Recipe)
+
+    if keyword:
+        like = f"%{keyword}%"
+        query = query.filter(Recipe.name.like(like) | Recipe.instructions.like(like))
+    if meal_type:
+        query = query.filter(Recipe.meal_type == meal_type)
+    if max_cook_time is not None:
+        query = query.filter(Recipe.cook_time_minutes <= max_cook_time)
+
+    recipes = query.order_by(Recipe.name).all()
+
+    # 材料は JSON の Unicode エスケープで保存されるため LIKE 不可。
+    # デコードしてから Python 側で部分一致フィルタする。
+    if ingredient:
+        needle = ingredient.lower()
+        recipes = [
+            r
+            for r in recipes
+            if any(needle in ing.get("name", "").lower() for ing in r.ingredients)
+        ]
+
+    total = len(recipes)
+    total_pages = (total + per_page - 1) // per_page if total else 0
+    start = (page - 1) * per_page
+    page_items = recipes[start : start + per_page]
+
+    return RecipeSearchResponse(
+        recipes=[RecipeResponse.model_validate(r) for r in page_items],
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+    )
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)

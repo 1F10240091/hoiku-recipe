@@ -36,3 +36,5 @@ logs/
 
 # --- テスト ---
 .test_*.db
+*.db
+*.sqlite3
