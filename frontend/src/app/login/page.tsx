@@ -32,65 +32,57 @@ export default function LoginPage() {
       localStorage.setItem("token", res.access_token);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "デモログインに失敗しました");
+      setError(
+        err instanceof Error ? err.message : "デモログインに失敗しました",
+      );
       setDemo(false);
     }
   };
 
   return (
-    <main style={{ maxWidth: 400, margin: "80px auto", padding: "0 24px" }}>
-      <h1 style={{ textAlign: "center" }}>ログイン</h1>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <input
-          type="email"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="password"
-          placeholder="パスワード"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={inputStyle}
-        />
-        {error && <p style={{ color: "#dc2626" }}>{error}</p>}
-        <button type="submit" className="button">
-          ログイン
-        </button>
-        {isDemoMode() && (
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={demo}
-            style={{
-              padding: 12,
-              borderRadius: 8,
-              border: "1px solid var(--color-primary)",
-              background: "var(--color-white)",
-              color: "var(--color-primary-dark)",
-              fontSize: 15,
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            {demo ? "ログイン中..." : "デモを試す（バックエンド不要）"}
+    <main className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card__title">ログイン</h1>
+        <p className="auth-card__subtitle">もぐもぐで毎日の献立づくりを楽に</p>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="input"
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="input"
+          />
+          {error && <div className="alert alert--error">{error}</div>}
+          <button type="submit" className="button button--full">
+            ログイン
           </button>
-        )}
-      </form>
-      <p style={{ textAlign: "center", marginTop: 24 }}>
-        アカウントをお持ちでない方は <Link href="/register">新規登録</Link>
-      </p>
+          {isDemoMode() && (
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={demo}
+              className="button button--secondary button--full"
+            >
+              {demo ? "ログイン中..." : "デモを試す（バックエンド不要）"}
+            </button>
+          )}
+        </form>
+        <p className="auth-card__footer">
+          アカウントをお持ちでない方は <Link href="/register">新規登録</Link>
+        </p>
+      </div>
     </main>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  padding: 12,
-  borderRadius: 8,
-  border: "1px solid var(--color-border)",
-  fontSize: 16,
-};

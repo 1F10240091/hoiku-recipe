@@ -48,13 +48,15 @@ function RecipeSearchInner() {
   }, [searchParams]);
 
   return (
-    <main id="main-content">
+    <main className="main">
       <AppNav />
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 80 }}>
-        <h1>レシピ検索</h1>
-        <p style={{ color: "var(--color-muted)" }}>
-          キーワード・カテゴリ・材料・調理時間から保育園向けレシピを探せます。
-        </p>
+      <div className="container" style={{ paddingBottom: 80 }}>
+        <div className="page-header">
+          <h1 className="page-header__title">レシピ検索</h1>
+          <p className="page-header__subtitle">
+            キーワード・カテゴリ・材料・調理時間から保育園向けレシピを探せます。
+          </p>
+        </div>
         <SearchBar
           initial={{
             keyword: searchParams.get("keyword") ?? undefined,

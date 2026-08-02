@@ -17,7 +17,9 @@ export default function RegisterPage() {
     setError(null);
     const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
     if (!passwordPattern.test(password)) {
-      setError("パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください");
+      setError(
+        "パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください",
+      );
       return;
     }
     try {
@@ -30,50 +32,51 @@ export default function RegisterPage() {
   };
 
   return (
-    <main style={{ maxWidth: 400, margin: "80px auto", padding: "0 24px" }}>
-      <h1 style={{ textAlign: "center" }}>新規登録</h1>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <input
-          type="text"
-          placeholder="名前（任意）"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="email"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="password"
-          placeholder="パスワード"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={inputStyle}
-        />
-        <p style={{ margin: 0, fontSize: 13, color: "var(--color-muted)" }}>
-          パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください。
+    <main className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card__title">新規登録</h1>
+        <p className="auth-card__subtitle">
+          アカウントを作成して献立づくりを始めましょう
         </p>
-        {error && <p style={{ color: "#dc2626" }}>{error}</p>}
-        <button type="submit" className="button">
-          登録する
-        </button>
-      </form>
-      <p style={{ textAlign: "center", marginTop: 24 }}>
-        すでにアカウントをお持ちの方は <Link href="/login">ログイン</Link>
-      </p>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
+          <input
+            type="text"
+            placeholder="名前（任意）"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input"
+          />
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="input"
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="input"
+          />
+          <p className="form-field__hint">
+            パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください。
+          </p>
+          {error && <div className="alert alert--error">{error}</div>}
+          <button type="submit" className="button button--full">
+            登録する
+          </button>
+        </form>
+        <p className="auth-card__footer">
+          すでにアカウントをお持ちの方は <Link href="/login">ログイン</Link>
+        </p>
+      </div>
     </main>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  padding: 12,
-  borderRadius: 8,
-  border: "1px solid var(--color-border)",
-  fontSize: 16,
-};

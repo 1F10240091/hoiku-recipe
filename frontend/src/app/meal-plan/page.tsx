@@ -31,75 +31,88 @@ export default function MealPlanPage() {
   };
 
   return (
-    <main id="main-content">
+    <main className="main">
       <AppNav />
-      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
-      <h1>AI 献立提案</h1>
-      <div className="card">
-        <label style={{ display: "block", marginBottom: 8 }}>
-          お子様
-          <select
-            value={selectedChild}
-            onChange={(e) => setSelectedChild(e.target.value)}
-            style={selectStyle}
-          >
-            {children.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label style={{ display: "block", marginBottom: 8 }}>
-          開始日
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            style={selectStyle}
-          />
-        </label>
-        <label style={{ display: "block", marginBottom: 16 }}>
-          日数
-          <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={selectStyle}>
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option key={n} value={n}>
-                {n} 日分
-              </option>
-            ))}
-          </select>
-        </label>
-        {error && <p style={{ color: "#dc2626" }}>{error}</p>}
-        <button className="button" onClick={handleGenerate} disabled={!selectedChild}>
-          献立を生成する
-        </button>
-      </div>
-
-      {mealPlan && mealPlan.meals.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <h2>提案された献立（{mealPlan.meals.length} 日分）</h2>
-          {mealPlan.meals.map((meal) => (
-            <div className="card" key={meal.id}>
-              <h3>{meal.date}</h3>
-              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{meal.menu_text}</pre>
-            </div>
-          ))}
-          <Link href="/recipes" className="button">
-            レシピ・買い物リストを見る
-          </Link>
+      <div className="container" style={{ paddingBottom: 80 }}>
+        <div className="page-header">
+          <h1 className="page-header__title">AI 献立提案</h1>
+          <p className="page-header__subtitle">
+            お子様の情報と在庫を考慮した夕食献立を AI が自動提案します。
+          </p>
         </div>
-      )}
+        <div className="card">
+          <label className="form-field">
+            <span className="form-field__label">お子様</span>
+            <select
+              value={selectedChild}
+              onChange={(e) => setSelectedChild(e.target.value)}
+              className="select"
+            >
+              {children.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">開始日</span>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="input"
+            />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">日数</span>
+            <select
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className="select"
+            >
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <option key={n} value={n}>
+                  {n} 日分
+                </option>
+              ))}
+            </select>
+          </label>
+          {error && <div className="alert alert--error">{error}</div>}
+          <button
+            className="button"
+            onClick={handleGenerate}
+            disabled={!selectedChild}
+          >
+            献立を生成する
+          </button>
+        </div>
+
+        {mealPlan && mealPlan.meals.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <h2>提案された献立（{mealPlan.meals.length} 日分）</h2>
+            {mealPlan.meals.map((meal) => (
+              <div className="card" key={meal.id}>
+                <h3>{meal.date}</h3>
+                <pre
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    fontFamily: "inherit",
+                    margin: 0,
+                  }}
+                >
+                  {meal.menu_text}
+                </pre>
+              </div>
+            ))}
+            <div className="action-links">
+              <Link href="/recipes" className="button">
+                レシピ・買い物リストを見る
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
 }
-
-const selectStyle: React.CSSProperties = {
-  display: "block",
-  width: "100%",
-  padding: 12,
-  marginTop: 4,
-  borderRadius: 8,
-  border: "1px solid var(--color-border)",
-  fontSize: 16,
-};

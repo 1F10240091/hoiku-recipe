@@ -17,27 +17,40 @@ export default function RecipesPage() {
   }, []);
 
   return (
-    <main id="main-content">
+    <main className="main">
       <AppNav />
-      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
-      <h1>レシピ・買い物リスト</h1>
-      {loading ? (
-        <p>読み込み中...</p>
-      ) : recipes.length === 0 ? (
-        <div className="card">
-          <p>まだ提案された献立がありません。</p>
-          <Link href="/meal-plan" className="button">
-            献立を作成する
-          </Link>
+      <div className="container" style={{ paddingBottom: 80 }}>
+        <div className="page-header">
+          <h1 className="page-header__title">レシピ・買い物リスト</h1>
+          <p className="page-header__subtitle">
+            AI が提案した献立の詳細を確認できます。
+          </p>
         </div>
-      ) : (
-        recipes.map((recipe) => (
-          <div className="card" key={recipe.id}>
-            <h2>{recipe.date}</h2>
-            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{recipe.menu_text}</pre>
+        {loading ? (
+          <div className="loading">読み込み中...</div>
+        ) : recipes.length === 0 ? (
+          <div className="card">
+            <p className="card__text">まだ提案された献立がありません。</p>
+            <Link href="/meal-plan" className="button">
+              献立を作成する
+            </Link>
           </div>
-        ))
-      )}
+        ) : (
+          recipes.map((recipe) => (
+            <div className="card" key={recipe.id}>
+              <h2>{recipe.date}</h2>
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "inherit",
+                  margin: 0,
+                }}
+              >
+                {recipe.menu_text}
+              </pre>
+            </div>
+          ))
+        )}
       </div>
     </main>
   );

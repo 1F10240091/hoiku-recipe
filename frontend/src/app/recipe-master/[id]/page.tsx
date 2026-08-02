@@ -32,17 +32,19 @@ export default function RecipeDetailPage({
   }, [params.id]);
 
   return (
-    <main id="main-content">
+    <main className="main">
       <AppNav />
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 80 }}>
-        <p style={{ marginBottom: 16 }}>
-          <Link
-            href="/recipe-search"
-            style={{ color: "var(--color-primary-dark)" }}
-          >
-            ← レシピ検索に戻る
-          </Link>
-        </p>
+      <div className="container" style={{ paddingBottom: 80 }}>
+        <div className="page-header">
+          <p style={{ marginBottom: 16 }}>
+            <Link
+              href="/recipe-search"
+              style={{ color: "var(--color-primary-dark)" }}
+            >
+              ← レシピ検索に戻る
+            </Link>
+          </p>
+        </div>
 
         {loading && (
           <div className="card">

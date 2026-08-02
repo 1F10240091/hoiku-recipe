@@ -28,62 +28,49 @@ export default function FeedbackPage() {
   };
 
   return (
-    <main id="main-content">
+    <main className="main">
       <AppNav />
-      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
-        <h1>フィードバック</h1>
-        <p style={{ color: "var(--color-muted)" }}>
-          アプリの使い勝手や改善してほしい点を教えてください。今後の開発に活かします。
-        </p>
+      <div className="container" style={{ paddingBottom: 80 }}>
+        <div className="page-header">
+          <h1 className="page-header__title">フィードバック</h1>
+          <p className="page-header__subtitle">
+            アプリの使い勝手や改善してほしい点を教えてください。今後の開発に活かします。
+          </p>
+        </div>
         {submitted ? (
           <div className="card">
             <p>ご協力ありがとうございました！</p>
-            <Link href="/dashboard" className="button">
-              ダッシュボードへ戻る
-            </Link>
+            <div className="action-links">
+              <Link href="/dashboard" className="button">
+                ダッシュボードへ戻る
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="card">
-            <p style={{ marginBottom: 8 }}>満足度（1〜5）</p>
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            <p className="form-field__label">満足度（1〜5）</p>
+            <div className="rating" role="group" aria-label="満足度">
               {RATINGS.map((r) => (
                 <button
                   key={r}
                   onClick={() => setRating(r)}
                   aria-pressed={rating === r}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 8,
-                    border: "1px solid var(--color-border)",
-                    background: rating === r ? "var(--color-primary)" : "var(--color-white)",
-                    color: rating === r ? "var(--color-white)" : "var(--color-text)",
-                    fontSize: 18,
-                    cursor: "pointer",
-                  }}
+                  className={`rating__button${rating === r ? " rating__button--active" : ""}`}
                 >
                   {r}
                 </button>
               ))}
             </div>
-            <label style={{ display: "block", marginBottom: 8 }}>
-              ご意見・ご要望
+            <label className="form-field">
+              <span className="form-field__label">ご意見・ご要望</span>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
-                style={{
-                  width: "100%",
-                  marginTop: 4,
-                  padding: 12,
-                  borderRadius: 8,
-                  border: "1px solid var(--color-border)",
-                  fontSize: 15,
-                  fontFamily: "inherit",
-                }}
+                className="textarea"
               />
             </label>
-            {error && <p style={{ color: "#dc2626" }}>{error}</p>}
+            {error && <div className="alert alert--error">{error}</div>}
             <button className="button" onClick={handleSubmit}>
               送信する
             </button>
