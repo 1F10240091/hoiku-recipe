@@ -7,14 +7,17 @@ import { api } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!username.trim()) {
+      setError("ユーザーネームを入力してください");
+      return;
+    }
     const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
     if (!passwordPattern.test(password)) {
       setError(
@@ -23,7 +26,7 @@ export default function RegisterPage() {
       return;
     }
     try {
-      const res = await api.register(email, password, name);
+      const res = await api.register(username.trim(), password);
       localStorage.setItem("token", res.access_token);
       router.push("/dashboard");
     } catch (err) {
@@ -34,32 +37,26 @@ export default function RegisterPage() {
   return (
     <main className="auth-page">
       <div className="auth-card">
+        <p className="auth-card__en">SIGN UP</p>
         <h1 className="auth-card__title">新規登録</h1>
-        <p className="auth-card__subtitle">
-          アカウントを作成して献立づくりを始めましょう
-        </p>
         <form
           onSubmit={handleSubmit}
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <input
             type="text"
-            placeholder="名前（任意）"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input"
-          />
-          <input
-            type="email"
-            placeholder="メールアドレス"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ユーザーネーム（1〜30文字）"
+            aria-label="ユーザーネーム"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
+            maxLength={30}
             className="input"
           />
           <input
             type="password"
             placeholder="パスワード"
+            aria-label="パスワード"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

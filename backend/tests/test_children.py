@@ -44,7 +44,7 @@ def test_add_preference_validate_mode(auth_client):
 def test_cannot_access_other_users_child(client, auth_client):
     other_client = TestClient(app)
     res = other_client.post(
-        "/api/v1/auth/register", json={"email": "other@example.com", "password": "password123"}
+        "/api/v1/auth/register", json={"username": "otheruser", "password": "password123"}
     )
     other_token = res.json()["access_token"]
     other_client.headers.update({"Authorization": f"Bearer {other_token}"})

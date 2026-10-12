@@ -32,7 +32,8 @@ export default function FeedbackPage() {
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
-          <h1 className="page-header__title">フィードバック</h1>
+          <p className="page-header__en">YOUR VOICE</p>
+          <h1 className="page-header__title">ご意見ボックス</h1>
           <p className="page-header__subtitle">
             アプリの使い勝手や改善してほしい点を教えてください。今後の開発に活かします。
           </p>

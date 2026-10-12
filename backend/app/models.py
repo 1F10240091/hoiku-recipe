@@ -1,7 +1,7 @@
 """データベースモデル定義。"""
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -17,11 +17,10 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(60), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    display_name: Mapped[str] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     children: Mapped[list["Child"]] = relationship(back_populates="user")
 
@@ -33,7 +32,7 @@ class Child(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     birth_date: Mapped[date] = mapped_column(Date, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user: Mapped[User] = relationship(back_populates="children")
     allergies: Mapped[list["Allergy"]] = relationship(back_populates="child", cascade="all, delete-orphan")
@@ -70,7 +69,7 @@ class NurseryMenu(Base):
     date: Mapped[date] = mapped_column(Date, nullable=False)
     menu_text: Mapped[str] = mapped_column(Text, nullable=False)
     ingredients: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class InventoryItem(Base):
@@ -80,7 +79,7 @@ class InventoryItem(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     quantity: Mapped[str] = mapped_column(String(50), nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
 class SuggestedMeal(Base):
@@ -92,7 +91,7 @@ class SuggestedMeal(Base):
     date: Mapped[date] = mapped_column(Date, nullable=False)
     menu_text: Mapped[str] = mapped_column(Text, nullable=False)
     ingredients: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Recipe(Base):
@@ -111,7 +110,7 @@ class Recipe(Base):
     ingredients: Mapped[list] = mapped_column(JSON, default=list)
     instructions: Mapped[str] = mapped_column(Text, default="")
     cook_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Feedback(Base):
@@ -125,4 +124,4 @@ class Feedback(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1〜5
     comment: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

@@ -48,6 +48,7 @@ export default function MenusPage() {
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
+          <p className="page-header__en">MENU SCAN</p>
           <h1 className="page-header__title">献立表の取り込み</h1>
           <p className="page-header__subtitle">
             保育園から配布された献立表を読み取り、デジタル化します。
@@ -99,7 +100,7 @@ export default function MenusPage() {
         )}
         <div className="action-links">
           <Link href="/meal-plan" className="button">
-            AI 献立提案へ進む
+            こんだて提案へ進む
           </Link>
         </div>
       </div>

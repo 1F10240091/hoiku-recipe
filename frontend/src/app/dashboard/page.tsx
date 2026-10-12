@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const [newBirthDate, setNewBirthDate] = useState("");
 
   // プロフィール編集
-  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
 
   // アレルギー・好み入力
   const [allergyInput, setAllergyInput] = useState("");
@@ -29,7 +29,7 @@ export default function DashboardPage() {
     Promise.all([api.me(), api.listChildren()])
       .then(([me, list]) => {
         setUser(me);
-        setDisplayName(me.display_name ?? "");
+        setUsername(me.username ?? "");
         setChildren(list);
       })
       .catch((err) =>
@@ -48,7 +48,7 @@ export default function DashboardPage() {
   const handleSaveProfile = async () => {
     setError(null);
     try {
-      const updated = await api.updateMe({ display_name: displayName });
+      const updated = await api.updateMe({ username });
       setUser(updated);
     } catch (err) {
       setError(
@@ -116,6 +116,7 @@ export default function DashboardPage() {
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
+          <p className="page-header__en">PROFILE</p>
           <div
             style={{
               display: "flex",
@@ -142,15 +143,16 @@ export default function DashboardPage() {
         <div className="card">
           <h2 className="card__title">アカウント</h2>
           <p>
-            メールアドレス: <strong>{user?.email}</strong>
+            ユーザーネーム: <strong>{user?.username}</strong>
           </p>
           <label className="form-field">
-            <span className="form-field__label">表示名</span>
+            <span className="form-field__label">ユーザーネームの変更</span>
             <input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="input"
-              placeholder="例: 花子ママ"
+              placeholder="例: はなこママ"
+              maxLength={30}
             />
           </label>
           <button className="button" onClick={handleSaveProfile}>

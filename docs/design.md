@@ -72,7 +72,7 @@
 | カラム | 型 | 説明 |
 |--------|-----|------|
 | id | UUID | 主キー |
-| email | TEXT | ログインID（ユニーク） |
+| username | TEXT | ログインID（ユニーク、1〜30文字） |
 | hashed_password | TEXT | パスワードハッシュ |
 | display_name | TEXT | 表示名 |
 | created_at | TIMESTAMP | 作成日時 |

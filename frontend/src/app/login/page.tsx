@@ -7,7 +7,7 @@ import { api, isDemoMode } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
@@ -16,7 +16,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     try {
-      const res = await api.login(email, password);
+      const res = await api.login(username, password);
       localStorage.setItem("token", res.access_token);
       router.push("/dashboard");
     } catch (err) {
@@ -28,7 +28,7 @@ export default function LoginPage() {
     setError(null);
     setDemo(true);
     try {
-      const res = await api.login("demo@example.com", "password123");
+      const res = await api.login("デモユーザー", "password123");
       localStorage.setItem("token", res.access_token);
       router.push("/dashboard");
     } catch (err) {
@@ -42,6 +42,7 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <div className="auth-card">
+        <p className="auth-card__en">LOGIN</p>
         <h1 className="auth-card__title">ログイン</h1>
         <p className="auth-card__subtitle">もぐもぐで毎日の献立づくりを楽に</p>
         <form
@@ -49,16 +50,18 @@ export default function LoginPage() {
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <input
-            type="email"
-            placeholder="メールアドレス"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="ユーザーネーム"
+            aria-label="ユーザーネーム"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             className="input"
           />
           <input
             type="password"
             placeholder="パスワード"
+            aria-label="パスワード"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

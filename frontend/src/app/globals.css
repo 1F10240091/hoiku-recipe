@@ -1,21 +1,30 @@
 :root {
-  --color-primary: #f59e0b;
-  --color-primary-dark: #d97706;
-  --color-primary-light: #fef3c7;
-  --color-bg: #fdfaf4;
-  --color-text: #1f2937;
-  --color-muted: #6b7280;
-  --color-border: #e5e7eb;
-  --color-white: #ffffff;
-  --color-danger: #dc2626;
-  --color-danger-light: #fee2e2;
-  --color-success: #16a34a;
-  --color-success-light: #dcfce7;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+  --color-bg: #fff8f1;
+  --color-card: #ffffff;
+  --color-ink: #5b4a3f;
+  --color-muted: #77685b;
+  --color-line: #f6e5d3;
+  --color-pink: #ff8fa3;
+  --color-pink-deep: #c24362;
+  --color-pink-wash: #ffe9ee;
+  --color-peach: #ffb86b;
+  --color-peach-wash: #fff3e2;
+  --color-lemon: #ffe29a;
+  --color-lemon-wash: #fff8e1;
+  --color-mint: #7cc9a1;
+  --color-mint-wash: #e3f5ea;
+  --color-sky: #8ec9ff;
+  --color-sky-wash: #e7f3ff;
+  --color-grape: #b9a7e6;
+  --color-grape-wash: #efe9ff;
+  --color-danger: #c24362;
+  --color-danger-light: #ffe9ee;
+  --color-success: #4a9e72;
+  --color-success-light: #e3f5ea;
+  --font-body: "M PLUS Rounded 1c", "Zen Maru Gothic", "Hiragino Maru Gothic ProN",
+    "Hiragino Sans", "Yu Gothic Rounded", "Noto Sans JP", Meiryo, sans-serif;
+  --font-maru: "M PLUS Rounded 1c", "Zen Maru Gothic", "Hiragino Maru Gothic ProN",
+    "Hiragino Sans", "Yu Gothic Rounded", "Noto Sans JP", sans-serif;
 }
 
 * {
@@ -26,9 +35,11 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: var(--font);
-  color: var(--color-text);
+  font-family: var(--font-body);
+  color: var(--color-ink);
   background: var(--color-bg);
+  background-image: radial-gradient(#f9ddc6 2.2px, transparent 2.6px);
+  background-size: 30px 30px;
 }
 
 a {
@@ -41,15 +52,18 @@ h2,
 h3,
 h4 {
   margin-top: 0;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-family: var(--font-maru);
+  letter-spacing: 0.04em;
+  color: var(--color-ink);
 }
 
 h1 {
-  font-size: 26px;
+  font-size: 27px;
 }
 
 h2 {
-  font-size: 20px;
+  font-size: 21px;
 }
 
 h3 {
@@ -58,7 +72,7 @@ h3 {
 
 /* --- レイアウト --- */
 .container {
-  max-width: 960px;
+  max-width: 1024px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -69,73 +83,94 @@ h3 {
 
 /* --- ページ見出し --- */
 .page-header {
-  padding: 32px 0 8px;
+  padding: 28px 0 4px;
+  margin-bottom: 14px;
 }
 
 .page-header__title {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  display: inline-block;
+  background: #fff;
+  border: 2px solid var(--color-line);
+  padding: 8px 20px;
+  border-radius: 0;
+
+  font-size: 24px;
+}
+
+.page-header__en {
+  margin: 0 0 10px 2px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  color: var(--color-pink-deep);
+  font-family: var(--font-maru);
 }
 
 .page-header__subtitle {
-  margin: 0;
+  margin: 12px 4px 0;
   color: var(--color-muted);
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 1.9;
 }
 
 /* --- ボタン --- */
 .button {
   display: inline-block;
-  padding: 12px 24px;
+  padding: 13px 30px;
   border: none;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary);
-  color: var(--color-white);
+  border-radius: 0;
+  background: var(--color-pink-deep);
+  color: #fff;
   font-size: 15px;
-  font-weight: bold;
+  font-weight: 800;
+  font-family: var(--font-maru);
+  letter-spacing: 0.04em;
   cursor: pointer;
   text-align: center;
-  transition:
-    background 0.15s,
-    transform 0.1s,
-    box-shadow 0.15s;
+  transition: transform 0.15s, background 0.15s;
 }
 
 .button:hover {
-  background: var(--color-primary-dark);
-  box-shadow: var(--shadow-md);
+  background: #a83a54;
+  transform: translateY(-2px) scale(1.02);
 }
 
 .button:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.99);
 }
 
 .button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
+  transform: none;
 }
 
 .button--secondary {
-  background: var(--color-white);
-  color: var(--color-primary-dark);
-  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-ink);
+  border: 2px solid var(--color-line);
 }
 
 .button--secondary:hover {
-  background: var(--color-bg);
-  box-shadow: none;
+  background: var(--color-peach-wash);
+  border-color: var(--color-peach);
 }
 
 .button--danger {
-  background: var(--color-danger);
+  background: #fff;
+  color: var(--color-danger);
+  border: 2px solid #ffc9d5;
+  box-shadow: none;
 }
 
 .button--danger:hover {
-  background: #b91c1c;
+  background: var(--color-danger-light);
 }
 
 .button--sm {
-  padding: 8px 14px;
+  padding: 8px 18px;
   font-size: 13px;
 }
 
@@ -145,21 +180,35 @@ h3 {
 
 /* --- カード --- */
 .card {
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  background: var(--color-card);
+  border: 2px solid #fff;
+  outline: 2px solid var(--color-line);
+  border-radius: 0;
   padding: 24px;
-  margin: 16px 0;
-  box-shadow: var(--shadow-sm);
+  margin: 18px 0;
+
 }
 
 .card__title {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card__title::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--color-lemon);
+  flex-shrink: 0;
 }
 
 .card__text {
   color: var(--color-muted);
   font-size: 14px;
+  line-height: 1.9;
   margin-bottom: 16px;
 }
 
@@ -170,11 +219,14 @@ h3 {
 }
 
 .form-field__label {
-  display: block;
+  display: inline-block;
   font-size: 13px;
-  font-weight: bold;
-  color: var(--color-muted);
-  margin-bottom: 6px;
+  font-weight: 800;
+  color: var(--color-ink);
+  background: var(--color-lemon-wash);
+  border-radius: 0;
+  padding: 4px 14px;
+  margin-bottom: 8px;
 }
 
 .form-field__hint {
@@ -187,29 +239,28 @@ h3 {
 .select,
 .textarea {
   width: 100%;
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  border: 2px solid var(--color-line);
+  border-radius: 0;
   font-size: 15px;
   font-family: inherit;
-  background: var(--color-white);
-  color: var(--color-text);
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+  background: #fffaf3;
+  color: var(--color-ink);
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  outline: 2px solid var(--color-pink-deep);
+  outline-offset: 0;
+  border-color: var(--color-pink-deep);
+  background: #fff;
 }
 
 .input-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   align-items: center;
 }
@@ -226,20 +277,24 @@ h3 {
 
 /* --- アラート --- */
 .alert {
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
+  padding: 13px 18px;
+  border-radius: 0;
   margin: 12px 0;
   font-size: 14px;
+  font-weight: bold;
+  border: 2px solid transparent;
 }
 
 .alert--error {
   background: var(--color-danger-light);
-  color: var(--color-danger);
+  color: #a83a54;
+  border-color: #ffc9d5;
 }
 
 .alert--success {
   background: var(--color-success-light);
   color: var(--color-success);
+  border-color: #bfe6cf;
 }
 
 /* --- リスト --- */
@@ -247,23 +302,23 @@ h3 {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  gap: 10px;
 }
 
 .list__item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.list__item:last-child {
-  border-bottom: none;
+  gap: 14px;
+  padding: 12px 14px 12px 18px;
+  background: #fffaf3;
+  border: 2px solid var(--color-line);
+  border-radius: 0;
 }
 
 .list__item-title {
-  font-weight: bold;
+  font-weight: 800;
   margin: 0 0 2px;
 }
 
@@ -271,6 +326,7 @@ h3 {
   margin: 0;
   color: var(--color-muted);
   font-size: 13px;
+  line-height: 1.7;
 }
 
 .list__item-actions {
@@ -280,21 +336,23 @@ h3 {
   flex-shrink: 0;
 }
 
-/* --- タグ/バッジ --- */
+/* --- バッジ --- */
 .badge {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  font-size: 12px;
-  font-weight: bold;
+  padding: 5px 15px;
+  border-radius: 0;
+  background: var(--color-pink-wash);
+  color: #a83a54;
+  font-size: 12.5px;
+  font-weight: 800;
   white-space: nowrap;
+  border: 2px solid #ffc9d5;
 }
 
 .badge--muted {
-  background: #f3f4f6;
-  color: var(--color-muted);
+  background: var(--color-lemon-wash);
+  color: #8a6f3c;
+  border-color: #f3ddab;
 }
 
 .tag-list {
@@ -309,90 +367,123 @@ h3 {
 /* --- 空状態 / ローディング --- */
 .empty-state {
   text-align: center;
-  padding: 40px 24px;
+  padding: 44px 24px;
   color: var(--color-muted);
+  background: #fff;
+  border: 2px dashed #eccfae;
+  border-radius: 0;
 }
 
 .empty-state__title {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 800;
   margin: 0 0 8px;
-  color: var(--color-text);
+  color: var(--color-ink);
+  font-family: var(--font-maru);
 }
 
 .empty-state p {
   margin: 0 0 16px;
+  line-height: 1.9;
 }
 
 .loading {
-  padding: 40px;
+  padding: 48px;
   text-align: center;
   color: var(--color-muted);
+  font-family: var(--font-maru);
 }
 
 /* --- テーブル --- */
 .table-responsive {
   overflow-x: auto;
+  border-radius: 0;
+  border: 2px solid var(--color-line);
+  background: #fff;
+
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
 }
 
 .table th,
 .table td {
   text-align: left;
-  padding: 12px;
-  border-bottom: 1px solid var(--color-border);
+  padding: 12px 14px;
 }
 
 .table th {
-  background: var(--color-bg);
+  background: var(--color-peach-wash);
   font-size: 13px;
-  color: var(--color-muted);
+  color: var(--color-ink);
+  white-space: nowrap;
 }
 
-.table tr:last-child td {
-  border-bottom: none;
+.table td {
+  border-top: 2px solid #fdf1e2;
 }
 
-/* --- 認証ページ（ログイン/新規登録） --- */
+/* --- 認証ページ --- */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px;
-  background: linear-gradient(
-    180deg,
-    var(--color-primary-light) 0%,
-    var(--color-bg) 60%
-  );
+  padding: 48px 24px;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 400px;
-  background: var(--color-white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
-  padding: 32px 28px;
+  max-width: 430px;
+  background: #fff;
+  border-radius: 0;
+
+  border: 3px solid #fff;
+  outline: 2px solid var(--color-line);
+  padding: 36px 30px 28px;
+  position: relative;
+  text-align: center;
+}
+
+.auth-card::before {
+  content: "● ● ●";
+  display: block;
+  letter-spacing: 8px;
+  font-size: 11px;
+  color: var(--color-pink);
+  margin-bottom: 10px;
 }
 
 .auth-card__title {
   text-align: center;
   margin-bottom: 8px;
-  font-size: 24px;
+  font-size: 26px;
+}
+
+.auth-card__en {
+  text-align: center;
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--color-pink-deep);
+  font-family: var(--font-maru);
 }
 
 .auth-card__subtitle {
   text-align: center;
   color: var(--color-muted);
-  font-size: 14px;
-  margin: 0 0 24px;
+  font-size: 13.5px;
+  line-height: 1.9;
+  margin: 0 0 22px;
+  background: var(--color-lemon-wash);
+  border-radius: 0;
+  padding: 6px 12px;
+  display: inline-block;
 }
 
 .auth-card__footer {
@@ -400,6 +491,13 @@ h3 {
   margin-top: 20px;
   font-size: 14px;
   color: var(--color-muted);
+  border-top: 2px dashed var(--color-line);
+  padding-top: 16px;
+}
+
+.auth-card__footer a {
+  color: var(--color-pink-deep);
+  font-weight: 800;
 }
 
 /* --- アクセシビリティ --- */
@@ -409,9 +507,9 @@ h3 {
   left: 16px;
   z-index: 100;
   padding: 8px 16px;
-  background: var(--color-primary-dark);
-  color: var(--color-white);
-  border-radius: 0 0 8px 8px;
+  background: var(--color-ink);
+  color: #fff;
+  border-radius: 0;
   transition: top 0.2s;
 }
 
@@ -419,36 +517,42 @@ h3 {
   top: 0;
 }
 
-/* --- 共通ナビゲーション --- */
+/* --- 共通ナビゲーション（背景なし・テキストのみ） --- */
 .app-nav {
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 50;
+  background: transparent;
+  padding: 10px 16px 0;
 }
 
 .app-nav__inner {
-  max-width: 960px;
+  max-width: 1024px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 8px 10px 8px 8px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  height: 56px;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
 }
 
 .app-nav__brand {
-  font-weight: bold;
-  font-size: 18px;
-  color: var(--color-primary-dark);
+  font-family: var(--font-maru);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  background: transparent;
+  color: var(--color-ink);
+  padding: 9px 10px;
   white-space: nowrap;
 }
 
 .app-nav__list {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -458,21 +562,28 @@ h3 {
 
 .app-nav__link {
   display: block;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  color: var(--color-text);
+  padding: 9px 10px;
+  font-size: 13.5px;
+  font-weight: bold;
+  color: var(--color-ink);
   white-space: nowrap;
+  background: transparent;
 }
 
 .app-nav__link:hover {
-  background: var(--color-bg);
+  background: transparent;
+  color: var(--color-pink-deep);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .app-nav__link--active {
-  background: var(--color-primary);
-  color: var(--color-white);
-  font-weight: bold;
+  background: transparent;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--color-pink-deep);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 /* --- レスポンシブ --- */
@@ -481,37 +592,24 @@ h3 {
     padding: 0 16px;
   }
 
-  .app-nav__inner {
-    gap: 8px;
-    padding: 0 8px;
+  .app-nav {
+    top: 8px;
+    padding: 8px 10px 0;
   }
 
   .app-nav__brand {
-    font-size: 15px;
+    font-size: 13px;
+    padding: 8px 14px;
   }
 
   .app-nav__link {
-    padding: 8px 10px;
-    font-size: 13px;
+    padding: 8px 11px;
+    font-size: 12.5px;
   }
 
   .card {
-    padding: 16px;
-  }
-
-  .button {
-    width: 100%;
-    text-align: center;
-  }
-
-  table,
-  .table-responsive {
-    display: block;
-    overflow-x: auto;
-  }
-
-  .page-header {
-    padding: 24px 0 8px;
+    padding: 18px;
+    border-radius: 0;
   }
 }
 
@@ -520,31 +618,36 @@ h3 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
+  background: #fff;
+  border: 2px solid var(--color-line);
+  border-radius: 0;
+  padding: 16px;
 }
 
 .search-form__field label {
   display: block;
   font-size: 13px;
-  font-weight: bold;
-  color: var(--color-muted);
-  margin-bottom: 4px;
+  font-weight: 800;
+  color: var(--color-ink);
+  margin-bottom: 6px;
 }
 
 .search-form input,
 .search-form select {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  padding: 11px 14px;
+  border: 2px solid var(--color-line);
+  border-radius: 0;
   font-size: 14px;
-  background: var(--color-white);
-  color: var(--color-text);
+  background: #fffaf3;
+  color: var(--color-ink);
 }
 
 .search-form input:focus,
 .search-form select:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
+  outline: 2px solid var(--color-pink-deep);
+  outline-offset: 0;
+  border-color: var(--color-pink-deep);
 }
 
 .search-form__actions {
@@ -555,32 +658,31 @@ h3 {
 }
 
 .search-form__actions .button {
-  padding: 10px 20px;
+  padding: 10px 24px;
   font-size: 14px;
 }
 
 .recipe-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  gap: 18px;
+  margin-top: 18px;
 }
 
 .recipe-card {
   display: flex;
   flex-direction: column;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 16px;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
+  background: #fff;
+  border: 2px solid #fff;
+  outline: 2px solid var(--color-line);
+  border-radius: 0;
+  padding: 18px;
+
+  transition: transform 0.15s;
 }
 
 .recipe-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+  transform: translateY(-4px) rotate(-0.4deg);
 }
 
 .recipe-card__header {
@@ -588,17 +690,18 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .recipe-card__badge {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  padding: 5px 13px;
+  border-radius: 0;
+  background: var(--color-mint-wash);
+  color: #2f7a52;
+  border: 2px solid #bfe6cf;
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 800;
   white-space: nowrap;
 }
 
@@ -606,37 +709,44 @@ h3 {
   font-size: 12px;
   color: var(--color-muted);
   white-space: nowrap;
+  background: var(--color-lemon-wash);
+  padding: 4px 10px;
+  border-radius: 0;
 }
 
 .recipe-card h3 {
   margin: 0 0 8px;
   font-size: 17px;
-  color: var(--color-text);
 }
 
 .recipe-card__ingredients {
   margin: 0 0 12px;
   padding-left: 18px;
   font-size: 13px;
+  line-height: 1.9;
   color: var(--color-muted);
   flex: 1;
 }
 
 .recipe-card__link {
   display: inline-block;
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--color-primary-dark);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--color-pink-deep);
+  background: var(--color-pink-wash);
+  padding: 8px 16px;
+  border-radius: 0;
+  text-align: center;
 }
 
 .recipe-detail__ingredients {
   padding-left: 20px;
-  line-height: 1.8;
+  line-height: 1.9;
 }
 
 .recipe-detail__instructions ol {
   padding-left: 20px;
-  line-height: 1.9;
+  line-height: 2;
 }
 
 .pagination {
@@ -648,12 +758,13 @@ h3 {
 }
 
 .pagination button {
-  padding: 8px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-white);
-  color: var(--color-text);
+  padding: 9px 18px;
+  border: 2px solid var(--color-line);
+  border-radius: 0;
+  background: #fff;
+  color: var(--color-ink);
   font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
 }
 
@@ -667,39 +778,37 @@ h3 {
   color: var(--color-muted);
 }
 
-/* --- レーティング（フィードバック） --- */
+/* --- レーティング --- */
 .rating {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
 .rating__button {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  color: var(--color-text);
+  width: 48px;
+  height: 48px;
+  border-radius: 0;
+  border: 2px solid var(--color-line);
+  background: #fff;
+  color: var(--color-ink);
   font-size: 18px;
+  font-family: var(--font-maru);
   cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    transform 0.1s;
+
 }
 
 .rating__button:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-pink);
 }
 
 .rating__button--active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-white);
+  background: var(--color-pink-deep);
+  border-color: var(--color-pink-deep);
+  color: #fff;
 }
 
-/* --- アイコン風テキスト（ナビゲーション導線など） --- */
+/* --- 導線 --- */
 .action-links {
   display: flex;
   gap: 12px;

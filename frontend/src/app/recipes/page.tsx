@@ -21,9 +21,10 @@ export default function RecipesPage() {
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
+          <p className="page-header__en">MENU LOG</p>
           <h1 className="page-header__title">レシピ・買い物リスト</h1>
           <p className="page-header__subtitle">
-            AI が提案した献立の詳細を確認できます。
+            提案された献立の詳細を確認できます。
           </p>
         </div>
         {loading ? (

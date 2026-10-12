@@ -37,13 +37,13 @@ def client():
 
 @pytest.fixture
 def auth_client(client):
-    """一意メールで登録済みユーザーのトークンを付与したクライアントを返す。
+    """一意ユーザーネームで登録済みユーザーのトークンを付与したクライアントを返す。
 
     セッション共有の client はヘッダを汚染しないよう、専用の TestClient を作る。
     """
-    email = f"user-{uuid.uuid4().hex[:12]}@example.com"
+    username = f"user-{uuid.uuid4().hex[:12]}"
     res = TestClient(app)
-    r = res.post("/api/v1/auth/register", json={"email": email, "password": "password123"})
+    r = res.post("/api/v1/auth/register", json={"username": username, "password": "password123"})
     assert r.status_code == 201, r.text
     token = r.json()["access_token"]
     res.headers.update({"Authorization": f"Bearer {token}"})

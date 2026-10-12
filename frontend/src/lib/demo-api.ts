@@ -23,11 +23,9 @@ import type {
 } from "./api";
 
 const DEMO_TOKEN = "demo-token";
-const DEMO_EMAIL = "demo@example.com";
 const DEMO_USER: User = {
   id: "demo-user",
-  email: DEMO_EMAIL,
-  display_name: "デモユーザー",
+  username: "デモユーザー",
 };
 
 function load<T>(key: string, fallback: T): T {
@@ -76,16 +74,15 @@ function safeRecipes(allergens: string[]): DemoRecipe[] {
 
 export const demoApi = {
   async register(
-    _email: string,
+    username: string,
     _password: string,
-    displayName?: string,
   ): Promise<TokenResponse> {
     localStorage.setItem("token", DEMO_TOKEN);
-    DEMO_USER.display_name = displayName ?? DEMO_USER.display_name;
+    if (username.trim()) DEMO_USER.username = username.trim();
     return delay({ access_token: DEMO_TOKEN, token_type: "bearer" });
   },
 
-  async login(_email: string, _password: string): Promise<TokenResponse> {
+  async login(_username: string, _password: string): Promise<TokenResponse> {
     localStorage.setItem("token", DEMO_TOKEN);
     return delay({ access_token: DEMO_TOKEN, token_type: "bearer" });
   },
@@ -95,11 +92,11 @@ export const demoApi = {
   },
 
   async updateMe(payload: {
-    display_name?: string;
+    username?: string;
     password?: string;
   }): Promise<User> {
-    if (payload.display_name != null)
-      DEMO_USER.display_name = payload.display_name;
+    if (payload.username != null && payload.username.trim())
+      DEMO_USER.username = payload.username.trim();
     return delay({ ...DEMO_USER });
   },
 

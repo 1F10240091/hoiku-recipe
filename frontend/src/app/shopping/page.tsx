@@ -54,6 +54,7 @@ export default function ShoppingPage() {
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
+          <p className="page-header__en">SHOPPING MEMO</p>
           <h1 className="page-header__title">買い物リスト</h1>
           <p className="page-header__subtitle">
             献立で不足している食材と、冷蔵庫の在庫を確認できます。
@@ -65,8 +66,8 @@ export default function ShoppingPage() {
         ) : items.length === 0 ? (
           <div className="card">
             <p className="card__text">
-              まだ不足食材がありません。先に AI
-              献立提案で献立を生成してください。
+              まだ不足食材がありません。先に
+              こんだて提案で献立を生成してください。
             </p>
             <Link href="/meal-plan" className="button">
               献立を作成する

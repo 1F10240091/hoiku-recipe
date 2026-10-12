@@ -26,8 +26,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export interface User {
   id: string;
-  email: string;
-  display_name: string | null;
+  username: string;
 }
 
 export interface TokenResponse {
@@ -102,22 +101,22 @@ export interface RecipeSearchResponse {
 }
 
 const realApi = {
-  register(email: string, password: string, displayName?: string) {
+  register(username: string, password: string) {
     return request<TokenResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password, display_name: displayName }),
+      body: JSON.stringify({ username, password }),
     });
   },
-  login(email: string, password: string) {
+  login(username: string, password: string) {
     return request<TokenResponse>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
   },
   me() {
     return request<User>("/auth/me");
   },
-  updateMe(payload: { display_name?: string; password?: string }) {
+  updateMe(payload: { username?: string; password?: string }) {
     return request<User>("/auth/me", {
       method: "PUT",
       body: JSON.stringify(payload),

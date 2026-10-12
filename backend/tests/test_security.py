@@ -23,18 +23,18 @@ def _limited_app(max_requests: int = 2, window_seconds: int = 60) -> TestClient:
 
 
 def test_password_too_weak_rejected(client):
-    res = client.post("/api/v1/auth/register", json={"email": "weak@example.com", "password": "short"})
+    res = client.post("/api/v1/auth/register", json={"username": "weak1", "password": "short"})
     assert res.status_code == 422
 
-    res = client.post("/api/v1/auth/register", json={"email": "weak2@example.com", "password": "onlyletters"})
+    res = client.post("/api/v1/auth/register", json={"username": "weak2", "password": "onlyletters"})
     assert res.status_code == 422
 
-    res = client.post("/api/v1/auth/register", json={"email": "weak3@example.com", "password": "12345678"})
+    res = client.post("/api/v1/auth/register", json={"username": "weak3", "password": "12345678"})
     assert res.status_code == 422
 
 
 def test_password_with_letters_and_digits_accepted(client):
-    res = client.post("/api/v1/auth/register", json={"email": "ok@example.com", "password": "abc12345"})
+    res = client.post("/api/v1/auth/register", json={"username": "okuser", "password": "abc12345"})
     assert res.status_code == 201
 
 

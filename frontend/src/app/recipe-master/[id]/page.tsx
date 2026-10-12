@@ -36,10 +36,11 @@ export default function RecipeDetailPage({
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
+          <p className="page-header__en">RECIPE</p>
           <p style={{ marginBottom: 16 }}>
             <Link
               href="/recipe-search"
-              style={{ color: "var(--color-primary-dark)" }}
+              style={{ color: "var(--color-pink-deep)", fontWeight: "bold" }}
             >
               ← レシピ検索に戻る
             </Link>

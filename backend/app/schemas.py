@@ -4,7 +4,7 @@ import re
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # パスワード強度チェック: 8文字以上・英字・数字を含む
 _PASSWORD_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
@@ -16,15 +16,26 @@ def validate_password_strength(value: str) -> str:
     return value
 
 
+def validate_username(value: str) -> str:
+    name = value.strip()
+    if not 1 <= len(name) <= 30:
+        raise ValueError("ユーザーネームは1〜30文字で入力してください")
+    return name
+
+
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
 # --- 認証 ---
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    username: str = Field(min_length=1, max_length=30)
     password: str = Field(min_length=8)
-    display_name: Optional[str] = None
+
+    @field_validator("username")
+    @classmethod
+    def check_username(cls, v: str) -> str:
+        return validate_username(v)
 
     @field_validator("password")
     @classmethod
@@ -33,7 +44,7 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    username: str = Field(min_length=1, max_length=30)
     password: str
 
 
@@ -44,13 +55,17 @@ class TokenResponse(BaseModel):
 
 class UserResponse(ORMModel):
     id: str
-    email: EmailStr
-    display_name: Optional[str] = None
+    username: str
 
 
 class UserUpdate(BaseModel):
-    display_name: Optional[str] = None
+    username: Optional[str] = Field(default=None, min_length=1, max_length=30)
     password: Optional[str] = Field(default=None, min_length=8)
+
+    @field_validator("username")
+    @classmethod
+    def check_username(cls, v: Optional[str]) -> Optional[str]:
+        return validate_username(v) if v is not None else v
 
     @field_validator("password")
     @classmethod

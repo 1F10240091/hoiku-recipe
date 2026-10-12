@@ -35,9 +35,10 @@ export default function MealPlanPage() {
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="page-header">
-          <h1 className="page-header__title">AI 献立提案</h1>
+          <p className="page-header__en">MENU PLAN</p>
+          <h1 className="page-header__title">こんだて提案</h1>
           <p className="page-header__subtitle">
-            お子様の情報と在庫を考慮した夕食献立を AI が自動提案します。
+            お子さんの情報と在庫をもとに、夕食の候補をまとめて出します。
           </p>
         </div>
         <div className="card">

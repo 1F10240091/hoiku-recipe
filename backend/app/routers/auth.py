@@ -9,7 +9,7 @@ from app.config import get_settings
 from app.database import get_db
 from app.models import User
 from app.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse, UserUpdate
-from app.security import create_access_token, get_user_by_email, hash_password, verify_password
+from app.security import create_access_token, get_user_by_username, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -43,13 +43,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    if get_user_by_email(db, payload.email) is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="このメールアドレスは既に登録されています")
+    if get_user_by_username(db, payload.username) is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="このユーザーネームは既に登録されています")
 
     user = User(
-        email=payload.email,
+        username=payload.username,
         hashed_password=hash_password(payload.password),
-        display_name=payload.display_name,
     )
     db.add(user)
     db.commit()
@@ -59,9 +58,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    user = get_user_by_email(db, payload.email)
+    user = get_user_by_username(db, payload.username)
     if user is None or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="メールアドレスまたはパスワードが正しくありません")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="ユーザーネームまたはパスワードが正しくありません")
     return TokenResponse(access_token=create_access_token(user.id))
 
 
@@ -72,8 +71,11 @@ def me(user: User = Depends(get_current_user)) -> User:
 
 @router.put("/me", response_model=UserResponse)
 def update_me(payload: UserUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
-    if payload.display_name is not None:
-        user.display_name = payload.display_name
+    if payload.username is not None:
+        existing = get_user_by_username(db, payload.username)
+        if existing is not None and existing.id != user.id:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="このユーザーネームは既に登録されています")
+        user.username = payload.username
     if payload.password:
         user.hashed_password = hash_password(payload.password)
     db.commit()
