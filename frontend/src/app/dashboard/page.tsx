@@ -25,6 +25,12 @@ export default function DashboardPage() {
   const [prefInput, setPrefInput] = useState("");
   const [prefMode, setPrefMode] = useState("exclude");
 
+  // ご意見ボックス
+  const [fbRating, setFbRating] = useState<number | null>(null);
+  const [fbComment, setFbComment] = useState("");
+  const [fbSubmitted, setFbSubmitted] = useState(false);
+  const [fbError, setFbError] = useState<string | null>(null);
+
   const load = () => {
     Promise.all([api.me(), api.listChildren()])
       .then(([me, list]) => {
@@ -100,6 +106,22 @@ export default function DashboardPage() {
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "好みの追加に失敗しました");
+    }
+  };
+
+  const handleSubmitFeedback = async () => {
+    setFbError(null);
+    if (fbRating === null && !fbComment.trim()) {
+      setFbError("評価またはコメントを入力してください");
+      return;
+    }
+    try {
+      await api.submitFeedback(fbRating, fbComment);
+      setFbSubmitted(true);
+      setFbRating(null);
+      setFbComment("");
+    } catch (err) {
+      setFbError(err instanceof Error ? err.message : "送信に失敗しました");
     }
   };
 
@@ -306,6 +328,54 @@ export default function DashboardPage() {
           <Link href="/meal-plan" className="button">
             献立を作成する
           </Link>
+        </div>
+
+        <h2 style={{ marginTop: 40 }}>ご意見ボックス</h2>
+        <div className="card">
+          <p className="card__text">
+            アプリの使い勝手や改善してほしい点を教えてください。今後の開発に活かします。
+          </p>
+          {fbSubmitted ? (
+            <p>
+              ご協力ありがとうございました！
+              <button
+                className="button button--secondary button--sm"
+                style={{ marginLeft: 10 }}
+                onClick={() => setFbSubmitted(false)}
+              >
+                追加で送る
+              </button>
+            </p>
+          ) : (
+            <>
+              <p className="form-field__label">満足度（1〜5）</p>
+              <div className="rating" role="group" aria-label="満足度">
+                {[1, 2, 3, 4, 5].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setFbRating(r)}
+                    aria-pressed={fbRating === r}
+                    className={`rating__button${fbRating === r ? " rating__button--active" : ""}`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <label className="form-field">
+                <span className="form-field__label">ご意見・ご要望</span>
+                <textarea
+                  value={fbComment}
+                  onChange={(e) => setFbComment(e.target.value)}
+                  rows={4}
+                  className="textarea"
+                />
+              </label>
+              {fbError && <div className="alert alert--error">{fbError}</div>}
+              <button className="button" onClick={handleSubmitFeedback}>
+                送信する
+              </button>
+            </>
+          )}
         </div>
       </div>
     </main>
