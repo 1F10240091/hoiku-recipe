@@ -211,6 +211,17 @@ export const demoApi = {
     return delay(DEMO_RECIPES);
   },
 
+  async listRecipeIngredients(): Promise<string[]> {
+    const names = new Set<string>();
+    for (const recipe of DEMO_RECIPES) {
+      for (const item of recipe.ingredients) {
+        const name = item.name.trim();
+        if (name) names.add(name);
+      }
+    }
+    return delay([...names].sort());
+  },
+
   async searchRecipes(params: {
     keyword?: string;
     meal_type?: string;

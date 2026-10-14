@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import Recipe
 from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
+from app.services.ingredients import list_recipe_ingredient_names
 
 router = APIRouter(prefix="/recipe-master", tags=["recipe-master"])
 
@@ -66,6 +67,12 @@ def search_recipes(
         per_page=per_page,
         total_pages=total_pages,
     )
+
+
+@router.get("/ingredients", response_model=list[str])
+def list_ingredients(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[str]:
+    """レシピで使われている食材名の一覧（重複なし）。アレルギー登録の選択肢に使う。"""
+    return list_recipe_ingredient_names(db)
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)

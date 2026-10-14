@@ -40,6 +40,7 @@ export default function DashboardPage() {
 
   // アレルギー・好み入力
   const [allergyInput, setAllergyInput] = useState("");
+  const [ingredients, setIngredients] = useState<string[]>([]);
   const [prefInput, setPrefInput] = useState("");
   const [prefMode, setPrefMode] = useState("exclude");
 
@@ -50,11 +51,12 @@ export default function DashboardPage() {
   const [fbError, setFbError] = useState<string | null>(null);
 
   const load = () => {
-    Promise.all([api.me(), api.listChildren()])
-      .then(([me, list]) => {
+    Promise.all([api.me(), api.listChildren(), api.listRecipeIngredients()])
+      .then(([me, list, ings]) => {
         setUser(me);
         setUsername(me.username ?? "");
         setChildren(list);
+        setIngredients(ings);
       })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "読み込みに失敗しました"),
@@ -296,15 +298,19 @@ export default function DashboardPage() {
                 <p className="card__text">なし</p>
               )}
               <div className="input-row" style={{ marginTop: 8 }}>
-                <input
+                <select
                   value={allergyInput}
                   onChange={(e) => setAllergyInput(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && handleAddAllergy(child.id)
-                  }
-                  placeholder="アレルギー食材（例: 卵）"
-                  className="input"
-                />
+                  className="select"
+                  aria-label="アレルギー食材"
+                >
+                  <option value="">食材を選択（レシピにある食材）</option>
+                  {ingredients.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   className="button button--secondary"
                   onClick={() => handleAddAllergy(child.id)}

@@ -23,9 +23,9 @@ def test_add_and_delete_allergy(auth_client):
     res = auth_client.post("/api/v1/children", json={"name": "さくら", "allergies": [], "preferences": []})
     child_id = res.json()["id"]
 
-    res = auth_client.post(f"/api/v1/children/{child_id}/allergies", json={"ingredient": "さけ"})
+    res = auth_client.post(f"/api/v1/children/{child_id}/allergies", json={"ingredient": "鮭"})
     assert res.status_code == 201
-    assert [a["ingredient"] for a in res.json()["allergies"]] == ["さけ"]
+    assert [a["ingredient"] for a in res.json()["allergies"]] == ["鮭"]
 
     allergy_id = res.json()["allergies"][0]["id"]
     res = auth_client.delete(f"/api/v1/children/{child_id}/allergies/{allergy_id}")
@@ -38,6 +38,29 @@ def test_add_preference_validate_mode(auth_client):
     child_id = res.json()["id"]
 
     res = auth_client.post(f"/api/v1/children/{child_id}/preferences", json={"ingredient": "きのこ", "mode": "invalid"})
+    assert res.status_code == 422
+
+
+def test_allergy_must_be_recipe_ingredient(auth_client):
+    res = auth_client.post("/api/v1/children", json={"name": "ゆい", "allergies": [], "preferences": []})
+    child_id = res.json()["id"]
+
+    # レシピに無い食材は拒否される
+    res = auth_client.post(
+        f"/api/v1/children/{child_id}/allergies", json={"ingredient": "存在しない食材XYZ"}
+    )
+    assert res.status_code == 422
+
+    # レシピにある食材（シードの「卵」）は登録できる
+    res = auth_client.post(f"/api/v1/children/{child_id}/allergies", json={"ingredient": "卵"})
+    assert res.status_code == 201
+    assert [a["ingredient"] for a in res.json()["allergies"]] == ["卵"]
+
+    # 作成時にレシピに無いアレルギーを指定しても拒否される
+    res = auth_client.post(
+        "/api/v1/children",
+        json={"name": "れん", "allergies": [{"ingredient": "存在しない食材XYZ"}], "preferences": []},
+    )
     assert res.status_code == 422
 
 

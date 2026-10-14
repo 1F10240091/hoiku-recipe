@@ -218,6 +218,9 @@ const realApi = {
   listRecipes() {
     return request<Recipe[]>("/recipe-master");
   },
+  listRecipeIngredients() {
+    return request<string[]>("/recipe-master/ingredients");
+  },
   searchRecipes(params: RecipeSearchParams = {}) {
     const sp = new URLSearchParams();
     if (params.keyword) sp.set("keyword", params.keyword);
