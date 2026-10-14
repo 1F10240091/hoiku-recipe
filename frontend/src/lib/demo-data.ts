@@ -173,7 +173,7 @@ export const DEMO_CHILDREN: DemoChild[] = [
   {
     id: "c-001",
     name: "ゆうた",
-    birth_date: "2021-04-15",
+    birth_date: "2021-04-01",
     allergies: [{ id: "a-001", ingredient: "卵" }],
     preferences: [{ id: "p-001", ingredient: "なす", mode: "exclude" }],
   },

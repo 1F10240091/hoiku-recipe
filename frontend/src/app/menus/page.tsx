@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 import { api, type NurseryMenu } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function MenusPage() {
+  const authReady = useRequireAuth();
   const [menus, setMenus] = useState<NurseryMenu[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -23,7 +25,10 @@ export default function MenusPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(loadMenus, []);
+  useEffect(() => {
+    if (authReady) loadMenus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

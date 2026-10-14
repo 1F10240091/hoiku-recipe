@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 import { api, type ShoppingItem } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function ShoppingPage() {
+  const authReady = useRequireAuth();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [inventory, setInventory] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,10 @@ export default function ShoppingPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    if (authReady) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady]);
 
   const handleAdd = async () => {
     const name = newItem.trim();

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 import { api, type Child, type GenerateResponse } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function MealPlanPage() {
+  const authReady = useRequireAuth();
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChild, setSelectedChild] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -14,11 +16,12 @@ export default function MealPlanPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!authReady) return;
     api.listChildren().then((list) => {
       setChildren(list);
       if (list.length > 0) setSelectedChild(list[0].id);
     });
-  }, []);
+  }, [authReady]);
 
   const handleGenerate = async () => {
     setError(null);

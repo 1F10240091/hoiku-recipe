@@ -38,13 +38,21 @@ export default function SearchBar({ initial = {} }: SearchBarProps) {
     router.push(`/recipe-search?${params.toString()}`);
   };
 
+  const handleReset = () => {
+    setKeyword("");
+    setMealType("");
+    setIngredient("");
+    setMaxCookTime("");
+    router.push("/recipe-search");
+  };
+
   return (
     <form
       className="card search-form"
       onSubmit={handleSubmit}
       aria-label="レシピ検索"
     >
-      <div className="search-form__field">
+      <div className="search-form__field search-form__field--keyword">
         <label htmlFor="search-keyword">キーワード</label>
         <input
           id="search-keyword"
@@ -92,6 +100,13 @@ export default function SearchBar({ initial = {} }: SearchBarProps) {
         />
       </div>
       <div className="search-form__actions">
+        <button
+          type="button"
+          className="button button--secondary"
+          onClick={handleReset}
+        >
+          リセット
+        </button>
         <button type="submit" className="button">
           検索
         </button>

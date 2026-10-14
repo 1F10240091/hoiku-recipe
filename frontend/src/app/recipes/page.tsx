@@ -4,17 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 import { api, type SuggestedMeal } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function RecipesPage() {
+  const authReady = useRequireAuth();
   const [recipes, setRecipes] = useState<SuggestedMeal[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!authReady) return;
     api
       .listMealRecipes()
       .then(setRecipes)
       .finally(() => setLoading(false));
-  }, []);
+  }, [authReady]);
 
   return (
     <main className="main">

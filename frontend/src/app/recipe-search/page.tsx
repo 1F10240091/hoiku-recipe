@@ -6,14 +6,17 @@ import AppNav from "@/components/AppNav";
 import SearchBar from "@/components/SearchBar";
 import RecipeList from "@/components/RecipeList";
 import { api, type RecipeSearchResponse } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 function RecipeSearchInner() {
   const searchParams = useSearchParams();
+  const authReady = useRequireAuth();
   const [result, setResult] = useState<RecipeSearchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!authReady) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -45,7 +48,7 @@ function RecipeSearchInner() {
     return () => {
       cancelled = true;
     };
-  }, [searchParams]);
+  }, [authReady, searchParams]);
 
   return (
     <main className="main">

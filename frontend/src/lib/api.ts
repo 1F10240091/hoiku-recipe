@@ -1,6 +1,31 @@
 // バックエンド API クライアント
 const API_BASE = "/api/v1";
 
+const AUTH_PATHS = ["/login", "/register"];
+
+/** エラーレスポンスから表示用のメッセージを取り出す。 */
+function extractErrorMessage(body: string, status: number): string {
+  if (!body) return `リクエストに失敗しました（${status}）`;
+  try {
+    const data = JSON.parse(body) as { detail?: unknown };
+    const { detail } = data;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map((d) =>
+          d && typeof d === "object" && "msg" in d
+            ? String((d as { msg: unknown }).msg)
+            : "",
+        )
+        .filter(Boolean);
+      if (messages.length > 0) return messages.join(" / ");
+    }
+  } catch {
+    // JSON でない場合は本文をそのまま使う
+  }
+  return body;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
@@ -19,7 +44,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(body || `Request failed: ${res.status}`);
+
+    // 認証切れ・未ログインはトークンを破棄してログイン画面へ誘導する
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      if (typeof window !== "undefined") {
+        const onAuthPage = AUTH_PATHS.some((p) =>
+          window.location.pathname.startsWith(p),
+        );
+        if (!onAuthPage) {
+          window.location.href = "/login";
+        }
+      }
+    }
+
+    throw new Error(extractErrorMessage(body, res.status));
   }
   return res.json() as Promise<T>;
 }

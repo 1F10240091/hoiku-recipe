@@ -5,9 +5,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AppNav from "@/components/AppNav";
 import { api, type Child, type User } from "@/lib/api";
+import { useRequireAuth } from "@/lib/useRequireAuth";
+
+// 生年月日は「年」と「月」のみ取得する（個人情報の最小化）。
+// 保存時は既存 API に合わせて日を 01 に固定した YYYY-MM-01 を送る。
+const BIRTH_YEARS = Array.from(
+  { length: 13 },
+  (_, i) => new Date().getFullYear() - i,
+);
+const BIRTH_MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+/** 「YYYY-MM-DD」を「YYYY年M月生まれ」に整形する。 */
+function formatBirthYm(value: string): string {
+  const [year, month] = value.split("-");
+  if (!year || !month) return value;
+  return `${Number(year)}年${Number(month)}月生まれ`;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
+  const authReady = useRequireAuth();
   const [user, setUser] = useState<User | null>(null);
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +32,8 @@ export default function DashboardPage() {
 
   // お子様追加フォーム
   const [newName, setNewName] = useState("");
-  const [newBirthDate, setNewBirthDate] = useState("");
+  const [newBirthYear, setNewBirthYear] = useState("");
+  const [newBirthMonth, setNewBirthMonth] = useState("");
 
   // プロフィール編集
   const [username, setUsername] = useState("");
@@ -44,7 +62,10 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    if (authReady) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -67,14 +88,19 @@ export default function DashboardPage() {
     if (!newName.trim()) return;
     setError(null);
     try {
+      const birthDate =
+        newBirthYear && newBirthMonth
+          ? `${newBirthYear}-${newBirthMonth.padStart(2, "0")}-01`
+          : null;
       await api.createChild({
         name: newName,
-        birth_date: newBirthDate || null,
+        birth_date: birthDate,
         allergies: [],
         preferences: [],
       });
       setNewName("");
-      setNewBirthDate("");
+      setNewBirthYear("");
+      setNewBirthMonth("");
       load();
     } catch (err) {
       setError(
@@ -192,12 +218,32 @@ export default function DashboardPage() {
               placeholder="名前（例: ゆうた）"
               className="input"
             />
-            <input
-              type="date"
-              value={newBirthDate}
-              onChange={(e) => setNewBirthDate(e.target.value)}
+            <select
+              value={newBirthYear}
+              onChange={(e) => setNewBirthYear(e.target.value)}
               className="input"
-            />
+              aria-label="生まれ年"
+            >
+              <option value="">年</option>
+              {BIRTH_YEARS.map((year) => (
+                <option key={year} value={year}>
+                  {year}年
+                </option>
+              ))}
+            </select>
+            <select
+              value={newBirthMonth}
+              onChange={(e) => setNewBirthMonth(e.target.value)}
+              className="input"
+              aria-label="生まれ月"
+            >
+              <option value="">月</option>
+              {BIRTH_MONTHS.map((month) => (
+                <option key={month} value={month}>
+                  {month}月
+                </option>
+              ))}
+            </select>
             <button
               className="button"
               onClick={handleAddChild}
@@ -219,7 +265,9 @@ export default function DashboardPage() {
             <div className="card" key={child.id}>
               <h2>{child.name}</h2>
               {child.birth_date && (
-                <p className="card__text">誕生日: {child.birth_date}</p>
+                <p className="card__text">
+                  生年月: {formatBirthYm(child.birth_date)}
+                </p>
               )}
 
               <h3>アレルギー</h3>

@@ -31,6 +31,7 @@ class Child(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    # 生年月のみ保持する（日は 01 固定。個人情報の最小化のため日は取得しない）
     birth_date: Mapped[date] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 

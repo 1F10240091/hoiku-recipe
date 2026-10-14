@@ -673,17 +673,38 @@ h3 {
     padding: 18px;
     border-radius: 0;
   }
+
+  .search-form__field--keyword {
+    grid-column: auto;
+  }
+
+  .search-form__actions {
+    flex-direction: column;
+  }
+
+  .search-form__actions .button {
+    width: 100%;
+  }
 }
 
 /* --- レシピ検索 --- */
 .search-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px 14px;
+  align-items: end;
   background: #fff;
   border: 2px solid var(--color-line);
   border-radius: 0;
   padding: 16px;
+}
+
+.search-form__field {
+  min-width: 0;
+}
+
+.search-form__field--keyword {
+  grid-column: span 2;
 }
 
 .search-form__field label {
@@ -697,12 +718,18 @@ h3 {
 .search-form input,
 .search-form select {
   width: 100%;
+  min-width: 0;
   padding: 11px 14px;
   border: 2px solid var(--color-line);
   border-radius: 0;
   font-size: 14px;
   background: #fffaf3;
   color: var(--color-ink);
+}
+
+.search-form input::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
 }
 
 .search-form input:focus,
@@ -715,8 +742,12 @@ h3 {
 .search-form__actions {
   grid-column: 1 / -1;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
+  align-items: center;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 2px solid var(--color-line);
 }
 
 .search-form__actions .button {
