@@ -1,12 +1,20 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import AppNav from "@/components/AppNav";
 import SearchBar from "@/components/SearchBar";
 import RecipeList from "@/components/RecipeList";
 import { api, type RecipeSearchResponse } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
+
+const CATEGORIES = [
+  { value: "main", label: "主菜" },
+  { value: "side", label: "副菜" },
+  { value: "soup", label: "汁物" },
+  { value: "staple", label: "主食" },
+];
 
 function RecipeSearchInner() {
   const searchParams = useSearchParams();
@@ -50,17 +58,58 @@ function RecipeSearchInner() {
     };
   }, [authReady, searchParams]);
 
+  const mealType = searchParams.get("meal_type") ?? "";
+  const filtered = Boolean(
+    searchParams.get("keyword") ||
+      searchParams.get("meal_type") ||
+      searchParams.get("ingredient") ||
+      searchParams.get("max_cook_time"),
+  );
+
   return (
     <main className="main">
       <AppNav />
       <div className="container" style={{ paddingBottom: 80 }}>
-        <div className="page-header">
-          <p className="page-header__en">RECIPE SEARCH</p>
-          <h1 className="page-header__title">レシピ検索</h1>
-          <p className="page-header__subtitle">
-            キーワード・カテゴリ・材料・調理時間から保育園向けレシピを探せます。
+        <section className="home-hero" aria-labelledby="home-title">
+          <p className="home-hero__en">RECIPE SEARCH</p>
+          <h1 className="home-hero__title" id="home-title">
+            きょうの ごはん、さがそう。
+          </h1>
+          <p className="home-hero__lead">
+            保育園で人気のレシピを、カテゴリ・材料・調理時間から探せます。
+            きょうの献立づくりに、ぴったりの一品をどうぞ。
           </p>
-        </div>
+          <ul className="home-cats" aria-label="カテゴリから探す">
+            <li>
+              <Link
+                href="/recipe-search"
+                className={`home-cat home-cat--all${mealType ? "" : " home-cat--active"}`}
+                aria-current={mealType ? undefined : "true"}
+              >
+                すべて
+              </Link>
+            </li>
+            {CATEGORIES.map((c) => (
+              <li key={c.value}>
+                <Link
+                  href={`/recipe-search?meal_type=${c.value}`}
+                  className={`home-cat home-cat--${c.value}${mealType === c.value ? " home-cat--active" : ""}`}
+                  aria-current={mealType === c.value ? "true" : undefined}
+                >
+                  {c.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="home-quick">
+            <Link href="/menus" className="home-quick__item">
+              献立表をみる →
+            </Link>
+            <Link href="/meal-plan" className="home-quick__item">
+              こんだて提案をつくる →
+            </Link>
+          </div>
+        </section>
         <SearchBar
           initial={{
             keyword: searchParams.get("keyword") ?? undefined,
@@ -81,7 +130,14 @@ function RecipeSearchInner() {
             <p>読み込み中...</p>
           </div>
         )}
-        {result && !loading && <RecipeList result={result} />}
+        {result && !loading && (
+          <>
+            <h2 className="home-section-title">
+              {filtered ? "検索結果" : "おすすめのレシピ"}
+            </h2>
+            <RecipeList result={result} />
+          </>
+        )}
       </div>
     </main>
   );

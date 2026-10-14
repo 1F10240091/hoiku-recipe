@@ -110,12 +110,13 @@ function IconCart() {
   );
 }
 
+// 並び順: 先頭がアプリのトップ（レシピ検索）、末尾がプロフィール。
 const NAV_ITEMS = [
   {
-    href: "/dashboard",
-    label: "お子さん・プロフィール",
-    short: "プロフィール",
-    icon: IconProfile,
+    href: "/recipe-search",
+    label: "レシピ検索",
+    short: "レシピ",
+    icon: IconSearch,
   },
   {
     href: "/menus",
@@ -130,12 +131,6 @@ const NAV_ITEMS = [
     icon: IconSparkle,
   },
   {
-    href: "/recipe-search",
-    label: "レシピ検索",
-    short: "レシピ",
-    icon: IconSearch,
-  },
-  {
     href: "/recipes",
     label: "提案の記録",
     short: "記録",
@@ -146,6 +141,12 @@ const NAV_ITEMS = [
     label: "買い物メモ",
     short: "買い物",
     icon: IconCart,
+  },
+  {
+    href: "/dashboard",
+    label: "お子さん・プロフィール",
+    short: "プロフィール",
+    icon: IconProfile,
   },
 ];
 
@@ -159,7 +160,7 @@ export default function AppNav() {
       </a>
       <nav className="app-nav" aria-label="メインナビゲーション">
         <div className="app-nav__inner">
-          <Link href="/dashboard" className="app-nav__brand">
+          <Link href="/recipe-search" className="app-nav__brand">
             ほいくレシピ
           </Link>
           <ul className="app-nav__list">

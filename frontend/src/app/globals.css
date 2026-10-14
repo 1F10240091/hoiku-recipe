@@ -908,3 +908,137 @@ h3 {
   flex-wrap: wrap;
   margin-top: 24px;
 }
+
+/* --- アプリのトップ（レシピ検索） --- */
+.home-hero {
+  background: var(--color-peach-wash);
+  border: 2px solid #fff;
+  outline: 2px solid var(--color-line);
+  border-radius: 0;
+  padding: 30px 28px 26px;
+  margin: 24px 0 18px;
+}
+
+.home-hero__en {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  color: var(--color-pink-deep);
+  font-family: var(--font-maru);
+}
+
+.home-hero__title {
+  margin: 0 0 10px;
+  font-size: 28px;
+}
+
+.home-hero__lead {
+  margin: 0 0 20px;
+  max-width: 620px;
+  color: var(--color-muted);
+  font-size: 14.5px;
+  line-height: 1.9;
+}
+
+.home-cats {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.home-cat {
+  display: inline-block;
+  padding: 9px 20px;
+  border: 2px solid var(--color-line);
+  border-radius: 0;
+  background: #fffaf3;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.home-cat:hover {
+  border-color: var(--color-pink-deep);
+  color: var(--color-pink-deep);
+}
+
+.home-cat--main {
+  background: var(--color-pink-wash);
+  border-color: #ffc9d5;
+  color: #a83a54;
+}
+
+.home-cat--side {
+  background: var(--color-mint-wash);
+  border-color: #bfe6cf;
+  color: #2f7a52;
+}
+
+.home-cat--soup {
+  background: var(--color-sky-wash);
+  border-color: #c3e0ff;
+  color: #2f6ba8;
+}
+
+.home-cat--staple {
+  background: var(--color-lemon-wash);
+  border-color: #f3ddab;
+  color: #8a6f3c;
+}
+
+.home-cat--active {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+.home-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 2px solid var(--color-line);
+}
+
+.home-quick__item {
+  padding: 9px 16px;
+  background: var(--color-pink-wash);
+  color: var(--color-pink-deep);
+  border-radius: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.home-quick__item:hover {
+  background: #ffd7e0;
+}
+
+.home-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 26px 0 2px;
+  font-size: 18px;
+}
+
+.home-section-title::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: var(--color-lemon);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .home-hero {
+    padding: 22px 18px 20px;
+    margin-top: 16px;
+  }
+
+  .home-hero__title {
+    font-size: 23px;
+  }
+}
