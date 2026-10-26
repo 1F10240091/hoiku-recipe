@@ -30,14 +30,13 @@ class Settings(BaseSettings):
     ai_timeout_seconds: int = 120
 
     # AI による献立生成・献立表解析
-    ai_provider: str = "gemini"
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o-mini"
-    openai_max_pages: int = 5
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_max_pages: int = 5
 
 
 @lru_cache

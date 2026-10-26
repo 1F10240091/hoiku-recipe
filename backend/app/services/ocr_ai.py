@@ -62,9 +62,7 @@ _PROMPT = """あなたは保育園の献立表を読み取るアシスタント�
 def is_available() -> bool:
     """AI 読み取りが設定されているか。"""
     settings = get_settings()
-    if settings.ai_provider.lower() == "gemini":
-        return bool(settings.gemini_api_key.strip())
-    return bool(settings.openai_api_key.strip())
+    return bool(settings.gemini_api_key.strip())
 
 
 def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMenuEntry]:
@@ -74,22 +72,21 @@ def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMen
         AIOCRError: API キー未設定、通信失敗、応答の解析失敗など。
     """
     settings = get_settings()
-    provider = settings.ai_provider.lower()
-    api_key = settings.gemini_api_key.strip() if provider == "gemini" else settings.openai_api_key.strip()
+    api_key = settings.gemini_api_key.strip()
     if not api_key:
         raise AIOCRError("AI_API_KEY が設定されていません")
 
     if len(data) > MAX_FILE_BYTES:
         raise AIOCRError("ファイルサイズが大きすぎます（15MB 以下にしてください）")
 
-    images = _to_png_images(filename, content_type, data, max_pages=settings.openai_max_pages)
+    images = _to_png_images(filename, content_type, data, max_pages=settings.gemini_max_pages)
     if not images:
         raise AIOCRError("読み取れる画像がありませんでした")
 
     from datetime import date as _date
 
     prompt = _PROMPT.format(year=_date.today().year)
-    response_text = _request_gemini(api_key, prompt, images) if provider == "gemini" else _request(api_key, prompt, images)
+    response_text = _request_gemini(api_key, prompt, images)
     entries = parse_menus_json(response_text)
     if not entries:
         raise AIOCRError("AI が献立を認識できませんでした")
@@ -183,59 +180,6 @@ def _clean_text(value: object) -> str | None:
         return None
     text = str(value).strip()
     return text or None
-
-
-def _request(api_key: str, prompt: str, images: list[bytes]) -> str:
-    settings = get_settings()
-    model = settings.openai_model.strip()
-    content: list[dict] = []
-    for image in images:
-        content.append(
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{base64.b64encode(image).decode('ascii')}"},
-            }
-        )
-    content.append({"type": "text", "text": prompt})
-
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": content}],
-        "temperature": 0,
-        "max_tokens": 1200,
-        "stream": False,
-    }
-    payload["response_format"] = {"type": "json_object"}
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    url = f"{settings.openai_base_url.rstrip('/')}/chat/completions"
-
-    try:
-        with httpx.Client(timeout=settings.ai_timeout_seconds) as client:
-            response = client.post(url, json=payload, headers=headers)
-    except httpx.HTTPError as exc:
-        raise AIOCRError(f"AI への接続に失敗しました（{type(exc).__name__}）") from exc
-
-    if response.status_code >= 400:
-        # 応答本文にキーが混ざる可能性に備えて必ず伏せる
-        snippet = response.text[:200].replace(api_key, "***")
-        raise AIOCRError(f"AI API がエラーを返しました（{response.status_code}）: {snippet}")
-
-    try:
-        data = response.json()
-        message_content = data["choices"][0]["message"]["content"]
-    except (ValueError, KeyError, IndexError, TypeError) as exc:
-        raise AIOCRError("AI の応答形式が不正です") from exc
-
-    if isinstance(message_content, list):
-        message_content = "".join(
-            part.get("text", "") for part in message_content if isinstance(part, dict)
-        )
-    if not isinstance(message_content, str) or not message_content.strip():
-        raise AIOCRError("AI の応答が空でした")
-    return message_content
 
 
 def _request_gemini(api_key: str, prompt: str, images: list[bytes]) -> str:

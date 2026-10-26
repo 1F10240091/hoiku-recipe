@@ -38,7 +38,7 @@ async def upload_menu(
         raise HTTPException(status_code=413, detail="ファイルサイズは15MB以下にしてください")
 
     if not ocr_ai.is_available():
-        raise HTTPException(status_code=503, detail="OPENAI_API_KEY が設定されていません")
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY が設定されていません")
     try:
         entries = ocr_ai.extract_entries(
             filename=file.filename or "",
@@ -79,7 +79,7 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
         ingredients = {
             "dishes": bucket["dishes"],
             "meal_types": bucket["meal_types"],
-            "engine": "openai",
+            "engine": "gemini",
         }
         menu = (
             db.query(NurseryMenu)
