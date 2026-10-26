@@ -11,6 +11,7 @@ export default function MenusPage() {
   const [menus, setMenus] = useState<NurseryMenu[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const loadMenus = () => {
@@ -34,9 +35,11 @@ export default function MenusPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setUploadStatus("uploading");
     setError(null);
     try {
       await api.uploadMenu(file);
+      setUploadStatus("saved");
       loadMenus();
     } catch (err) {
       setError(
@@ -44,6 +47,9 @@ export default function MenusPage() {
       );
     } finally {
       setUploading(false);
+      if (!error) {
+        window.setTimeout(() => setUploadStatus("idle"), 2500);
+      }
       e.target.value = "";
     }
   };
@@ -59,16 +65,23 @@ export default function MenusPage() {
             保育園から配布された献立表を読み取り、デジタル化します。
           </p>
         </div>
-        <div className="card">
+        <div className="card menu-upload-card">
           <p className="card__text">
             保育園から配布された献立表（PDF
             または画像）をアップロードしてください。
           </p>
+          <div className="privacy-note" role="note">
+            <strong>取り扱いについて</strong>
+            <br />
+            アップロードした献立表は解析のためOpenAI APIへ送信されます。
+            解析以外の目的では使用せず、アプリ内の献立データとして保存します。
+            個人名などが含まれる場合は、必要に応じて隠してからアップロードしてください。
+          </div>
           <label
-            className="button"
+            className="button upload-button"
             style={{ display: "inline-block", cursor: "pointer" }}
           >
-            {uploading ? "読み取り中..." : "献立表をアップロード"}
+            {uploading ? "解析中..." : "PDF・画像を選ぶ"}
             <input
               type="file"
               accept=".pdf,image/png,image/jpeg,image/webp"
@@ -76,6 +89,14 @@ export default function MenusPage() {
               hidden
             />
           </label>
+          <div className="upload-status" aria-live="polite">
+            <span className={uploadStatus === "uploading" ? "is-active" : ""}>1. アップロード</span>
+            <span className={uploadStatus === "uploading" ? "is-active" : uploadStatus === "saved" ? "is-done" : ""}>2. AI解析</span>
+            <span className={uploadStatus === "saved" ? "is-done" : ""}>3. 保存</span>
+          </div>
+          {uploadStatus === "saved" && (
+            <div className="alert alert--success">献立表を解析して保存しました。</div>
+          )}
           {error && <div className="alert alert--error">{error}</div>}
         </div>
 
@@ -88,7 +109,9 @@ export default function MenusPage() {
             </p>
           </div>
         ) : (
-          menus.map((menu) => (
+          <>
+            <p className="section-caption">保存済みの献立（{menus.length}件）</p>
+          {menus.map((menu) => (
             <div className="card" key={menu.id}>
               <h2>{menu.date}</h2>
               <pre
@@ -101,7 +124,8 @@ export default function MenusPage() {
                 {menu.menu_text}
               </pre>
             </div>
-          ))
+          ))}
+          </>
         )}
         <div className="action-links">
           <Link href="/meal-plan" className="button">
