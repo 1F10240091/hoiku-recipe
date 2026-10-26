@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,7 +30,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <footer className="site-footer">
+          <Link href="/terms">利用規約</Link>
+          <Link href="/privacy">プライバシー</Link>
+          <Link href="/disclaimer">免責事項</Link>
+        </footer>
+      </body>
     </html>
   );
 }

@@ -33,7 +33,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # レート制限を適用するエンドポイント
         limited_paths = {"/api/v1/auth/login", "/api/v1/auth/register"}
         if path not in limited_paths:
-            return await call_next(request)
+            response = await call_next(request)
+            return _security_headers(response)
 
         key = f"{self._client_key(request)}:{path}"
         now = time.monotonic()
@@ -44,14 +45,23 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             hits.popleft()
 
         if len(hits) >= self.max_requests:
-            return JSONResponse(
+            return _security_headers(JSONResponse(
                 status_code=429,
                 content={"detail": "試行回数が多すぎます。しばらく待ってから再度お試しください。"},
-            )
+            ))
 
         # 失敗した試行だけを数える。ログイン成功や登録成功で枠を消費しないため、
         # 学内など同じ IP を共有する環境でもデモ中に 429 になりにくい。
         response = await call_next(request)
         if response.status_code in {400, 401, 403, 422}:
             hits.append(now)
-        return response
+        return _security_headers(response)
+
+
+def _security_headers(response: Response) -> Response:
+    """ブラウザ側の基本的な防御ヘッダーを付与する。"""
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    return response
