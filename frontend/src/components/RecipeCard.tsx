@@ -13,9 +13,11 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
     .slice(0, 4)
     .map((i) => i.name)
     .join("、");
+  const visual = recipe.meal_type === "soup" ? "🥣" : recipe.meal_type === "side" ? "🥗" : recipe.meal_type === "staple" ? "🍚" : "🍳";
 
   return (
     <article className="recipe-card">
+      <div className="recipe-card__visual" aria-hidden="true">{visual}</div>
       <div className="recipe-card__header">
         <span className="recipe-card__badge">
           {MEAL_TYPE_LABELS[recipe.meal_type] ?? recipe.meal_type}
