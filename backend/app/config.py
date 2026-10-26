@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     ai_ocr_model: str = "mimo-v2.6-flash"
     ai_ocr_max_pages: int = 5
 
+    # OpenAI 献立表解析（設定時はこちらを優先）
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_ocr_model: str = "gpt-4o-mini"
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -62,7 +62,8 @@ _PROMPT = """あなたは保育園の献立表を読み取るアシスタント�
 
 def is_available() -> bool:
     """AI 読み取りが設定されているか。"""
-    return bool(get_settings().ai_api_key.strip())
+    settings = get_settings()
+    return bool(settings.openai_api_key.strip() or settings.ai_api_key.strip())
 
 
 def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMenuEntry]:
@@ -72,7 +73,7 @@ def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMen
         AIOCRError: API キー未設定、通信失敗、応答の解析失敗など。
     """
     settings = get_settings()
-    api_key = settings.ai_api_key.strip()
+    api_key = settings.openai_api_key.strip() or settings.ai_api_key.strip()
     if not api_key:
         raise AIOCRError("AI_API_KEY が設定されていません")
 
@@ -184,7 +185,8 @@ def _clean_text(value: object) -> str | None:
 
 def _request(api_key: str, prompt: str, images: list[bytes]) -> str:
     settings = get_settings()
-    model = settings.ai_ocr_model.strip() or settings.ai_model
+    use_openai = bool(settings.openai_api_key.strip())
+    model = settings.openai_ocr_model.strip() if use_openai else settings.ai_ocr_model.strip() or settings.ai_model
     content: list[dict] = []
     for image in images:
         content.append(
@@ -199,14 +201,17 @@ def _request(api_key: str, prompt: str, images: list[bytes]) -> str:
         "model": model,
         "messages": [{"role": "user", "content": content}],
         "temperature": 0,
-        "max_completion_tokens": 2000,
+        "max_tokens": 1200,
         "stream": False,
     }
+    if use_openai:
+        payload["response_format"] = {"type": "json_object"}
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
-    url = f"{settings.ai_base_url.rstrip('/')}/chat/completions"
+    base_url = settings.openai_base_url if use_openai else settings.ai_base_url
+    url = f"{base_url.rstrip('/')}/chat/completions"
 
     try:
         with httpx.Client(timeout=settings.ai_timeout_seconds) as client:

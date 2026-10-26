@@ -6,6 +6,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.models import NurseryMenu, User
 from app.routers.auth import get_current_user
@@ -95,7 +96,7 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
         ingredients = {
             "dishes": bucket["dishes"],
             "meal_types": bucket["meal_types"],
-            "engine": "mimo",
+            "engine": "openai" if get_settings().openai_api_key.strip() else "mimo",
         }
         menu = (
             db.query(NurseryMenu)
