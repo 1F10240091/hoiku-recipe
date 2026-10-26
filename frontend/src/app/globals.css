@@ -146,7 +146,7 @@ h3 {
   background: #fff;
   border: 2px solid var(--color-line);
   padding: 8px 20px;
-  border-radius: 0;
+  border-radius: 16px;
 
   font-size: 24px;
 }
@@ -330,7 +330,7 @@ h3 {
 .like-button__count {
   min-width: 1em;
   padding: 0;
-  border-radius: 0;
+  border-radius: 50%;
   background: none;
   color: inherit;
   font-size: 13px;
@@ -371,7 +371,7 @@ h3 {
   background: var(--color-card);
   border: 2px solid #fff;
   outline: 2px solid var(--color-line);
-  border-radius: 0;
+  border-radius: 999px;
   padding: 24px;
   margin: 18px 0;
 
@@ -388,7 +388,7 @@ h3 {
   content: "";
   width: 12px;
   height: 12px;
-  border-radius: 0;
+  border-radius: 10px;
   background: var(--color-lemon);
   flex-shrink: 0;
 }
@@ -412,7 +412,7 @@ h3 {
   font-weight: 800;
   color: var(--color-ink);
   background: var(--color-lemon-wash);
-  border-radius: 0;
+  border-radius: 12px;
   padding: 4px 14px;
   margin-bottom: 8px;
 }
@@ -429,7 +429,7 @@ h3 {
   width: 100%;
   padding: 13px 16px;
   border: 2px solid var(--color-line);
-  border-radius: 0;
+  border-radius: 12px;
   font-size: 15px;
   font-family: inherit;
   background: #fffaf3;

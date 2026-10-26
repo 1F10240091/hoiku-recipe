@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {children}
+        <div id="main-content">{children}</div>
         <footer className="site-footer">
           <Link href="/terms">利用規約</Link>
           <Link href="/privacy">プライバシー</Link>

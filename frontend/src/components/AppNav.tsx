@@ -171,6 +171,7 @@ export default function AppNav() {
                   <Link
                     href={item.href}
                     className={`app-nav__link${active ? " app-nav__link--active" : ""}`}
+                    aria-current={active ? "page" : undefined}
                   >
                     {item.label}
                   </Link>
