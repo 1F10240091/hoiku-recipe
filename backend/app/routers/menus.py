@@ -12,8 +12,6 @@ from app.models import NurseryMenu, User
 from app.routers.auth import get_current_user
 from app.schemas import NurseryMenuCreate, NurseryMenuResponse
 from app.services import ocr_ai
-from app.services.menu_parser import parse_menu_text
-from app.services.ocr import OCRProcessingError, OCRUnsupportedError, extract_text
 
 router = APIRouter(prefix="/menus", tags=["menus"])
 
@@ -31,44 +29,25 @@ async def upload_menu(
 ) -> NurseryMenu:
     """献立表の PDF/画像をアップロードし、献立として保存する。
 
-    AI_API_KEY が設定されていればマルチモーダル AI で読み取り、
-    失敗した場合は従来の PDF テキスト抽出にフォールバックする。
+    OpenAI のマルチモーダル API だけで読み取る。
     """
     data = await file.read()
 
-    if ocr_ai.is_available():
-        try:
-            entries = ocr_ai.extract_entries(
-                filename=file.filename or "",
-                content_type=file.content_type or "",
-                data=data,
-            )
-        except ocr_ai.AIOCRError as exc:
-            logger.warning("AI 読み取りに失敗したため従来の OCR に切り替えます: %s", exc)
-            entries = []
-        if entries:
-            saved = _save_ai_entries(db, user, entries)
-            if saved:
-                return saved[0]
-
+    if not ocr_ai.is_available():
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY が設定されていません")
     try:
-        result = extract_text(filename=file.filename or "", content_type=file.content_type or "", data=data)
-    except OCRUnsupportedError as exc:
-        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(exc)) from exc
-    except OCRProcessingError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
-
-    dishes = _collect_dishes(result.text)
-    menu = NurseryMenu(
-        user_id=user.id,
-        date=_date_from_text(result.text),
-        menu_text=result.text,
-        ingredients={"dishes": dishes, "engine": result.engine},
-    )
-    db.add(menu)
-    db.commit()
-    db.refresh(menu)
-    return menu
+        entries = ocr_ai.extract_entries(
+            filename=file.filename or "",
+            content_type=file.content_type or "",
+            data=data,
+        )
+    except ocr_ai.AIOCRError as exc:
+        logger.warning("OpenAI による献立表解析に失敗しました: %s", exc)
+        raise HTTPException(status_code=422, detail="献立表を解析できませんでした") from exc
+    saved = _save_ai_entries(db, user, entries)
+    if not saved:
+        raise HTTPException(status_code=422, detail="献立表から献立を抽出できませんでした")
+    return saved[0]
 
 
 def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry]) -> list[NurseryMenu]:
@@ -96,7 +75,7 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
         ingredients = {
             "dishes": bucket["dishes"],
             "meal_types": bucket["meal_types"],
-            "engine": "openai" if get_settings().openai_api_key.strip() else "mimo",
+            "engine": "openai",
         }
         menu = (
             db.query(NurseryMenu)
@@ -117,19 +96,6 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
     return saved
 
 
-def _date_from_text(text: str) -> date:
-    """従来 OCR のテキストから先頭の日付を取り出す（取れなければ今日）。"""
-    entries = parse_menu_text(text)
-    for entry in entries:
-        if entry.month and entry.day:
-            try:
-                return date(date.today().year, entry.month, entry.day)
-            except ValueError:
-                continue
-    return date.today()
-
-
-
 @router.post("", response_model=NurseryMenuResponse, status_code=status.HTTP_201_CREATED)
 def create_menu(payload: NurseryMenuCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> NurseryMenu:
     menu = NurseryMenu(user_id=user.id, date=payload.date, menu_text=payload.menu_text, ingredients={})
@@ -146,12 +112,3 @@ def get_menu(menu_id: str, user: User = Depends(get_current_user), db: Session =
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="献立が見つかりません")
     return menu
 
-
-def _collect_dishes(text: str) -> list[str]:
-    """献立テキストから料理名のリストを収集する。"""
-    dishes: list[str] = []
-    for entry in parse_menu_text(text):
-        for dish in entry.dishes:
-            if dish not in dishes:
-                dishes.append(dish)
-    return dishes

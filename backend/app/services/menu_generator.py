@@ -116,9 +116,9 @@ def generate_menus(
     inventory = inventory or []
     recipe_list = recipes if recipes is not None else []
 
-    if settings.ai_api_key:
+    if settings.openai_api_key:
         try:
-            return _generate_freeform_with_mimo(
+            return _generate_freeform_with_openai(
                 child_name=child_name,
                 child_age_months=child_age_months,
                 start_date=start_date,
@@ -130,7 +130,7 @@ def generate_menus(
                 inventory=inventory,
             )
         except Exception as exc:  # noqa: BLE001 - AI 失敗時は必ずルールベースへ
-            logger.warning("AI 献立生成に失敗したためルールベースに切り替えます: %s", exc)
+            logger.warning("OpenAI 献立生成に失敗したためルールベースに切り替えます: %s", exc)
 
     return _generate_rule_based(
         child_name=child_name,
@@ -244,7 +244,7 @@ def _extract_dishes(menu_text: str) -> list[str]:
     return dishes
 
 
-def _generate_freeform_with_mimo(
+def _generate_freeform_with_openai(
     *,
     child_name: str,
     child_age_months: int | None,
@@ -297,7 +297,7 @@ def _generate_freeform_with_mimo(
     )
 
     payload = {
-        "model": settings.ai_model,
+        "model": settings.openai_model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -306,16 +306,16 @@ def _generate_freeform_with_mimo(
         "max_completion_tokens": 6000,
     }
     headers = {
-        "Authorization": f"Bearer {settings.ai_api_key}",
+        "Authorization": f"Bearer {settings.openai_api_key}",
         "Content-Type": "application/json",
     }
 
     with httpx.Client(timeout=settings.ai_timeout_seconds) as client:
-        resp = client.post(f"{settings.ai_base_url.rstrip('/')}/chat/completions", headers=headers, json=payload)
+        resp = client.post(f"{settings.openai_base_url.rstrip('/')}/chat/completions", headers=headers, json=payload)
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
 
-    entries = _parse_mimo_response(content)
+    entries = _parse_openai_response(content)
     excluded = [a.lower() for a in allergies + preferences]
 
     menus: list[GeneratedMenu] = []
@@ -340,7 +340,7 @@ def _generate_freeform_with_mimo(
                 date=d,
                 menu_text=f"{child_name} さんの夕食（{d}）\n{'・'.join(names)}",
                 dishes=names,
-                engine="mimo_freeform",
+                engine="openai_freeform",
                 recipe_ids=[],
                 dish_details=details,
             )
@@ -416,7 +416,7 @@ def _format_age(months: int | None) -> str:
     return f"{years}歳{rest}か月"
 
 
-def _parse_mimo_response(content: str) -> list[dict]:
+def _parse_openai_response(content: str) -> list[dict]:
     """AI の出力から JSON 配列を抽出する。"""
     match = re.search(r"\[.*\]", content, re.DOTALL)
     if not match:

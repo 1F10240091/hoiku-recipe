@@ -24,21 +24,13 @@ class Settings(BaseSettings):
     rate_limit_max_requests: int = 5
     rate_limit_window_seconds: int = 60
 
-    # AI 献立生成（Xiaomi MiMo / OpenAI 互換 API）
-    ai_base_url: str = "https://api.xiaomimimo.com/v1"
-    ai_model: str = "mimo-v2.6-pro"
-    ai_api_key: str = ""
     ai_timeout_seconds: int = 120
 
-    # 献立表の AI 読み取り（マルチモーダル）
-    # 空なら ai_model を使用する。画像入力に対応したモデルを指定する。
-    ai_ocr_model: str = "mimo-v2.6-flash"
-    ai_ocr_max_pages: int = 5
-
-    # OpenAI 献立表解析（設定時はこちらを優先）
+    # OpenAI による献立生成・献立表解析
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
-    openai_ocr_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-4o-mini"
+    openai_max_pages: int = 5
 
 
 @lru_cache

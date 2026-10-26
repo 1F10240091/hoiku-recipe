@@ -1,12 +1,11 @@
-"""AI（Xiaomi MiMo）による献立表読み取りサービス。
+"""OpenAI による献立表読み取りサービス。
 
 従来の pypdf / easyocr による文字抽出ではなく、献立表の画像を
 マルチモーダル LLM に直接渡し、日付・食事区分・料理名を構造化して受け取る。
 
 - 画像（PNG/JPEG/WebP）はそのまま送信する。
 - PDF は PyMuPDF でページ画像に変換して送信する（先頭数ページのみ）。
-- API キー未設定・通信失敗・JSON 不正時は AIOCRError を送出し、
-  呼び出し側（menus.py）が従来の OCR にフォールバックする。
+- API キー未設定・通信失敗・JSON 不正時は AIOCRError を送出する。
 
 API キーはサーバー側の環境変数（AI_API_KEY）からのみ読み込む。
 フロントエンドや API レスポンスに含めてはならない。
@@ -63,7 +62,7 @@ _PROMPT = """あなたは保育園の献立表を読み取るアシスタント�
 def is_available() -> bool:
     """AI 読み取りが設定されているか。"""
     settings = get_settings()
-    return bool(settings.openai_api_key.strip() or settings.ai_api_key.strip())
+    return bool(settings.openai_api_key.strip())
 
 
 def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMenuEntry]:
@@ -73,14 +72,14 @@ def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMen
         AIOCRError: API キー未設定、通信失敗、応答の解析失敗など。
     """
     settings = get_settings()
-    api_key = settings.openai_api_key.strip() or settings.ai_api_key.strip()
+    api_key = settings.openai_api_key.strip()
     if not api_key:
         raise AIOCRError("AI_API_KEY が設定されていません")
 
     if len(data) > MAX_FILE_BYTES:
         raise AIOCRError("ファイルサイズが大きすぎます（15MB 以下にしてください）")
 
-    images = _to_png_images(filename, content_type, data, max_pages=settings.ai_ocr_max_pages)
+    images = _to_png_images(filename, content_type, data, max_pages=settings.openai_max_pages)
     if not images:
         raise AIOCRError("読み取れる画像がありませんでした")
 
@@ -185,8 +184,7 @@ def _clean_text(value: object) -> str | None:
 
 def _request(api_key: str, prompt: str, images: list[bytes]) -> str:
     settings = get_settings()
-    use_openai = bool(settings.openai_api_key.strip())
-    model = settings.openai_ocr_model.strip() if use_openai else settings.ai_ocr_model.strip() or settings.ai_model
+    model = settings.openai_model.strip()
     content: list[dict] = []
     for image in images:
         content.append(
@@ -204,14 +202,12 @@ def _request(api_key: str, prompt: str, images: list[bytes]) -> str:
         "max_tokens": 1200,
         "stream": False,
     }
-    if use_openai:
-        payload["response_format"] = {"type": "json_object"}
+    payload["response_format"] = {"type": "json_object"}
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
-    base_url = settings.openai_base_url if use_openai else settings.ai_base_url
-    url = f"{base_url.rstrip('/')}/chat/completions"
+    url = f"{settings.openai_base_url.rstrip('/')}/chat/completions"
 
     try:
         with httpx.Client(timeout=settings.ai_timeout_seconds) as client:
