@@ -120,6 +120,8 @@ export interface Recipe {
   ingredients: { name: string; quantity?: string; unit?: string }[];
   instructions: string;
   cook_time_minutes?: number | null;
+  /** 「喜んでた」が押された回数（ログインユーザー分） */
+  liked_count?: number;
 }
 
 export interface RecipeSearchParams {
@@ -127,8 +129,23 @@ export interface RecipeSearchParams {
   meal_type?: string;
   ingredient?: string;
   max_cook_time?: number;
+  sort?: "name" | "liked";
   page?: number;
   per_page?: number;
+}
+
+export interface LikesSummary {
+  /** 押されている献立×料理の組 */
+  liked: { meal_id: string; recipe_id: string }[];
+  /** レシピID → 喜ばれた回数 */
+  counts: Record<string, number>;
+}
+
+export interface LikeToggleResponse {
+  meal_id: string;
+  recipe_id: string;
+  liked: boolean;
+  liked_count: number;
 }
 
 export interface RecipeSearchResponse {
@@ -228,6 +245,7 @@ const realApi = {
     if (params.ingredient) sp.set("ingredient", params.ingredient);
     if (params.max_cook_time)
       sp.set("max_cook_time", String(params.max_cook_time));
+    if (params.sort) sp.set("sort", params.sort);
     if (params.page) sp.set("page", String(params.page));
     if (params.per_page) sp.set("per_page", String(params.per_page));
     const qs = sp.toString();
@@ -245,6 +263,15 @@ const realApi = {
     return request<GenerateResponse>("/recipes/generate", {
       method: "POST",
       body: JSON.stringify({ child_id: childId, menu_date: menuDate, days }),
+    });
+  },
+  listLikes() {
+    return request<LikesSummary>("/likes");
+  },
+  toggleLike(mealId: string, recipeId: string) {
+    return request<LikeToggleResponse>("/likes/toggle", {
+      method: "POST",
+      body: JSON.stringify({ meal_id: mealId, recipe_id: recipeId }),
     });
   },
   getShoppingList() {

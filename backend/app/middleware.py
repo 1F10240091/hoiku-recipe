@@ -49,5 +49,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content={"detail": "試行回数が多すぎます。しばらく待ってから再度お試しください。"},
             )
 
-        hits.append(now)
-        return await call_next(request)
+        # 失敗した試行だけを数える。ログイン成功や登録成功で枠を消費しないため、
+        # 学内など同じ IP を共有する環境でもデモ中に 429 になりにくい。
+        response = await call_next(request)
+        if response.status_code in {400, 401, 403, 422}:
+            hits.append(now)
+        return response

@@ -36,6 +36,10 @@ function RecipeSearchInner() {
       max_cook_time: searchParams.get("max_cook_time")
         ? Number(searchParams.get("max_cook_time"))
         : undefined,
+      sort:
+        searchParams.get("sort") === "liked"
+          ? ("liked" as const)
+          : ("name" as const),
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       per_page: 12,
     };
@@ -59,6 +63,15 @@ function RecipeSearchInner() {
   }, [authReady, searchParams]);
 
   const mealType = searchParams.get("meal_type") ?? "";
+  const sort = searchParams.get("sort") === "liked" ? "liked" : "name";
+  const sortHref = (value: "name" | "liked") => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "name") params.delete("sort");
+    else params.set("sort", value);
+    params.delete("page");
+    const qs = params.toString();
+    return `/recipe-search${qs ? `?${qs}` : ""}`;
+  };
   const filtered = Boolean(
     searchParams.get("keyword") ||
       searchParams.get("meal_type") ||
@@ -135,6 +148,30 @@ function RecipeSearchInner() {
             <h2 className="home-section-title">
               {filtered ? "検索結果" : "おすすめのレシピ"}
             </h2>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginBottom: 12,
+                fontSize: 14,
+              }}
+              aria-label="並び順"
+            >
+              <Link
+                href={sortHref("name")}
+                className={`button button--sm${sort === "name" ? "" : " button--secondary"}`}
+                aria-current={sort === "name" ? "true" : undefined}
+              >
+                名前順
+              </Link>
+              <Link
+                href={sortHref("liked")}
+                className={`button button--sm${sort === "liked" ? "" : " button--secondary"}`}
+                aria-current={sort === "liked" ? "true" : undefined}
+              >
+                ♥ 喜ばれた順
+              </Link>
+            </div>
             <RecipeList result={result} />
           </>
         )}

@@ -5,7 +5,7 @@
 API キー未設定時はルールベースにフォールバックする。
 """
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -66,15 +66,34 @@ def generate_recipe(
         yesterday_menu=yesterday_menu,
         inventory=inventory,
         recipes=recipes,
+        child_age_months=_age_months(child.birth_date, payload.menu_date),
     )
 
     meals: list[SuggestedMeal] = []
     for menu in generated:
+        recipe_ids = list(menu.recipe_ids)
+        if menu.dish_details:
+            # AI が新しく考案した料理をレシピ一覧に登録する（同名は再利用）
+            recipe_ids = []
+            for detail in menu.dish_details:
+                recipe = db.query(Recipe).filter(Recipe.name == detail["name"]).first()
+                if recipe is None:
+                    recipe = Recipe(
+                        name=detail["name"],
+                        meal_type=detail["meal_type"],
+                        ingredients=detail["ingredients"],
+                        instructions=detail["instructions"],
+                        cook_time_minutes=detail["cook_time_minutes"],
+                    )
+                    db.add(recipe)
+                    db.flush()
+                recipe_ids.append(recipe.id)
+
         meal = SuggestedMeal(
             user_id=user.id,
             date=menu.date,
             menu_text=menu.menu_text,
-            ingredients={"dishes": menu.dishes, "engine": menu.engine, "recipe_ids": menu.recipe_ids},
+            ingredients={"dishes": menu.dishes, "engine": menu.engine, "recipe_ids": recipe_ids},
         )
         db.add(meal)
         meals.append(meal)
@@ -83,6 +102,16 @@ def generate_recipe(
         db.refresh(meal)
 
     return GenerateResponse(meals=meals)
+
+
+def _age_months(birth_date: date | None, on: date) -> int | None:
+    """生年月から対象日時点の月齢を求める（日は 01 固定で保持している）。"""
+    if birth_date is None:
+        return None
+    months = (on.year - birth_date.year) * 12 + (on.month - birth_date.month)
+    if on.day < birth_date.day:
+        months -= 1
+    return max(months, 0)
 
 
 @router.get("/{meal_id}", response_model=MealResponse)

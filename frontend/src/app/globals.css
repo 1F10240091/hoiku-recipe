@@ -178,6 +178,87 @@ h3 {
   width: 100%;
 }
 
+/* --- 「喜んでた」ボタン --- */
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 48px;
+  padding: 5px 11px;
+  border: 2px solid #ffc9d5;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-pink-deep);
+  font-size: 14px;
+  font-weight: 800;
+  font-family: var(--font-maru);
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.like-button > span:first-child {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.like-button:hover {
+  background: var(--color-pink-wash);
+  transform: translateY(-1px);
+}
+
+.like-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.like-button--on {
+  background: var(--color-pink-deep);
+  border-color: var(--color-pink-deep);
+  color: #fff;
+}
+
+.like-button__count {
+  min-width: 1em;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  text-align: center;
+}
+
+.dish-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--color-line);
+}
+
+.dish-row:last-child {
+  border-bottom: none;
+}
+
+.dish-row__main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dish-row__name {
+  font-weight: 700;
+}
+
+.dish-row__meta {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
 /* --- カード --- */
 .card {
   background: var(--color-card);

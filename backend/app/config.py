@@ -26,9 +26,14 @@ class Settings(BaseSettings):
 
     # AI 献立生成（Xiaomi MiMo / OpenAI 互換 API）
     ai_base_url: str = "https://api.xiaomimimo.com/v1"
-    ai_model: str = "mimo-v2.5-pro"
+    ai_model: str = "mimo-v2.6-pro"
     ai_api_key: str = ""
     ai_timeout_seconds: int = 120
+
+    # 献立表の AI 読み取り（マルチモーダル）
+    # 空なら ai_model を使用する。画像入力に対応したモデルを指定する。
+    ai_ocr_model: str = "mimo-v2.6-flash"
+    ai_ocr_max_pages: int = 5
 
 
 @lru_cache

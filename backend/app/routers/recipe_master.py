@@ -1,10 +1,11 @@
 """レシピマスタ API（一覧・検索・作成・更新・削除）。"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Recipe
+from app.models import Recipe, RecipeLike
 from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
 from app.services.ingredients import list_recipe_ingredient_names
@@ -12,14 +13,30 @@ from app.services.ingredients import list_recipe_ingredient_names
 router = APIRouter(prefix="/recipe-master", tags=["recipe-master"])
 
 
+def _like_counts(db: Session, user_id: str) -> dict[str, int]:
+    rows = (
+        db.query(RecipeLike.recipe_id, func.count(RecipeLike.id))
+        .filter(RecipeLike.user_id == user_id)
+        .group_by(RecipeLike.recipe_id)
+        .all()
+    )
+    return {recipe_id: int(count) for recipe_id, count in rows}
+
+
+def _to_response(recipe: Recipe, counts: dict[str, int]) -> RecipeResponse:
+    response = RecipeResponse.model_validate(recipe)
+    return response.model_copy(update={"liked_count": counts.get(recipe.id, 0)})
+
+
 @router.get("", response_model=list[RecipeResponse])
 def list_recipes(
     meal_type: str | None = None, user=Depends(get_current_user), db: Session = Depends(get_db)
-) -> list[Recipe]:
+) -> list[RecipeResponse]:
     query = db.query(Recipe)
     if meal_type:
         query = query.filter(Recipe.meal_type == meal_type)
-    return query.order_by(Recipe.name).all()
+    counts = _like_counts(db, user.id)
+    return [_to_response(r, counts) for r in query.order_by(Recipe.name).all()]
 
 
 @router.get("/search", response_model=RecipeSearchResponse)
@@ -28,6 +45,7 @@ def search_recipes(
     meal_type: str | None = Query(default=None, description="main | side | soup | staple"),
     ingredient: str | None = Query(default=None, description="材料名の部分一致検索"),
     max_cook_time: int | None = Query(default=None, ge=1, description="最大調理時間（分）"),
+    sort: str = Query(default="name", pattern="^(name|liked)$", description="name | liked（喜ばれた順）"),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
     user=Depends(get_current_user),
@@ -43,7 +61,7 @@ def search_recipes(
     if max_cook_time is not None:
         query = query.filter(Recipe.cook_time_minutes <= max_cook_time)
 
-    recipes = query.order_by(Recipe.name).all()
+    recipes = query.all()
 
     # 材料は JSON の Unicode エスケープで保存されるため LIKE 不可。
     # デコードしてから Python 側で部分一致フィルタする。
@@ -55,13 +73,19 @@ def search_recipes(
             if any(needle in ing.get("name", "").lower() for ing in r.ingredients)
         ]
 
+    counts = _like_counts(db, user.id)
+    if sort == "liked":
+        recipes.sort(key=lambda r: (-counts.get(r.id, 0), r.name))
+    else:
+        recipes.sort(key=lambda r: r.name)
+
     total = len(recipes)
     total_pages = (total + per_page - 1) // per_page if total else 0
     start = (page - 1) * per_page
     page_items = recipes[start : start + per_page]
 
     return RecipeSearchResponse(
-        recipes=[RecipeResponse.model_validate(r) for r in page_items],
+        recipes=[_to_response(r, counts) for r in page_items],
         total=total,
         page=page,
         per_page=per_page,

@@ -25,6 +25,11 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
             {recipe.cook_time_minutes}分
           </span>
         )}
+        {(recipe.liked_count ?? 0) > 0 && (
+          <span className="recipe-card__time">
+            ♥ 喜ばれた {recipe.liked_count} 回
+          </span>
+        )}
       </div>
       <h3>{recipe.name}</h3>
       {ingredientNames && (

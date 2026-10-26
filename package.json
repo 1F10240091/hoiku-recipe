@@ -10,8 +10,9 @@
     "setup": "npm install && npm run setup:backend",
     "setup:backend": "cd backend && python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt",
     "dev": "npm run dev:backend & npm run dev:frontend",
-    "dev:frontend": "npm run dev --workspace frontend",
-    "dev:backend": "cd backend && .venv\\Scripts\\uvicorn app.main:app --reload --port 8000",
+    "dev:frontend": "npm run dev --workspace frontend -- -H 127.0.0.1",
+    "dev:backend": "cd backend && .venv\\Scripts\\uvicorn app.main:app --host 127.0.0.1 --reload --port 8000",
+    "start:frontend": "npm run start --workspace frontend -- -H 127.0.0.1",
     "build": "npm run build --workspace frontend",
     "lint": "npm run lint --workspace frontend"
   },

@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Index, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -111,6 +111,22 @@ class Recipe(Base):
     ingredients: Mapped[list] = mapped_column(JSON, default=list)
     instructions: Mapped[str] = mapped_column(Text, default="")
     cook_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class RecipeLike(Base):
+    """献立の料理に対する「喜んでた」評価。
+
+    同じ献立・同じ料理を二重に数えないよう (user_id, meal_id, recipe_id) を一意にする。
+    """
+
+    __tablename__ = "recipe_likes"
+    __table_args__ = (UniqueConstraint("user_id", "meal_id", "recipe_id", name="uq_recipe_like"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    meal_id: Mapped[str] = mapped_column(ForeignKey("suggested_meals.id"), index=True, nullable=False)
+    recipe_id: Mapped[str] = mapped_column(ForeignKey("recipes.id"), index=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 

@@ -175,6 +175,7 @@ class RecipeResponse(ORMModel):
     ingredients: list[Ingredient]
     instructions: str
     cook_time_minutes: int | None
+    liked_count: int = 0
 
 
 class RecipeSearchResponse(BaseModel):
@@ -183,6 +184,29 @@ class RecipeSearchResponse(BaseModel):
     page: int
     per_page: int
     total_pages: int
+
+
+class LikeToggleRequest(BaseModel):
+    meal_id: str
+    recipe_id: str
+
+
+class LikeToggleResponse(BaseModel):
+    meal_id: str
+    recipe_id: str
+    liked: bool
+    liked_count: int
+
+
+class LikesSummary(BaseModel):
+    """ユーザーの「喜んでた」状態。
+
+    liked: 押されている (meal_id, recipe_id) の組
+    counts: レシピID → 喜ばれた回数
+    """
+
+    liked: list[dict[str, str]]
+    counts: dict[str, int]
 
 
 # --- 買い物リスト ---

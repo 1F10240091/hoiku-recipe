@@ -12,6 +12,8 @@ import {
 import type {
   Child,
   GenerateResponse,
+  LikeToggleResponse,
+  LikesSummary,
   NurseryMenu,
   Recipe,
   RecipeSearchResponse,
@@ -70,6 +72,25 @@ function containsAllergen(recipe: DemoRecipe, allergens: string[]): boolean {
 // デモ用にアレルゲン判定したレシピリストを返す
 function safeRecipes(allergens: string[]): DemoRecipe[] {
   return DEMO_RECIPES.filter((r) => !containsAllergen(r, allergens));
+}
+
+type DemoLike = { meal_id: string; recipe_id: string };
+
+function loadLikes(): DemoLike[] {
+  return load<DemoLike[]>("demo_likes", []);
+}
+
+function likeCounts(): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const like of loadLikes()) {
+    counts[like.recipe_id] = (counts[like.recipe_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function withLikedCounts(recipes: DemoRecipe[]): Recipe[] {
+  const counts = likeCounts();
+  return recipes.map((r) => ({ ...r, liked_count: counts[r.id] ?? 0 }));
 }
 
 export const demoApi = {
@@ -208,7 +229,7 @@ export const demoApi = {
   },
 
   async listRecipes(): Promise<Recipe[]> {
-    return delay(DEMO_RECIPES);
+    return delay(withLikedCounts(DEMO_RECIPES));
   },
 
   async listRecipeIngredients(): Promise<string[]> {
@@ -227,10 +248,11 @@ export const demoApi = {
     meal_type?: string;
     ingredient?: string;
     max_cook_time?: number;
+    sort?: "name" | "liked";
     page?: number;
     per_page?: number;
   }): Promise<RecipeSearchResponse> {
-    let list = DEMO_RECIPES;
+    let list: Recipe[] = withLikedCounts(DEMO_RECIPES);
     if (params.keyword) {
       const kw = params.keyword.toLowerCase();
       list = list.filter(
@@ -255,6 +277,15 @@ export const demoApi = {
           r.cook_time_minutes <= params.max_cook_time!,
       );
     }
+    if (params.sort === "liked") {
+      list = [...list].sort(
+        (a, b) =>
+          (b.liked_count ?? 0) - (a.liked_count ?? 0) ||
+          a.name.localeCompare(b.name, "ja"),
+      );
+    } else {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    }
     const per_page = params.per_page ?? 20;
     const page = params.page ?? 1;
     const total = list.length;
@@ -271,11 +302,40 @@ export const demoApi = {
   async getRecipe(recipeId: string): Promise<Recipe> {
     const recipe = DEMO_RECIPES.find((r) => r.id === recipeId);
     if (!recipe) throw new Error("レシピが見つかりません");
-    return delay(recipe);
+    return delay(withLikedCounts([recipe])[0]);
   },
 
   async listMealRecipes(): Promise<SuggestedMeal[]> {
     return delay(load<SuggestedMeal[]>("demo_meals", []));
+  },
+
+  async listLikes(): Promise<LikesSummary> {
+    return delay({ liked: loadLikes(), counts: likeCounts() });
+  },
+
+  async toggleLike(
+    mealId: string,
+    recipeId: string,
+  ): Promise<LikeToggleResponse> {
+    const likes = loadLikes();
+    const index = likes.findIndex(
+      (l) => l.meal_id === mealId && l.recipe_id === recipeId,
+    );
+    let liked: boolean;
+    if (index >= 0) {
+      likes.splice(index, 1);
+      liked = false;
+    } else {
+      likes.push({ meal_id: mealId, recipe_id: recipeId });
+      liked = true;
+    }
+    save("demo_likes", likes);
+    return delay({
+      meal_id: mealId,
+      recipe_id: recipeId,
+      liked,
+      liked_count: likeCounts()[recipeId] ?? 0,
+    });
   },
 
   async generateRecipe(
@@ -293,10 +353,19 @@ export const demoApi = {
         .map((p) => p.ingredient) ?? []),
     ];
 
-    // 保育園の昼食と重複しない主菜を選ぶ
-    const mainRecipes = safeRecipes(allergens).filter(
-      (r) => r.meal_type === "main",
-    );
+    // 保育園の昼食と重複しない主菜を選ぶ。在庫の食材を使う料理を優先する。
+    const inventory = load<ShoppingItem[]>("demo_inventory", []);
+    const inventoryNames = inventory.map((i) => i.name.trim()).filter(Boolean);
+    const inventoryScore = (r: DemoRecipe) =>
+      r.ingredients.filter((ing) =>
+        inventoryNames.some(
+          (name) => ing.name.includes(name) || name.includes(ing.name),
+        ),
+      ).length;
+
+    const mainRecipes = safeRecipes(allergens)
+      .filter((r) => r.meal_type === "main")
+      .sort((a, b) => inventoryScore(b) - inventoryScore(a));
     const soup = safeRecipes(allergens).find((r) => r.meal_type === "soup");
     const side = safeRecipes(allergens).find((r) => r.meal_type === "side");
     const staple = safeRecipes(allergens).find((r) => r.meal_type === "staple");
