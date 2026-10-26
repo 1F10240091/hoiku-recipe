@@ -5,7 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Recipe, RecipeLike
+from app.models import Recipe, RecipeFavorite, RecipeLike
 from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
 from app.services.ingredients import list_recipe_ingredient_names
@@ -23,9 +23,13 @@ def _like_counts(db: Session, user_id: str) -> dict[str, int]:
     return {recipe_id: int(count) for recipe_id, count in rows}
 
 
-def _to_response(recipe: Recipe, counts: dict[str, int]) -> RecipeResponse:
+def _to_response(recipe: Recipe, counts: dict[str, int], favorites: set[str] | None = None) -> RecipeResponse:
     response = RecipeResponse.model_validate(recipe)
-    return response.model_copy(update={"liked_count": counts.get(recipe.id, 0)})
+    return response.model_copy(update={"liked_count": counts.get(recipe.id, 0), "is_favorite": recipe.id in (favorites or set())})
+
+
+def _favorites(db: Session, user_id: str) -> set[str]:
+    return {row.recipe_id for row in db.query(RecipeFavorite).filter(RecipeFavorite.user_id == user_id).all()}
 
 
 @router.get("", response_model=list[RecipeResponse])
@@ -36,7 +40,8 @@ def list_recipes(
     if meal_type:
         query = query.filter(Recipe.meal_type == meal_type)
     counts = _like_counts(db, user.id)
-    return [_to_response(r, counts) for r in query.order_by(Recipe.name).all()]
+    favorites = _favorites(db, user.id)
+    return [_to_response(r, counts, favorites) for r in query.order_by(Recipe.name).all()]
 
 
 @router.get("/search", response_model=RecipeSearchResponse)
@@ -74,6 +79,7 @@ def search_recipes(
         ]
 
     counts = _like_counts(db, user.id)
+    favorites = _favorites(db, user.id)
     if sort == "liked":
         recipes.sort(key=lambda r: (-counts.get(r.id, 0), r.name))
     else:
@@ -85,7 +91,7 @@ def search_recipes(
     page_items = recipes[start : start + per_page]
 
     return RecipeSearchResponse(
-        recipes=[_to_response(r, counts) for r in page_items],
+        recipes=[_to_response(r, counts, favorites) for r in page_items],
         total=total,
         page=page,
         per_page=per_page,
@@ -109,11 +115,17 @@ def create_recipe(payload: RecipeCreate, user=Depends(get_current_user), db: Ses
         ingredients=[i.model_dump() for i in payload.ingredients],
         instructions=payload.instructions,
         cook_time_minutes=payload.cook_time_minutes,
+        cuisine=payload.cuisine,
+        age_min_months=payload.age_min_months,
+        age_max_months=max(payload.age_min_months, payload.age_max_months),
+        is_official=False,
+        owner_id=user.id,
+        is_public=payload.is_public,
     )
     db.add(recipe)
     db.commit()
     db.refresh(recipe)
-    return recipe
+    return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
 
 
 @router.get("/{recipe_id}", response_model=RecipeResponse)
@@ -121,14 +133,14 @@ def get_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = Dep
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
-    return recipe
+    return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
 
 
 @router.put("/{recipe_id}", response_model=RecipeResponse)
 def update_recipe(
     recipe_id: str, payload: RecipeUpdate, user=Depends(get_current_user), db: Session = Depends(get_db)
 ) -> Recipe:
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, (Recipe.is_official == True) | (Recipe.owner_id == user.id)).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
 
@@ -142,15 +154,49 @@ def update_recipe(
         recipe.instructions = payload.instructions
     if payload.cook_time_minutes is not None:
         recipe.cook_time_minutes = payload.cook_time_minutes
+    if payload.cuisine is not None:
+        recipe.cuisine = payload.cuisine
+    if payload.age_min_months is not None:
+        recipe.age_min_months = payload.age_min_months
+    if payload.age_max_months is not None:
+        recipe.age_max_months = max(recipe.age_min_months, payload.age_max_months)
+    if payload.is_public is not None and not recipe.is_official:
+        recipe.is_public = payload.is_public
     db.commit()
     db.refresh(recipe)
-    return recipe
+    return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
 
 
 @router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = Depends(get_db)) -> None:
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, Recipe.owner_id == user.id, Recipe.is_official == False).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
     db.delete(recipe)
     db.commit()
+
+
+@router.get("/my-favorites", response_model=list[RecipeResponse])
+def list_favorites(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[RecipeResponse]:
+    recipes = (
+        db.query(Recipe)
+        .join(RecipeFavorite, RecipeFavorite.recipe_id == Recipe.id)
+        .filter(RecipeFavorite.user_id == user.id)
+        .order_by(Recipe.name)
+        .all()
+    )
+    return [_to_response(r, _like_counts(db, user.id), {x.id for x in recipes}) for r in recipes]
+
+
+@router.post("/{recipe_id}/favorite", response_model=RecipeResponse)
+def toggle_favorite(recipe_id: str, user=Depends(get_current_user), db: Session = Depends(get_db)) -> RecipeResponse:
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, (Recipe.is_official == True) | (Recipe.owner_id == user.id)).first()
+    if recipe is None:
+        raise HTTPException(status_code=404, detail="レシピが見つかりません")
+    favorite = db.query(RecipeFavorite).filter(RecipeFavorite.user_id == user.id, RecipeFavorite.recipe_id == recipe_id).first()
+    if favorite:
+        db.delete(favorite)
+    else:
+        db.add(RecipeFavorite(user_id=user.id, recipe_id=recipe_id))
+    db.commit()
+    return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))

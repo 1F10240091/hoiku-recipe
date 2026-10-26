@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, migrate_recipe_columns
 from app.middleware import RateLimitMiddleware
 from app.routers import auth, children, feedback, likes, menus, recipe_master, recipes, shopping
 from app.services.seed import seed_recipes
@@ -12,6 +12,7 @@ from app.services.seed import seed_recipes
 settings = get_settings()
 
 Base.metadata.create_all(bind=engine)
+migrate_recipe_columns()
 
 # レシピマスタのシード投入（初回起動時のみ追加）
 with SessionLocal() as db:

@@ -169,10 +169,15 @@ def _generate_rule_based(
     nursery_text = " ".join(nursery_menus)
     yesterday_dishes = _extract_dishes(yesterday_menu) if yesterday_menu else []
 
-    mains = [r for r in recipes if r.meal_type == "main"]
-    soup = next((r for r in recipes if r.meal_type == "soup" and not _recipe_has_allergen(r, allergens)), None)
-    sides = [r for r in recipes if r.meal_type == "side" and not _recipe_has_allergen(r, allergens)]
-    staple = next((r for r in recipes if r.meal_type == "staple" and not _recipe_has_allergen(r, allergens)), None)
+    age_eligible = [
+        r for r in recipes
+        if child_age_months is None
+        or getattr(r, "age_min_months", 12) <= child_age_months <= getattr(r, "age_max_months", 72)
+    ]
+    mains = [r for r in age_eligible if r.meal_type == "main"]
+    soups = [r for r in age_eligible if r.meal_type == "soup" and not _recipe_has_allergen(r, allergens)]
+    sides = [r for r in age_eligible if r.meal_type == "side" and not _recipe_has_allergen(r, allergens)]
+    staples = [r for r in age_eligible if r.meal_type == "staple" and not _recipe_has_allergen(r, allergens)]
 
     def _uses_inventory(recipe: Recipe) -> int:
         """レシピが在庫食材をいくつ使っているかカウント（優先度用）。"""
@@ -196,6 +201,7 @@ def _generate_rule_based(
         if any(_shared_names([main.name], [prev[0].name]) for prev in selected):
             continue
         combo = [main]
+        soup = next((s for s in soups if not _shared_names([main.name], [s.name])), None)
         if soup:
             combo.append(soup)
         if sides:
@@ -203,7 +209,8 @@ def _generate_rule_based(
             scored_sides = [( _uses_inventory(s), s) for s in sides]
             scored_sides.sort(key=lambda x: -x[0])
             combo.append(scored_sides[len(selected) % len(scored_sides)][1])
-        if staple and staple.name != main.name:
+        staple = next((s for s in staples if s.name != main.name), None)
+        if staple:
             combo.append(staple)
         selected.append(combo)
 

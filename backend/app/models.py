@@ -111,6 +111,12 @@ class Recipe(Base):
     ingredients: Mapped[list] = mapped_column(JSON, default=list)
     instructions: Mapped[str] = mapped_column(Text, default="")
     cook_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cuisine: Mapped[str] = mapped_column(String(20), default="和", nullable=False)
+    age_min_months: Mapped[int] = mapped_column(Integer, default=12, nullable=False)
+    age_max_months: Mapped[int] = mapped_column(Integer, default=72, nullable=False)
+    is_official: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    owner_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
@@ -126,6 +132,16 @@ class RecipeLike(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     meal_id: Mapped[str] = mapped_column(ForeignKey("suggested_meals.id"), index=True, nullable=False)
+    recipe_id: Mapped[str] = mapped_column(ForeignKey("recipes.id"), index=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class RecipeFavorite(Base):
+    __tablename__ = "recipe_favorites"
+    __table_args__ = (UniqueConstraint("user_id", "recipe_id", name="uq_recipe_favorite"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     recipe_id: Mapped[str] = mapped_column(ForeignKey("recipes.id"), index=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 

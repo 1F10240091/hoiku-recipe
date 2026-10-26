@@ -158,6 +158,10 @@ class RecipeCreate(BaseModel):
     ingredients: list[Ingredient] = []
     instructions: str = ""
     cook_time_minutes: int | None = Field(default=None, ge=1)
+    cuisine: str = Field(default="和", min_length=1, max_length=20)
+    age_min_months: int = Field(default=12, ge=0, le=216)
+    age_max_months: int = Field(default=72, ge=0, le=216)
+    is_public: bool = False
 
 
 class RecipeUpdate(BaseModel):
@@ -166,6 +170,10 @@ class RecipeUpdate(BaseModel):
     ingredients: list[Ingredient] | None = None
     instructions: str | None = None
     cook_time_minutes: int | None = Field(default=None, ge=1)
+    cuisine: str | None = Field(default=None, min_length=1, max_length=20)
+    age_min_months: int | None = Field(default=None, ge=0, le=216)
+    age_max_months: int | None = Field(default=None, ge=0, le=216)
+    is_public: bool | None = None
 
 
 class RecipeResponse(ORMModel):
@@ -176,6 +184,12 @@ class RecipeResponse(ORMModel):
     instructions: str
     cook_time_minutes: int | None
     liked_count: int = 0
+    cuisine: str = "和"
+    age_min_months: int = 12
+    age_max_months: int = 72
+    is_official: bool = True
+    is_public: bool = False
+    is_favorite: bool = False
 
 
 class RecipeSearchResponse(BaseModel):
