@@ -59,7 +59,6 @@ export default function MenusPage() {
       if (!error) {
         window.setTimeout(() => setUploadStatus("idle"), 2500);
       }
-      e.target.value = "";
     }
   };
 
