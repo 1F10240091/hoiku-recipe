@@ -1,4 +1,4 @@
-"""献立表 API（OCR 読み取り・一覧・詳細）。"""
+"""献立表 API（Gemini解析・一覧・詳細）。"""
 
 import logging
 from datetime import date

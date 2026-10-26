@@ -19,7 +19,7 @@ from app.services.ocr_ai import AIOCRError, extract_entries, is_available  # noq
 
 def main() -> int:
     if not is_available():
-        print("AI_API_KEY が未設定です。backend/.env に設定してから再実行してください。")
+        print("GEMINI_API_KEY が未設定です。backend/.env に設定してから再実行してください。")
         return 1
 
     path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[2] / "docs" / "sample-nursery-menu.pdf"
