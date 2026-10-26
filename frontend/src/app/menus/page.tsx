@@ -12,6 +12,7 @@ export default function MenusPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "saved">("idle");
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadMenus = () => {
@@ -31,9 +32,17 @@ export default function MenusPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const uploadFile = async (file?: File) => {
     if (!file) return;
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setError("PDF・PNG・JPEG・WebPのファイルを選択してください");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setError("ファイルサイズは15MB以下にしてください");
+      return;
+    }
     setUploading(true);
     setUploadStatus("uploading");
     setError(null);
@@ -54,6 +63,17 @@ export default function MenusPage() {
     }
   };
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    await uploadFile(e.target.files?.[0]);
+    e.target.value = "";
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    await uploadFile(e.dataTransfer.files?.[0]);
+  };
+
   return (
     <main className="main">
       <AppNav />
@@ -65,7 +85,18 @@ export default function MenusPage() {
             保育園から配布された献立表を読み取り、デジタル化します。
           </p>
         </div>
-        <div className="card menu-upload-card">
+        <div
+          className={"card menu-upload-card" + (isDragging ? " menu-upload-card--dragging" : "")}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={(e) => {
+            if (e.currentTarget === e.target) setIsDragging(false);
+          }}
+          onDrop={handleDrop}
+        >
           <p className="card__text">
             保育園から配布された献立表（PDF
             または画像）をアップロードしてください。
@@ -77,6 +108,7 @@ export default function MenusPage() {
             解析以外の目的では使用せず、アプリ内の献立データとして保存します。
             個人名などが含まれる場合は、必要に応じて隠してからアップロードしてください。
           </div>
+          <p className="drop-hint">ここにPDF・画像をドラッグ＆ドロップ</p>
           <label
             className="button upload-button"
             style={{ display: "inline-block", cursor: "pointer" }}
