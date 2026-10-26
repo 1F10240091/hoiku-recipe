@@ -9,7 +9,10 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # 古いローカル .env に残った廃止設定が起動を妨げないよう無視する。
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     app_name: str = "Hoiku-Recipe API"
     version: str = "0.1.0"
