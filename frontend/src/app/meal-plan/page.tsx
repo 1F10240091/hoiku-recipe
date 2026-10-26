@@ -248,7 +248,7 @@ export default function MealPlanPage() {
                 提案された献立（{mealPlan.meals.length} 日分）
               </h2>
               {mealPlan.meals[0].ingredients.engine === "openai_freeform" ? (
-                <span className="badge">AI（OpenAI）が考案</span>
+                <span className="badge">AI（Gemini）が考案</span>
               ) : (
                 <span className="badge badge--muted">
                   ルールベース（登録レシピから選定）

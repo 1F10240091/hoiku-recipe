@@ -29,7 +29,7 @@ async def upload_menu(
 ) -> NurseryMenu:
     """献立表の PDF/画像をアップロードし、献立として保存する。
 
-    OpenAI のマルチモーダル API だけで読み取る。
+    Gemini のマルチモーダル API だけで読み取る。
     """
     if file.content_type not in {"application/pdf", "image/png", "image/jpeg", "image/webp"}:
         raise HTTPException(status_code=415, detail="PDF・PNG・JPEG・WebPのみ対応しています")
@@ -46,7 +46,7 @@ async def upload_menu(
             data=data,
         )
     except ocr_ai.AIOCRError as exc:
-        logger.warning("OpenAI による献立表解析に失敗しました: %s", exc)
+        logger.warning("Gemini による献立表解析に失敗しました: %s", exc)
         raise HTTPException(status_code=422, detail="献立表を解析できませんでした") from exc
     saved = _save_ai_entries(db, user, entries)
     if not saved:

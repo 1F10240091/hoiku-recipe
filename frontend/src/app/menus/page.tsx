@@ -103,7 +103,7 @@ export default function MenusPage() {
           <div className="privacy-note" role="note">
             <strong>取り扱いについて</strong>
             <br />
-            アップロードした献立表は解析のためOpenAI APIへ送信されます。
+            アップロードした献立表は解析のためGemini APIへ送信されます。
             解析以外の目的では使用せず、アプリ内の献立データとして保存します。
             個人名などが含まれる場合は、必要に応じて隠してからアップロードしてください。
           </div>
