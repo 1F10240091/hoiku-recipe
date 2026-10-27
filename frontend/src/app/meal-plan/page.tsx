@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useMutation } from "@/lib/useMutation";
+import MutationStatus from "@/components/MutationStatus";
 import AppNav from "@/components/AppNav";
 import LikeButton from "@/components/LikeButton";
 import {
@@ -23,6 +25,7 @@ function formatDate(value: string): string {
 
 export default function MealPlanPage() {
   const authReady = useRequireAuth();
+  const inventoryMutation = useMutation();
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChild, setSelectedChild] = useState("");
   const [date, setDate] = useState(() => {
@@ -68,25 +71,15 @@ export default function MealPlanPage() {
   const handleAddInventory = async () => {
     const name = newInventoryItem.trim();
     if (!name) return;
-    setError(null);
-    try {
-      await api.addInventory(name);
-      setNewInventoryItem("");
-      const inv = await api.listInventory();
-      setInventory(inv);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "在庫の追加に失敗しました");
-    }
+    await inventoryMutation.run("在庫を追加中", async () => {
+      const item = await api.addInventory(name);
+      setInventory((current) => [...current, item]); setNewInventoryItem("");
+    }, "在庫を追加しました。");
   };
-
   const handleDeleteInventory = async (id: string) => {
-    try {
-      await api.deleteInventory(id);
-      const inv = await api.listInventory();
-      setInventory(inv);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "在庫の削除に失敗しました");
-    }
+    await inventoryMutation.run("在庫を削除中", async () => {
+      await api.deleteInventory(id); setInventory((current) => current.filter((item) => item.id !== id));
+    }, "在庫を削除しました。");
   };
 
   const isLiked = (mealId: string, recipeId: string) =>
@@ -140,6 +133,7 @@ export default function MealPlanPage() {
           </p>
         </div>
 
+        <MutationStatus {...inventoryMutation} />
         {/* 在庫の事前確認・編集 */}
         <div className="card" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -163,7 +157,7 @@ export default function MealPlanPage() {
                 <button
                   className="button"
                   onClick={handleAddInventory}
-                  disabled={!newInventoryItem.trim()}
+                  disabled={!newInventoryItem.trim() || Boolean(inventoryMutation.pending)}
                 >
                   追加
                 </button>
@@ -176,6 +170,7 @@ export default function MealPlanPage() {
                     <li key={item.id ?? item.name} className="list__item" style={{ justifyContent: "space-between" }}>
                       <span>{item.name}</span>
                       <button
+                        disabled={Boolean(inventoryMutation.pending)}
                         onClick={() => handleDeleteInventory(item.id!)}
                         className="button button--danger button--sm"
                         style={{ padding: "4px 10px", fontSize: 13 }}

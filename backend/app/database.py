@@ -2,7 +2,6 @@
 
 from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
 
@@ -11,7 +10,7 @@ database_url = settings.database_url
 if database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
-engine = create_engine(database_url, connect_args=connect_args, pool_pre_ping=True, **({"poolclass": NullPool} if settings.environment == "production" else {}))
+engine = create_engine(database_url, connect_args=connect_args, pool_pre_ping=True, **({"pool_size": 2, "max_overflow": 1, "pool_recycle": 120, "pool_timeout": 10} if settings.environment == "production" else {}))
 if database_url.startswith("sqlite"):
     @event.listens_for(engine, "connect")
     def enable_foreign_keys(connection, _record):

@@ -90,6 +90,7 @@ export default function RecipeDetailPage({
                   {ing.name}
                   {ing.quantity ? ` ${ing.quantity}` : ""}
                   {ing.unit ? ing.unit : ""}
+                  {Boolean(ing.components?.length) && <small>（原材料：{ing.components?.join("、")}）</small>}
                 </li>
               ))}
             </ul>

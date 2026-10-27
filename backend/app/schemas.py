@@ -2,9 +2,9 @@
 
 import re
 from datetime import date, datetime
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 # パスワード強度チェック: 8文字以上・英字・数字を含む
 _PASSWORD_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
@@ -77,7 +77,7 @@ class UserUpdate(BaseModel):
 
 # --- お子様 ---
 class AllergyCreate(BaseModel):
-    ingredient: str = Field(min_length=1, max_length=100)
+    ingredient: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 
 
 class AllergyResponse(ORMModel):
@@ -149,6 +149,7 @@ class GenerateResponse(BaseModel):
 
 # --- レシピマスタ ---
 class Ingredient(BaseModel):
+    components: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]] = Field(default_factory=list, max_length=30)
     name: str
     quantity: str = ""
     unit: str = ""

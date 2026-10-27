@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useMutation } from "@/lib/useMutation";
+import MutationStatus from "@/components/MutationStatus";
 import AppNav from "@/components/AppNav";
 import { api, type ShoppingItem } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function ShoppingPage() {
   const authReady = useRequireAuth();
+  const mutation = useMutation();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [inventory, setInventory] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,23 +37,20 @@ export default function ShoppingPage() {
   const handleAdd = async () => {
     const name = newItem.trim();
     if (!name) return;
-    setError(null);
-    try {
-      await api.addInventory(name);
-      setNewItem("");
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "追加に失敗しました");
-    }
+    await mutation.run("在庫を追加中", async () => {
+      const added = await api.addInventory(name);
+      setInventory((items) => [...items, added]); setNewItem("");
+      try { setItems((await api.getShoppingList()).items); }
+      catch { setError("在庫は追加しましたが、買い物リストを更新できませんでした。再読み込みしてください。"); }
+    }, "在庫を追加しました。");
   };
-
   const handleDelete = async (id: string) => {
-    try {
+    await mutation.run("在庫を削除中", async () => {
       await api.deleteInventory(id);
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "削除に失敗しました");
-    }
+      setInventory((items) => items.filter((item) => item.id !== id));
+      try { setItems((await api.getShoppingList()).items); }
+      catch { setError("在庫は削除しましたが、買い物リストを更新できませんでした。再読み込みしてください。"); }
+    }, "在庫を削除しました。");
   };
 
   return (
@@ -64,6 +64,7 @@ export default function ShoppingPage() {
             献立で不足している食材と、冷蔵庫の在庫を確認できます。
           </p>
         </div>
+        <MutationStatus {...mutation} />
         {error && <div className="alert alert--error">{error}</div>}
         {loading ? (
           <div className="loading">読み込み中...</div>
@@ -113,7 +114,7 @@ export default function ShoppingPage() {
             <button
               className="button"
               onClick={handleAdd}
-              disabled={!newItem.trim()}
+              disabled={!newItem.trim() || Boolean(mutation.pending)}
             >
               追加
             </button>
@@ -126,6 +127,7 @@ export default function ShoppingPage() {
                 <li key={item.id ?? item.name} className="list__item">
                   <span>{item.name}</span>
                   <button
+                    disabled={Boolean(mutation.pending)}
                     onClick={() => handleDelete(item.id!)}
                     className="button button--danger button--sm"
                   >

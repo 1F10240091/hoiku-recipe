@@ -7,7 +7,7 @@ from app.models import Recipe
 
 def list_recipe_ingredient_names(db: Session, user_id: str | None = None) -> list[str]:
     """レシピマスタで使われている食材名を重複なく返す。"""
-    names: set[str] = set()
+    names: set[str] = {"卵", "乳", "小麦", "そば", "大豆", "落花生", "くるみ", "ごま", "えび", "かに"}
     query = db.query(Recipe)
     if user_id is not None:
         query = query.filter(Recipe.is_official.is_(True) | Recipe.is_public.is_(True) | (Recipe.owner_id == user_id))

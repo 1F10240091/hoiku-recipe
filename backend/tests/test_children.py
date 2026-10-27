@@ -41,27 +41,27 @@ def test_add_preference_validate_mode(auth_client):
     assert res.status_code == 422
 
 
-def test_allergy_must_be_recipe_ingredient(auth_client):
+def test_allergy_accepts_free_text(auth_client):
     res = auth_client.post("/api/v1/children", json={"name": "ゆい", "allergies": [], "preferences": []})
     child_id = res.json()["id"]
 
-    # レシピに無い食材は拒否される
+    # レシピに無い食材も登録できる
     res = auth_client.post(
         f"/api/v1/children/{child_id}/allergies", json={"ingredient": "存在しない食材XYZ"}
     )
-    assert res.status_code == 422
+    assert res.status_code == 201
 
     # レシピにある食材（シードの「卵」）は登録できる
     res = auth_client.post(f"/api/v1/children/{child_id}/allergies", json={"ingredient": "卵"})
     assert res.status_code == 201
-    assert [a["ingredient"] for a in res.json()["allergies"]] == ["卵"]
+    assert "卵" in [a["ingredient"] for a in res.json()["allergies"]]
 
-    # 作成時にレシピに無いアレルギーを指定しても拒否される
+    # 作成時もレシピに無い食材を指定できる
     res = auth_client.post(
         "/api/v1/children",
         json={"name": "れん", "allergies": [{"ingredient": "存在しない食材XYZ"}], "preferences": []},
     )
-    assert res.status_code == 422
+    assert res.status_code == 201
 
 
 def test_cannot_access_other_users_child(client, auth_client):

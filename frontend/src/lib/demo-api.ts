@@ -62,7 +62,7 @@ const SYNONYMS: Record<string, string[]> = {
 };
 
 function containsAllergen(recipe: DemoRecipe, allergens: string[]): boolean {
-  const text = recipe.ingredients.map((i) => i.name).join(" ");
+  const text = recipe.ingredients.map((i) => [i.name, ...((i as Recipe["ingredients"][number]).components ?? [])].join(" ")).join(" ");
   return allergens.some((a) => {
     const aliases = SYNONYMS[a] ?? [a];
     return aliases.some((alias) => text.includes(alias));

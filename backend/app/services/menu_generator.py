@@ -54,7 +54,7 @@ def _recipe_has_allergen(recipe: Recipe, allergens: list[str]) -> bool:
     """レシピの使用食品にアレルゲンが含まれるか判定する。"""
     if not allergens:
         return False
-    recipe_ingredients = " ".join(str(i.get("name", "")) for i in recipe.ingredients)
+    recipe_ingredients = " ".join(" ".join([str(i.get("name", "")), *[str(component) for component in i.get("components", [])]]) for i in recipe.ingredients)
     return any(_matches_ingredient(a, recipe_ingredients) for a in allergens)
 
 

@@ -7,7 +7,6 @@ from app.database import get_db
 from app.models import Allergy, Child, Preference, User
 from app.routers.auth import get_current_user
 from app.schemas import AllergyCreate, ChildCreate, ChildResponse, ChildUpdate, PreferenceCreate
-from app.services.ingredients import is_recipe_ingredient
 
 router = APIRouter(prefix="/children", tags=["children"])
 
@@ -19,13 +18,6 @@ def list_children(user: User = Depends(get_current_user), db: Session = Depends(
 
 @router.post("", response_model=ChildResponse, status_code=status.HTTP_201_CREATED)
 def create_child(payload: ChildCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Child:
-    # アレルギーはレシピで使われている食材のみ受け付ける
-    for allergy in payload.allergies:
-        if not is_recipe_ingredient(db, allergy.ingredient, user.id):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"「{allergy.ingredient}」はレシピで使われている食材ではありません",
-            )
     child = Child(user_id=user.id, name=payload.name, birth_date=payload.birth_date)
     child.allergies = [Allergy(ingredient=a.ingredient) for a in payload.allergies]
     child.preferences = [Preference(ingredient=p.ingredient, mode=p.mode) for p in payload.preferences]
@@ -48,7 +40,7 @@ def update_child(
     child = _get_owned_child(db, user.id, child_id)
     if payload.name is not None:
         child.name = payload.name
-    if payload.birth_date is not None:
+    if "birth_date" in payload.model_fields_set:
         child.birth_date = payload.birth_date
     db.commit()
     db.refresh(child)
@@ -70,11 +62,6 @@ def add_allergy(
     ingredient = payload.ingredient.strip()
     if not ingredient:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="食材名を入力してください")
-    if not is_recipe_ingredient(db, ingredient, user.id):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"「{ingredient}」はレシピで使われている食材ではありません",
-        )
     if not any(a.ingredient == ingredient for a in child.allergies):
         child.allergies.append(Allergy(ingredient=ingredient))
     db.commit()

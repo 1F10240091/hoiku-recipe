@@ -36,7 +36,7 @@ def test_private_recipe_ingredients_are_not_disclosed(auth_client):
     assert ingredient not in stranger.get("/api/v1/recipe-master/ingredients").json()
     assert stranger.get("/api/v1/recipe-master/" + own["id"]).status_code == 404
     child = stranger.post("/api/v1/children", json={"name": "test"}).json()
-    assert stranger.post(f"/api/v1/children/{child['id']}/allergies", json={"ingredient": ingredient}).status_code == 422
+    assert stranger.post(f"/api/v1/children/{child['id']}/allergies", json={"ingredient": ingredient}).status_code == 201
 
 
 def test_delete_recipe_cleans_foreign_keys(auth_client):

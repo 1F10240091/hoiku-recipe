@@ -129,7 +129,7 @@ export interface Recipe {
   id: string;
   name: string;
   meal_type: string;
-  ingredients: { name: string; quantity?: string; unit?: string }[];
+  ingredients: { name: string; quantity?: string; unit?: string; components?: string[] }[];
   instructions: string;
   cook_time_minutes?: number | null;
   /** 「喜んでた」が押された回数（ログインユーザー分） */

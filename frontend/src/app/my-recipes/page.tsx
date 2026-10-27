@@ -72,7 +72,7 @@ export default function MyRecipesPage() {
         cook_time_minutes: Number(time) || undefined,
         ingredients: ingredients.split("\n").map((line) => {
           const parts = line.split(",");
-          return { name: (parts[0] || "").trim(), quantity: (parts[1] || "").trim(), unit: (parts[2] || "").trim() };
+          return { name: (parts[0] || "").trim(), quantity: (parts[1] || "").trim(), unit: (parts[2] || "").trim(), components: (parts[3] || "").split("|").map((item) => item.trim()).filter(Boolean) };
         }).filter((item) => item.name),
         instructions: instructions.trim(), is_public: false,
       });
@@ -125,7 +125,8 @@ export default function MyRecipesPage() {
       </div>
       <label className="form-field"><span className="form-field__label">料理名</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></label>
       <div className="form-grid"><label className="form-field"><span className="form-field__label">分類</span><select className="select" value={mealType} onChange={(e) => setMealType(e.target.value)}><option value="main">主菜</option><option value="side">副菜</option><option value="soup">汁物</option><option value="staple">主食</option></select></label><label className="form-field"><span className="form-field__label">料理ジャンル</span><select className="select" value={cuisine} onChange={(e) => setCuisine(e.target.value)}><option>和</option><option>洋</option><option>中</option><option>伊</option><option>仏</option></select></label><label className="form-field"><span className="form-field__label">所要時間（分）</span><input className="input" type="number" min="1" value={time} onChange={(e) => setTime(e.target.value)} /></label></div>
-      <label className="form-field"><span className="form-field__label">材料（材料名,分量,単位）</span><textarea className="textarea" rows={6} value={ingredients} onChange={(e) => setIngredients(e.target.value)} placeholder="鶏もも肉,200,g" required /></label>
+      <label className="form-field"><span className="form-field__label">材料（材料名,分量,単位,原材料 ※任意）</span><textarea className="textarea" rows={6} value={ingredients} onChange={(e) => setIngredients(e.target.value)} placeholder={"鶏もも肉,200,g\n調味ソース,10,g,小麦|大豆"} required /></label>
+      <p className="note">加工品の原材料は商品の表示を確認し、複数ある場合は「|」で区切って記録できます。未入力の原材料は判定できません。</p>
       <label className="form-field"><span className="form-field__label">調理方法</span><textarea className="textarea" rows={7} value={instructions} onChange={(e) => setInstructions(e.target.value)} required /></label>
       {saveError && <div className="alert alert--error" role="alert">{saveError}</div>}
       {message && <div className="alert alert--success" role="status">{message}</div>}<button className="button" disabled={saving || preparingImage || Boolean(imageError)}>{saving ? "保存中..." : "マイレシピに保存"}</button>
