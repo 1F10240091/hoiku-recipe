@@ -20,13 +20,16 @@ const Picker = compile("../src/components/AllergenPicker.tsx", { "@/lib/allergen
 function markup(allergies = [], disabled = false) {
   return renderToStaticMarkup(React.createElement(Picker, { child: { id: "child", name: "test", allergies }, disabled, onToggle: () => {} }));
 }
-test("all 29 options are visible and none is registered by default", () => {
+test("all 29 options are available in initially collapsed groups with none selected", () => {
   const html = markup();
   assert.equal((html.match(/<button /g) || []).length, 29);
   assert.equal((html.match(/aria-pressed="false"/g) || []).length, 29);
   assert.match(html, /表示義務の対象（9品目）/);
   assert.match(html, /表示推奨の対象（20品目）/);
   assert.match(html, /ピスタチオ/);
+  assert.equal((html.match(/<details /g) || []).length, 2);
+  assert.equal((html.match(/<summary /g) || []).length, 2);
+  assert.doesNotMatch(html, /<details[^>]*\sopen(?:[\s=>])/);
 });
 test("existing milk alias appears as one selected standard choice", () => {
   const html = markup([{ id: "old", ingredient: "牛乳" }]);

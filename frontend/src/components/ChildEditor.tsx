@@ -63,7 +63,7 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
       </li>)}</ul> : <p className="card__text">未登録</p>}
       <form className="input-row" onSubmit={(e) => { e.preventDefault(); addAllergy(); }}>
         <label className="sr-only" htmlFor={`allergy-${child.id}`}>アレルギー食材</label>
-        <input id={`allergy-${child.id}`} className="input" list={`ingredients-${child.id}`} value={allergy} onChange={(e) => setAllergy(e.target.value)} placeholder="食材を入力してEnter（例：卵、小麦）" maxLength={100} />
+        <input id={`allergy-${child.id}`} className="input" list={`ingredients-${child.id}`} value={allergy} onChange={(e) => setAllergy(e.target.value)} placeholder="食材を入力してEnter（例：にんじん、トマト）" maxLength={100} />
         <datalist id={`ingredients-${child.id}`}>{ingredients.map((name) => <option key={name} value={name} />)}</datalist>
         <button className="button button--secondary" disabled={!allergy.trim()}>追加</button>
       </form>

@@ -1767,7 +1767,13 @@ h4 {
 .allergen-picker__heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .allergen-picker__heading h4 { margin: 0; font-size: 18px; }
 .allergen-picker__heading > span { font-size: 13px; color: #635443; }
-.allergen-picker__group h5 { margin: 18px 0 10px; font-size: 14px; }
+.allergen-picker__group { margin-top: 12px; border-top: 1px solid #e8d4bf; }
+.allergen-picker__summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 10px 0; font-size: 14px; font-weight: 700; cursor: pointer; list-style: none; }
+.allergen-picker__summary::-webkit-details-marker { display: none; }
+.allergen-picker__summary:focus-visible { outline: 3px solid #426a95; outline-offset: 3px; border-radius: 4px; }
+.allergen-picker__chevron { display: inline-block; font-size: 20px; }
+.allergen-picker__group[open] > summary .allergen-picker__chevron { transform: rotate(180deg); }
+.allergen-picker__group[open] > .allergen-picker__options { padding: 4px 0 10px; }
 .allergen-picker__options { display: flex; flex-wrap: wrap; gap: 8px; }
 .allergen-chip { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 13px; border: 1px solid #c8b7a5; border-radius: 999px; color: #4d4033; background: #fff; font: inherit; font-size: 14px; cursor: pointer; }
 .allergen-chip--selected { background: #754329; border-color: #754329; color: #fff; font-weight: 700; }
