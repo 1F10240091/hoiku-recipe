@@ -10,7 +10,7 @@ export default function AllergenPicker({ child, disabled, onToggle }: Props) {
     <div className="allergen-picker__heading"><h4>29品目からかんたん選択</h4><span>{count}品目を登録中</span></div>
     <p className="note">該当するものを押すと保存します。もう一度押すと解除できます。</p>
     {([ ["required", "表示義務の対象（9品目）"], ["recommended", "表示推奨の対象（20品目）"] ] as const).map(([group, title]) => <details className="allergen-picker__group" key={group}>
-      <summary className="allergen-picker__summary"><span>{title}</span><span className="allergen-picker__chevron" aria-hidden="true">∨</span></summary><div className="allergen-picker__options" role="group" aria-label={title}>
+      <summary className="allergen-picker__summary"><span>{title}</span><span className="allergen-picker__chevron" aria-hidden="true">▼</span></summary><div className="allergen-picker__options" role="group" aria-label={title}>
         {allergenCatalog.items.filter((item) => item.group === group).map((item) => {
           const active = selected.has(item.name);
           return <button type="button" key={item.name} className={`allergen-chip${active ? " allergen-chip--selected" : ""}`}
