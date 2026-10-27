@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [submitted, setSubmitted] = useState(false);
   useEffect(() => {
     if (!ready) return;
-    Promise.all([api.me(), api.listChildren(), api.listRecipeIngredients()]).then(([user, children, ingredients]) => {
+    Promise.all([api.me(), api.listChildren(), api.listRecipeIngredients(true)]).then(([user, children, ingredients]) => {
       setUser(user); setUsername(user.username); setChildren(children); setIngredients(ingredients);
     }).catch((error: unknown) => setLoadError(error instanceof Error ? error.message : "読み込みに失敗しました。"))
       .finally(() => setLoading(false));

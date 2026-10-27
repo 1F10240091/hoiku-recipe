@@ -1803,3 +1803,31 @@ h4 {
 .ingredient-autocomplete__select > span { margin-left: 5px; font-size: 15px; }
 .ingredient-autocomplete__footer { padding: 9px 10px 5px; margin: 4px 0 0; border-top: 1px solid #f1e7dc; font-size: 11px; line-height: 1.6; color: #8a7764; }
 @media (max-width: 480px) { .custom-allergy-form__add { padding-inline: 12px; } .ingredient-autocomplete__field > .input { font-size: 14px; } }
+
+.ingredient-autocomplete__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ingredient-autocomplete__actions { display: flex; justify-content: flex-end; padding: 5px 0 0; }
+.ingredient-autocomplete__expand { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 5px 7px; border: 0; border-radius: 7px; color: #805335; background: transparent; font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.ingredient-autocomplete__expand:hover { background: #f9eddf; }
+.ingredient-autocomplete__expand:focus-visible { outline: 2px solid #9c6746; outline-offset: 2px; }
+.ingredient-autocomplete__expand:disabled { opacity: .5; cursor: wait; }
+.ingredient-browser { width: min(760px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); padding: 24px; border: 1px solid #e6d6c7; border-radius: 22px; background: #fffdfa; color: #514132; box-shadow: 0 24px 80px #35261940; }
+.ingredient-browser::backdrop { background: #21170f80; }
+.ingredient-browser__header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.ingredient-browser__eyebrow { margin: 0 0 5px; color: #9a7655; font-size: 12px; font-weight: 600; }
+.ingredient-browser__header h2 { margin: 0; font-size: 23px; }
+.ingredient-browser__close { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #e6d6c7; border-radius: 50%; background: #fff8f1; color: #71533c; font-size: 24px; cursor: pointer; }
+.ingredient-browser__description { margin: 16px 0; color: #827161; font-size: 13px; line-height: 1.7; }
+.ingredient-browser__search { width: 100%; }
+.ingredient-browser__count { font-size: 12px; color: #827161; margin: 14px 0 10px; }
+.ingredient-browser__results { max-height: min(48dvh, 420px); overflow-y: auto; overscroll-behavior: contain; padding: 3px; }
+.ingredient-browser__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; padding: 0; list-style: none; }
+.ingredient-browser__item { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 10px; width: 100%; height: 100%; min-height: 78px; padding: 13px; border: 1px solid #eadccf; border-radius: 12px; background: #fff; color: #514132; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.ingredient-browser__item:hover { background: #f9eddf; border-color: #cba98b; }
+.ingredient-browser__item:focus-visible { outline: 2px solid #9c6746; outline-offset: 1px; }
+.ingredient-browser__item.is-registered { background: #f4f1eb; color: #8d8173; cursor: default; }
+.ingredient-browser__item-action { color: #997455; font-size: 11px; }
+.ingredient-browser__empty { padding: 35px 15px; text-align: center; color: #827161; font-size: 13px; }
+.ingredient-browser__footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #eadccf; font-size: 11px; color: #827161; }
+@media (max-width: 560px) { .ingredient-browser { padding: 18px; } .ingredient-browser__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ingredient-browser__footer { align-items: flex-end; } .ingredient-browser__results { max-height: 45dvh; } }
+
+.ingredient-autocomplete__footer { position: sticky; bottom: -6px; background: #fffdfa; }

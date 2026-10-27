@@ -64,7 +64,7 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
         <button type="button" className="button button--danger button--sm" aria-label={`${item.ingredient}のアレルギーを削除`} onClick={() => void mutation.run("アレルギーを削除中", async () => onChanged(await api.deleteAllergy(child.id, item.id)), "アレルギーを削除しました。")}>削除</button>
       </li>)}</ul> : <p className="card__text">未登録</p>}
       <form className="custom-allergy-form" onSubmit={(e) => { e.preventDefault(); addAllergy(); }}>
-        <IngredientAutocomplete id={`allergy-${child.id}`} value={allergy} onChange={setAllergy} candidates={customCandidates} disabled={Boolean(mutation.pending)} />
+        <IngredientAutocomplete id={`allergy-${child.id}`} value={allergy} onChange={setAllergy} candidates={customCandidates} allCandidates={ingredients} selected={child.allergies.map((item) => item.ingredient)} disabled={Boolean(mutation.pending)} />
         <button className="button custom-allergy-form__add" disabled={!allergy.trim()}>＋ 追加</button>
       </form>
       <p className="note" id={`allergy-${child.id}-hint`}>候補にない食材もEnterで登録できます。商品表示の原材料も確認してください。</p>

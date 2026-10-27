@@ -41,3 +41,17 @@ def test_recipe_components_persist(auth_client):
     assert response.status_code == 201
     result = auth_client.get('/api/v1/recipe-master/' + response.json()['id'])
     assert result.json()['ingredients'][0]['components'] == ['小麦','大豆']
+
+
+def test_full_ingredient_browser_contains_only_visible_recipe_ingredients(auth_client):
+    recipe = auth_client.post('/api/v1/recipe-master', json={
+        'name': 'all-ingredients-browser-test',
+        'ingredients': [{'name': '一覧専用の食材'}, {'name': '一覧専用の別食材'}],
+    })
+    assert recipe.status_code == 201
+    recipes = auth_client.get('/api/v1/recipe-master').json()
+    expected = {ingredient['name'] for recipe in recipes for ingredient in recipe['ingredients']}
+    response = auth_client.get('/api/v1/recipe-master/ingredients', params={'recipe_only': True})
+    assert response.status_code == 200
+    assert set(response.json()) == expected
+    assert len(response.json()) == len(expected)

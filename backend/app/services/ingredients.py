@@ -6,9 +6,9 @@ from app.models import Recipe
 from app.services.allergens import ALLERGEN_CATALOG
 
 
-def list_recipe_ingredient_names(db: Session, user_id: str | None = None) -> list[str]:
+def list_recipe_ingredient_names(db: Session, user_id: str | None = None, *, include_standard: bool = True) -> list[str]:
     """レシピマスタで使われている食材名を重複なく返す。"""
-    names: set[str] = {item["name"] for item in ALLERGEN_CATALOG["items"]}
+    names: set[str] = {item["name"] for item in ALLERGEN_CATALOG["items"]} if include_standard else set()
     query = db.query(Recipe)
     if user_id is not None:
         query = query.filter(Recipe.is_official.is_(True) | Recipe.is_public.is_(True) | (Recipe.owner_id == user_id))

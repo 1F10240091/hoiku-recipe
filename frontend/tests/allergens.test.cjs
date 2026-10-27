@@ -56,3 +56,22 @@ test("ingredient suggestions are deduplicated and bounded", () => {
 test("unmatched custom ingredients stay available for free text registration", () => {
   assert.equal(ingredientSuggestions(["にんじん"], "独自の食材").length, 0);
 });
+
+const Browser = compile("../src/components/IngredientBrowserDialog.tsx", {
+  "@/lib/allergens": helpers,
+  "@/lib/ingredient-suggestions": { ingredientSuggestions },
+}).default;
+test("expanded ingredient browser lists every recipe ingredient beyond six", () => {
+  const candidates = Array.from({ length: 35 }, (_, index) => `食材${index}`);
+  const html = renderToStaticMarkup(React.createElement(Browser, { id: "all-food", candidates, selected: [], onChoose: () => {}, onDismiss: () => {} }));
+  assert.equal((html.match(/class="ingredient-browser__item"/g) || []).length, 35);
+  assert.match(html, /食材34/);
+  assert.match(html, /すべての食材 35件/);
+});
+test("expanded browser keeps registered ingredients visible and marked", () => {
+  const html = renderToStaticMarkup(React.createElement(Browser, { id: "registered-food", candidates: ["牛乳", "にんじん"], selected: ["乳"], onChoose: () => {}, onDismiss: () => {} }));
+  assert.match(html, /牛乳/);
+  assert.match(html, /is-registered/);
+  assert.match(html, /登録済み/);
+  assert.equal((html.match(/disabled=""/g) || []).length, 1);
+});

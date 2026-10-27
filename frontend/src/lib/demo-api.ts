@@ -292,7 +292,7 @@ export const demoApi = {
 
   async listRecipeIngredients(): Promise<string[]> {
     const names = new Set<string>();
-    for (const recipe of DEMO_RECIPES) {
+    for (const recipe of allRecipes()) {
       for (const item of recipe.ingredients) {
         const name = item.name.trim();
         if (name) names.add(name);

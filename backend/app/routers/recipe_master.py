@@ -113,9 +113,9 @@ def allergen_catalog(user=Depends(get_current_user)) -> dict:
 
 
 @router.get("/ingredients", response_model=list[str])
-def list_ingredients(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[str]:
+def list_ingredients(recipe_only: bool = False, user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[str]:
     """レシピで使われている食材名の一覧（重複なし）。アレルギー登録の選択肢に使う。"""
-    return list_recipe_ingredient_names(db, user.id)
+    return list_recipe_ingredient_names(db, user.id, include_standard=not recipe_only)
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
