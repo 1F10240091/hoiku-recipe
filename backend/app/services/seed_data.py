@@ -831,6 +831,334 @@ _CHIBA_SIDE_RECIPES = [
 ]
 SEED_RECIPES.extend(_CHIBA_SIDE_RECIPES)
 
+# 千葉市「その他のレシピ副菜」から、上記の月別レシピと重ならない料理を追加。
+def _chiba_side(name: str, cuisine: str, minutes: int, ingredients: list[dict], instructions: str) -> dict:
+    return {
+        "name": f"{name}（千葉市保育所）", "meal_type": "side", "cuisine": cuisine,
+        "cook_time_minutes": minutes, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所の副菜レシピ",
+        "source_url": "https://www.city.chiba.jp/kodomomirai/yojikyoiku/shido/c-kids-resipisyuu-hukusai.html",
+        "child_notes": "具材は食べる様子に合わせた大きさとやわらかさに整えます。",
+        "ingredients": ingredients, "instructions": instructions,
+    }
+
+
+SEED_RECIPES.extend([
+    _chiba_side("わかめとトマトの酢味噌和え", "和", 20, [
+        {"name": "鶏ささみ", "quantity": "60", "unit": "g"}, {"name": "酒", "quantity": "6", "unit": "g"},
+        {"name": "きゅうり", "quantity": "60", "unit": "g"}, {"name": "トマト", "quantity": "80", "unit": "g"},
+        {"name": "生わかめ", "quantity": "12", "unit": "g"}, {"name": "酢", "quantity": "8", "unit": "g"},
+        {"name": "砂糖", "quantity": "8", "unit": "g"}, {"name": "ごま油", "quantity": "8", "unit": "g"}, {"name": "みそ", "quantity": "8", "unit": "g"},
+    ], "1. 酒を入れた湯でささみを中までゆで、細かくほぐす。\n2. きゅうりは半月切り、トマトは角切りにする。わかめは食べやすく切ってゆでる。\n3. 酢、砂糖、ごま油、みそを混ぜ、具材と和える。"),
+    _chiba_side("菜の花のナムル", "中", 15, [
+        {"name": "菜の花", "quantity": "50", "unit": "g"}, {"name": "にんじん", "quantity": "25", "unit": "g"},
+        {"name": "ほうれん草", "quantity": "100", "unit": "g"}, {"name": "砂糖", "quantity": "4", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "12", "unit": "g"}, {"name": "米酢", "quantity": "6", "unit": "g"},
+        {"name": "ごま油", "quantity": "4", "unit": "g"}, {"name": "すり白ごま", "quantity": "10", "unit": "g"},
+    ], "1. 菜の花とほうれん草はそれぞれゆで、食べやすい長さに切る。\n2. にんじんはせん切りにしてゆでる。\n3. 砂糖、しょうゆ、米酢、ごま油を合わせ、野菜とすりごまを和える。"),
+    _chiba_side("ごま和え", "和", 15, [
+        {"name": "ほうれん草", "quantity": "100", "unit": "g"}, {"name": "キャベツ", "quantity": "60", "unit": "g"},
+        {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "砂糖", "quantity": "6", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "6", "unit": "g"}, {"name": "和風だし", "quantity": "少々", "unit": ""},
+        {"name": "すり白ごま", "quantity": "12", "unit": "g"},
+    ], "1. ほうれん草とキャベツをゆでて食べやすく切る。にんじんはせん切りにしてゆでる。\n2. 砂糖、しょうゆ、だしを合わせ、野菜の水気を切ってすりごまと和える。"),
+    _chiba_side("切干大根のナムル", "中", 20, [
+        {"name": "切干大根", "quantity": "10", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+        {"name": "ほうれん草", "quantity": "100", "unit": "g"}, {"name": "砂糖", "quantity": "5", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "8", "unit": "g"}, {"name": "米酢", "quantity": "5", "unit": "g"},
+        {"name": "ごま油", "quantity": "4", "unit": "g"}, {"name": "すり白ごま", "quantity": "5", "unit": "g"},
+    ], "1. 切干大根は戻して洗い、短く切ってやわらかくゆでる。\n2. にんじんはせん切りにしてゆで、ほうれん草もゆでて食べやすく切る。\n3. 砂糖、しょうゆ、米酢、ごま油を合わせ、具材とすりごまを和える。"),
+    _chiba_side("磯和え", "和", 15, [
+        {"name": "キャベツ", "quantity": "100", "unit": "g"}, {"name": "ほうれん草", "quantity": "150", "unit": "g"},
+        {"name": "にんじん", "quantity": "30", "unit": "g"}, {"name": "しょうゆ", "quantity": "6", "unit": "g"},
+        {"name": "和風だし", "quantity": "5", "unit": "g"}, {"name": "刻みのり", "quantity": "3", "unit": "g"},
+    ], "1. キャベツはゆでてせん切りにする。ほうれん草はゆでて食べやすく切る。にんじんはせん切りにしてゆでる。\n2. しょうゆとだしを合わせ、水気を切った野菜とのりを和える。"),
+    _chiba_side("きゅうりとパインの酢の物", "和", 10, [
+        {"name": "きゅうり", "quantity": "60", "unit": "g"}, {"name": "パイナップル缶", "quantity": "100", "unit": "g"},
+        {"name": "米酢", "quantity": "4", "unit": "g"}, {"name": "砂糖", "quantity": "4", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+    ], "1. きゅうりは薄い半月切りにする。パイナップルは食べやすく切る。\n2. 米酢、砂糖、塩を合わせ、きゅうりとパイナップルを和える。"),
+    _chiba_side("即席漬", "和", 10, [
+        {"name": "キャベツ", "quantity": "80", "unit": "g"}, {"name": "きゅうり", "quantity": "30", "unit": "g"},
+        {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "塩昆布", "quantity": "4", "unit": "g"},
+    ], "1. キャベツはさっと湯通しして食べやすく切る。きゅうりとにんじんはせん切りにし、にんじんも湯通しする。\n2. 野菜の水気を絞り、塩昆布と和える。"),
+    _chiba_side("キャベツの味噌マヨネーズ和え", "和", 15, [
+        {"name": "キャベツ", "quantity": "100", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+        {"name": "きゅうり", "quantity": "40", "unit": "g"}, {"name": "ほたて水煮", "quantity": "20", "unit": "g"},
+        {"name": "生わかめ", "quantity": "10", "unit": "g"}, {"name": "マヨネーズ", "quantity": "24", "unit": "g"}, {"name": "みそ", "quantity": "4", "unit": "g"},
+    ], "1. キャベツはさっとゆでてせん切りにし、にんじんはいちょう切りにしてゆでる。きゅうりは半月切りにする。\n2. わかめはゆでて食べやすく切る。\n3. マヨネーズとみそを混ぜ、野菜とわかめ、ほたて水煮を和える。"),
+    _chiba_side("しらす和え", "和", 15, [
+        {"name": "ほうれん草", "quantity": "120", "unit": "g"}, {"name": "しらす干し", "quantity": "20", "unit": "g"}, {"name": "しょうゆ", "quantity": "2", "unit": "g"},
+    ], "1. しらす干しはさっとゆでて冷ます。\n2. ほうれん草をゆでて食べやすい長さに切り、しらすとしょうゆで和える。"),
+    _chiba_side("ひじきのサラダ", "和", 25, [
+        {"name": "芽ひじき", "quantity": "12", "unit": "g"}, {"name": "にんじん", "quantity": "30", "unit": "g"},
+        {"name": "きゅうり", "quantity": "50", "unit": "g"}, {"name": "もやし", "quantity": "50", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "8", "unit": "g"}, {"name": "オイスターソース", "quantity": "4", "unit": "g"},
+        {"name": "米酢", "quantity": "8", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+        {"name": "砂糖", "quantity": "2", "unit": "g"}, {"name": "ごま油", "quantity": "4", "unit": "g"},
+    ], "1. ひじきは戻して洗い、ゆでる。\n2. しょうゆ、オイスターソース、米酢、塩、砂糖、ごま油を混ぜてドレッシングを作る。半量をひじきに和える。\n3. にんじんはせん切りにしてゆで、きゅうりもせん切りにする。もやしは食べやすく切ってゆでる。\n4. 野菜の水気を切り、残りのドレッシングとひじきを和える。"),
+    _chiba_side("グリーンアスパラガスのサラダ", "洋", 20, [
+        {"name": "キャベツ", "quantity": "120", "unit": "g"}, {"name": "アスパラガス", "quantity": "20", "unit": "g"},
+        {"name": "ホールコーン", "quantity": "20", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+        {"name": "ほたて水煮", "quantity": "20", "unit": "g"}, {"name": "しょうゆ", "quantity": "6", "unit": "g"},
+        {"name": "サラダ油", "quantity": "6", "unit": "g"}, {"name": "酢", "quantity": "5", "unit": "g"},
+    ], "1. キャベツはさっとゆでてせん切りにする。アスパラガスはゆでて斜め切りにし、にんじんはせん切りにしてゆでる。\n2. しょうゆ、サラダ油、酢を混ぜてドレッシングを作る。\n3. 野菜の水気を絞り、コーンとほたてを加えてドレッシングで和える。"),
+    _chiba_side("里芋のサラダ", "和", 25, [
+        {"name": "里芋", "quantity": "160", "unit": "g"}, {"name": "細ちくわ", "quantity": "60", "unit": "g"},
+        {"name": "生わかめ", "quantity": "12", "unit": "g"}, {"name": "マヨネーズ", "quantity": "32", "unit": "g"},
+        {"name": "みそ", "quantity": "4", "unit": "g"}, {"name": "酢", "quantity": "3", "unit": "g"},
+    ], "1. 里芋は小さめに切ってゆで、水洗いしてぬめりを取る。\n2. ちくわは輪切りにしてゆで、わかめも食べやすく切ってゆでる。\n3. マヨネーズ、みそ、酢を混ぜ、具材と和える。"),
+    _chiba_side("ほうれん草とひじきのサラダ", "和", 25, [
+        {"name": "ほうれん草", "quantity": "60", "unit": "g"}, {"name": "にんじん", "quantity": "10", "unit": "g"},
+        {"name": "芽ひじき", "quantity": "3", "unit": "g"}, {"name": "まぐろ油漬け", "quantity": "20", "unit": "g"},
+        {"name": "ホールコーン", "quantity": "10", "unit": "g"}, {"name": "マヨネーズ", "quantity": "12", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "2", "unit": "g"}, {"name": "砂糖", "quantity": "1", "unit": "g"}, {"name": "すり白ごま", "quantity": "3", "unit": "g"},
+    ], "1. ひじきは戻してやわらかくゆでる。ほうれん草もゆでて食べやすく切る。\n2. にんじんはせん切りにしてゆでる。まぐろ油漬けは油を切る。\n3. マヨネーズ、しょうゆ、砂糖、すりごまを合わせ、具材とコーンを和える。"),
+    _chiba_side("春雨の中華炒め", "中", 20, [
+        {"name": "春雨", "quantity": "30", "unit": "g"}, {"name": "にんじん", "quantity": "30", "unit": "g"},
+        {"name": "エリンギ", "quantity": "20", "unit": "g"}, {"name": "油揚げ", "quantity": "20", "unit": "g"},
+        {"name": "ピーマン", "quantity": "20", "unit": "g"}, {"name": "ごま油", "quantity": "8", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "8", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+        {"name": "砂糖", "quantity": "少々", "unit": ""}, {"name": "酒", "quantity": "4", "unit": "g"},
+    ], "1. 春雨は沸騰した湯でゆでて水洗いし、短く切る。\n2. にんじん、エリンギ、油揚げ、ピーマンをせん切りにする。\n3. ごま油で野菜と油揚げを炒め、にんじんに火が通ったら春雨を加えて炒める。しょうゆ、塩、砂糖、酒で調味する。"),
+    _chiba_side("茄子とピーマンの味噌炒め", "和", 20, [
+        {"name": "豚ひき肉", "quantity": "40", "unit": "g"}, {"name": "なす", "quantity": "150", "unit": "g"},
+        {"name": "ピーマン", "quantity": "70", "unit": "g"}, {"name": "サラダ油", "quantity": "4", "unit": "g"},
+        {"name": "みそ", "quantity": "8", "unit": "g"}, {"name": "砂糖", "quantity": "12", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "4", "unit": "g"}, {"name": "すり白ごま", "quantity": "8", "unit": "g"},
+    ], "1. なすは皮をしま目にむいて半月切りにし、水にさらす。ピーマンは短冊切りにする。\n2. 油で豚ひき肉となすを炒め、火が通ったらピーマンを加える。\n3. 砂糖、しょうゆ、みそを合わせて加え、最後にすりごまを混ぜる。"),
+    _chiba_side("更紗炒め", "和", 20, [
+        {"name": "じゃがいも", "quantity": "100", "unit": "g"}, {"name": "にんじん", "quantity": "40", "unit": "g"},
+        {"name": "ピーマン", "quantity": "20", "unit": "g"}, {"name": "ロースハム", "quantity": "20", "unit": "g"},
+        {"name": "サラダ油", "quantity": "4", "unit": "g"}, {"name": "しょうゆ", "quantity": "5", "unit": "g"},
+        {"name": "塩", "quantity": "少々", "unit": ""}, {"name": "こしょう", "quantity": "少々", "unit": ""},
+    ], "1. じゃがいもはせん切りにして水にさらす。にんじん、ピーマン、ハムもせん切りにする。\n2. 油を熱し、水気を切ったじゃがいもと残りの具材を炒め、しょうゆ、塩、こしょうで調味する。"),
+    _chiba_side("切干大根のソテー", "洋", 20, [
+        {"name": "切干大根", "quantity": "20", "unit": "g"}, {"name": "ベーコン", "quantity": "40", "unit": "g"},
+        {"name": "にんじん", "quantity": "30", "unit": "g"}, {"name": "さやいんげん", "quantity": "20", "unit": "g"},
+        {"name": "塩", "quantity": "0.6", "unit": "g"}, {"name": "こしょう", "quantity": "少々", "unit": ""},
+        {"name": "しょうゆ", "quantity": "1.2", "unit": "g"}, {"name": "サラダ油", "quantity": "適量", "unit": ""},
+    ], "1. 切干大根は戻して洗い、ゆでて水気を絞り、短く切る。にんじんとベーコンはせん切りにする。\n2. 油でベーコンとにんじんを炒め、切干大根を加える。塩、こしょう、しょうゆで味を調える。\n3. ゆでて食べやすく切ったさやいんげんを添える。"),
+    _chiba_side("いとこ煮", "和", 45, [
+        {"name": "かぼちゃ", "quantity": "1/8", "unit": "個"}, {"name": "小豆", "quantity": "20", "unit": "g"},
+        {"name": "砂糖", "quantity": "大さじ2", "unit": ""}, {"name": "しょうゆ", "quantity": "小さじ1", "unit": ""},
+        {"name": "水", "quantity": "適量", "unit": ""},
+    ], "1. 小豆を洗ってたっぷりの水でゆで、沸騰したら一度湯を捨てる。新しい水でやわらかくなるまで弱火で煮る。\n2. 小豆に砂糖大さじ1を加える。\n3. かぼちゃを角切りにし、別鍋で浸る程度の水、残りの砂糖、しょうゆと煮る。\n4. かぼちゃに火が通ったら小豆を加えて煮含める。"),
+    _chiba_side("さつまいものオレンジ煮", "洋", 25, [
+        {"name": "さつまいも", "quantity": "160", "unit": "g"}, {"name": "オレンジジュース", "quantity": "30", "unit": "g"}, {"name": "砂糖", "quantity": "8", "unit": "g"},
+    ], "1. さつまいもはいちょう切りにして水にさらす。\n2. さつまいもがかぶる程度の水で硬めにゆでる。\n3. オレンジジュースと砂糖を加え、やわらかくなるまで煮含める。"),
+    _chiba_side("さつま芋の重ね煮", "洋", 25, [
+        {"name": "さつまいも", "quantity": "200", "unit": "g"}, {"name": "りんご", "quantity": "100", "unit": "g"},
+        {"name": "レーズン", "quantity": "10", "unit": "g"}, {"name": "砂糖", "quantity": "15", "unit": "g"}, {"name": "バター", "quantity": "10", "unit": "g"},
+    ], "1. さつまいもはいちょう切りにして水にさらす。りんごもいちょう切りにし、レーズンは洗う。\n2. さつまいも、りんご、レーズン、砂糖を鍋に入れ、ひたひたの水でやわらかく煮る。\n3. 仕上げにバターを加える。"),
+    _chiba_side("ジャーマンポテト", "洋", 20, [
+        {"name": "じゃがいも", "quantity": "120", "unit": "g"}, {"name": "ベーコン", "quantity": "20", "unit": "g"},
+        {"name": "バター", "quantity": "4", "unit": "g"}, {"name": "塩", "quantity": "ひとつまみ", "unit": ""},
+    ], "1. じゃがいもは乱切りにして、やわらかくなりすぎない程度にゆでる。\n2. せん切りにしたベーコンをバターで炒め、じゃがいもを加えてさらに炒め、塩で味を調える。"),
+    _chiba_side("煮豆（金時豆）", "和", 90, [
+        {"name": "金時豆", "quantity": "100", "unit": "g"}, {"name": "砂糖", "quantity": "30", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""}, {"name": "水", "quantity": "適量", "unit": ""},
+    ], "1. 金時豆を洗い、豆の約4倍量の水に一晩浸す。\n2. たっぷりの水でゆでて一度湯を捨てる。新しい水で煮立て、弱火でやわらかくなるまで煮る。\n3. 砂糖を2回に分けて加え、最後に塩を加えて弱火で煮含める。"),
+    _chiba_side("里芋のごま味噌和え", "和", 25, [
+        {"name": "里芋", "quantity": "200", "unit": "g"}, {"name": "すり白ごま", "quantity": "大さじ1.5", "unit": ""},
+        {"name": "砂糖", "quantity": "大さじ1", "unit": ""}, {"name": "みそ", "quantity": "小さじ1.5", "unit": ""},
+        {"name": "しょうゆ", "quantity": "小さじ1", "unit": ""}, {"name": "みりん", "quantity": "小さじ1/2", "unit": ""},
+    ], "1. 里芋は小さめの乱切りにしてゆで、水洗いしてぬめりを取る。\n2. 砂糖、みそ、しょうゆ、みりんを合わせて加熱し、冷ます。\n3. 里芋を調味料とすりごまで和える。"),
+    _chiba_side("小松菜と生揚げの煮浸し", "和", 20, [
+        {"name": "小松菜", "quantity": "120", "unit": "g"}, {"name": "厚揚げ", "quantity": "40", "unit": "g"},
+        {"name": "和風だし", "quantity": "100", "unit": "g"}, {"name": "しょうゆ", "quantity": "8", "unit": "g"}, {"name": "みりん", "quantity": "6", "unit": "g"},
+    ], "1. 小松菜は固めにゆで、食べやすい長さに切って水気を絞る。\n2. 厚揚げは熱湯をかけて油抜きし、薄切りにする。\n3. だし、しょうゆ、みりんを煮立て、小松菜と厚揚げを加えて煮含める。"),
+    _chiba_side("じゃこの炒り煮", "和", 15, [
+        {"name": "ちりめんじゃこ", "quantity": "100", "unit": "g"}, {"name": "しょうゆ", "quantity": "5", "unit": "g"},
+        {"name": "みりん", "quantity": "7", "unit": "g"}, {"name": "酒", "quantity": "7", "unit": "g"},
+        {"name": "すり白ごま", "quantity": "7", "unit": "g"}, {"name": "青のり", "quantity": "1", "unit": "g"},
+    ], "1. ちりめんじゃこをさっとゆで、水気を切る。\n2. フライパンでから煎りし、しょうゆ、みりん、酒を加えて汁気がなくなるまで煎る。\n3. すりごまと青のりを混ぜる。"),
+])
+
+_MATSUZAKA_SOURCE = "https://www.city.matsusaka.mie.jp/uploaded/attachment/85725.pdf"
+
+
+def _matsuzaka_recipe(name: str, meal_type: str, cuisine: str, minutes: int, ingredients: list[dict], instructions: str) -> dict:
+    return {
+        "name": f"{name}（松阪市保育園）", "meal_type": meal_type, "cuisine": cuisine,
+        "cook_time_minutes": minutes, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "4人分", "source_name": "松阪市保育園給食レシピ集",
+        "source_url": _MATSUZAKA_SOURCE,
+        "child_notes": "具材は食べやすい大きさとやわらかさに整えます。",
+        "ingredients": ingredients, "instructions": instructions,
+    }
+
+
+SEED_RECIPES.extend([
+    _matsuzaka_recipe("そぼろ和え", "side", "和", 20, [
+        {"name": "ツナ", "quantity": "90", "unit": "g"}, {"name": "砂糖", "quantity": "大さじ1/2", "unit": ""},
+        {"name": "しょうゆ", "quantity": "大さじ1/2", "unit": ""}, {"name": "みりん", "quantity": "小さじ1", "unit": ""},
+        {"name": "ほうれん草", "quantity": "1/2", "unit": "袋"}, {"name": "にんじん", "quantity": "1/4", "unit": "本"}, {"name": "キャベツ", "quantity": "90", "unit": "g"},
+    ], "1. ツナ、砂糖、しょうゆ、みりんを鍋に入れ、汁気がなくなるまで煮る。\n2. ほうれん草、にんじん、キャベツを食べやすく切ってゆで、水気を絞る。\n3. 野菜をツナそぼろで和える。"),
+    _matsuzaka_recipe("ミモザサラダ", "side", "洋", 20, [
+        {"name": "きゅうり", "quantity": "90", "unit": "g"}, {"name": "キャベツ", "quantity": "90", "unit": "g"},
+        {"name": "にんじん", "quantity": "30", "unit": "g"}, {"name": "卵", "quantity": "1", "unit": "個"},
+        {"name": "サラダ油", "quantity": "適量", "unit": ""}, {"name": "酢", "quantity": "大さじ1/2", "unit": ""},
+        {"name": "サラダ油", "quantity": "大さじ1", "unit": ""}, {"name": "しょうゆ", "quantity": "大さじ1", "unit": ""},
+        {"name": "砂糖", "quantity": "大さじ1と小さじ2", "unit": ""}, {"name": "塩", "quantity": "少々", "unit": ""},
+    ], "1. キャベツとにんじんは食べやすく切ってさっとゆで、水気を絞る。きゅうりは薄切りにして塩をふり、水気を絞る。\n2. 卵は炒り卵にする。\n3. 酢、油、しょうゆ、砂糖を混ぜてドレッシングを作り、野菜と炒り卵を和える。"),
+    _matsuzaka_recipe("トマトときゅうりの甘酢和え", "side", "和", 10, [
+        {"name": "トマト", "quantity": "1", "unit": "個"}, {"name": "きゅうり", "quantity": "2", "unit": "本"},
+        {"name": "酢", "quantity": "大さじ1", "unit": ""}, {"name": "砂糖", "quantity": "大さじ2", "unit": ""},
+        {"name": "薄口しょうゆ", "quantity": "大さじ1/2", "unit": ""}, {"name": "塩", "quantity": "少々", "unit": ""},
+    ], "1. トマトは食べやすい大きさに切る。きゅうりは薄切りにして塩をふり、水気を絞る。\n2. 酢、砂糖、薄口しょうゆを混ぜ、トマトときゅうりを和える。"),
+    _matsuzaka_recipe("トマトのナムル", "side", "中", 15, [
+        {"name": "トマト", "quantity": "1/2", "unit": "個"}, {"name": "きゅうり", "quantity": "1", "unit": "本"},
+        {"name": "にんじん", "quantity": "30", "unit": "g"}, {"name": "もやし", "quantity": "1/4", "unit": "袋"},
+        {"name": "すりごま", "quantity": "小さじ2", "unit": ""}, {"name": "しょうゆ", "quantity": "大さじ1", "unit": ""},
+        {"name": "砂糖", "quantity": "大さじ2", "unit": ""}, {"name": "酢", "quantity": "小さじ2", "unit": ""}, {"name": "ごま油", "quantity": "小さじ2", "unit": ""},
+    ], "1. トマトは角切りにする。きゅうりは薄切りにして塩をふり、水気を絞る。にんじんはせん切りにしてゆで、もやしも食べやすく切ってゆでる。\n2. すりごま、しょうゆ、砂糖、酢、ごま油を混ぜ、野菜と和える。トマトは最後に加えて軽く混ぜる。"),
+    _matsuzaka_recipe("なばなのごまマヨネーズ和え", "side", "和", 15, [
+        {"name": "なばな", "quantity": "60", "unit": "g"}, {"name": "キャベツ", "quantity": "90", "unit": "g"},
+        {"name": "りんご", "quantity": "1/6", "unit": "個"}, {"name": "ホールコーン", "quantity": "30", "unit": "g"},
+        {"name": "マヨネーズ", "quantity": "大さじ2", "unit": ""}, {"name": "すりごま", "quantity": "小さじ2", "unit": ""}, {"name": "しょうゆ", "quantity": "小さじ1", "unit": ""},
+    ], "1. なばなは短く切ってゆでる。キャベツもせん切りにしてゆでる。\n2. りんごは薄切りにする。\n3. 野菜の水気を切り、コーンを加え、マヨネーズ、すりごま、しょうゆで和える。"),
+    _matsuzaka_recipe("きゅうりとじゃこの酢の物", "side", "和", 15, [
+        {"name": "きゅうり", "quantity": "2", "unit": "本"}, {"name": "しらす干し", "quantity": "20", "unit": "g"},
+        {"name": "みかん缶", "quantity": "60", "unit": "g"}, {"name": "乾燥わかめ", "quantity": "2", "unit": "g"},
+        {"name": "酢", "quantity": "小さじ2", "unit": ""}, {"name": "砂糖", "quantity": "大さじ2", "unit": ""}, {"name": "しょうゆ", "quantity": "小さじ2", "unit": ""},
+    ], "1. きゅうりは薄い輪切りにして塩をふり、水気を絞る。しらすはさっと湯通しする。\n2. わかめは水で戻して食べやすく切り、熱湯にさっと通す。\n3. 酢、砂糖、しょうゆを混ぜ、きゅうり、しらす、わかめ、みかんを和える。"),
+    _matsuzaka_recipe("キャベツのしそ和え", "side", "和", 15, [
+        {"name": "キャベツ", "quantity": "120", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "赤しそふりかけ", "quantity": "2", "unit": "g"},
+    ], "1. キャベツとにんじんを食べやすく切ってゆで、水気を切る。\n2. 赤しそふりかけを和える。"),
+    _matsuzaka_recipe("キャベツの塩昆布和え", "side", "和", 15, [
+        {"name": "キャベツ", "quantity": "120", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "塩昆布", "quantity": "5", "unit": "g"},
+    ], "1. キャベツとにんじんを食べやすく切ってゆで、水気を切る。\n2. 塩昆布を和える。"),
+    _matsuzaka_recipe("キャベツのおかか和え", "side", "和", 15, [
+        {"name": "キャベツ", "quantity": "120", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+        {"name": "花かつお", "quantity": "4", "unit": "g"}, {"name": "しょうゆ", "quantity": "小さじ1", "unit": ""},
+    ], "1. キャベツとにんじんを食べやすく切ってゆで、水気を切る。\n2. 花かつおとしょうゆを和える。"),
+    _matsuzaka_recipe("和風大根サラダ", "side", "和", 15, [
+        {"name": "大根", "quantity": "120", "unit": "g"}, {"name": "きゅうり", "quantity": "1", "unit": "本"},
+        {"name": "にんじん", "quantity": "30", "unit": "g"}, {"name": "ハム", "quantity": "30", "unit": "g"},
+        {"name": "酢", "quantity": "大さじ1と小さじ1", "unit": ""}, {"name": "砂糖", "quantity": "大さじ1.5", "unit": ""},
+        {"name": "薄口しょうゆ", "quantity": "小さじ2", "unit": ""}, {"name": "ごま油", "quantity": "大さじ1/2", "unit": ""},
+        {"name": "かつお節", "quantity": "1", "unit": "袋"}, {"name": "いりごま", "quantity": "小さじ2", "unit": ""},
+    ], "1. 大根、きゅうり、にんじんをせん切りにして塩をふり、水気を絞る。\n2. ハムをせん切りにする。\n3. 酢、砂糖、薄口しょうゆ、ごま油を混ぜ、野菜とハムを和える。かつお節といりごまを加える。"),
+    _matsuzaka_recipe("切干大根煮", "side", "和", 30, [
+        {"name": "切干大根", "quantity": "40", "unit": "g"}, {"name": "にんじん", "quantity": "1/4", "unit": "本"},
+        {"name": "さつま揚げ", "quantity": "60", "unit": "g"}, {"name": "和風だし", "quantity": "適量", "unit": ""},
+        {"name": "砂糖", "quantity": "大さじ2", "unit": ""}, {"name": "しょうゆ", "quantity": "大さじ1", "unit": ""}, {"name": "みりん", "quantity": "小さじ2", "unit": ""},
+    ], "1. 切干大根は水で戻して食べやすい長さに切る。にんじんとさつま揚げはせん切りにする。\n2. ひたひたのだし汁で具材がやわらかくなるまで煮る。\n3. 砂糖、しょうゆ、みりんを加えて煮含める。"),
+    _matsuzaka_recipe("ごま酢和え", "side", "和", 15, [
+        {"name": "きゅうり", "quantity": "1", "unit": "本"}, {"name": "もやし", "quantity": "1/2", "unit": "袋"},
+        {"name": "にんじん", "quantity": "1/4", "unit": "本"}, {"name": "ごま油", "quantity": "小さじ1.5", "unit": ""},
+        {"name": "砂糖", "quantity": "大さじ2", "unit": ""}, {"name": "しょうゆ", "quantity": "大さじ1", "unit": ""},
+        {"name": "酢", "quantity": "小さじ1", "unit": ""}, {"name": "すりごま", "quantity": "小さじ2", "unit": ""},
+    ], "1. きゅうりはせん切りにして塩をふり、水気を絞る。にんじんもせん切りにしてゆで、もやしもゆでる。\n2. ごま油、砂糖、しょうゆ、酢を合わせ、具材とすりごまを和える。"),
+    _matsuzaka_recipe("豆乳スープ", "soup", "洋", 25, [
+        {"name": "玉ねぎ", "quantity": "100", "unit": "g"}, {"name": "にんじん", "quantity": "1/4", "unit": "本"},
+        {"name": "じゃがいも", "quantity": "100", "unit": "g"}, {"name": "ベーコン", "quantity": "20", "unit": "g"},
+        {"name": "調整豆乳", "quantity": "400", "unit": "ml"}, {"name": "コンソメ", "quantity": "8", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""}, {"name": "水", "quantity": "適量", "unit": ""},
+    ], "1. ベーコンを鍋で炒め、食べやすく切った玉ねぎ、にんじん、じゃがいもを加えて炒める。\n2. 具材がひたる程度の水とコンソメを加え、野菜がやわらかくなるまで煮る。\n3. 豆乳を加えてよく混ぜ、塩で味を調える。沸騰直前に火を止める。"),
+    _matsuzaka_recipe("お星さま汁", "soup", "和", 25, [
+        {"name": "オクラ", "quantity": "2", "unit": "本"}, {"name": "にんじん", "quantity": "1/4", "unit": "本"},
+        {"name": "玉ねぎ", "quantity": "1/4", "unit": "個"}, {"name": "そうめん", "quantity": "1/2", "unit": "束"},
+        {"name": "乾燥わかめ", "quantity": "2", "unit": "g"}, {"name": "削り節", "quantity": "18", "unit": "g"},
+        {"name": "だし昆布", "quantity": "6", "unit": "g"}, {"name": "薄口しょうゆ", "quantity": "18", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+    ], "1. 削り節と昆布でだしを取る。わかめは戻して切り、そうめんはゆでて水に取る。\n2. オクラは輪切りにしてゆでる。にんじんと玉ねぎは食べやすく切る。\n3. だしでにんじんと玉ねぎをやわらかく煮る。そうめんとわかめを加え、しょうゆと塩で調味し、オクラを加える。"),
+    _matsuzaka_recipe("春のみそ汁", "soup", "和", 25, [
+        {"name": "春キャベツ", "quantity": "60", "unit": "g"}, {"name": "新じゃがいも", "quantity": "1/2", "unit": "個"},
+        {"name": "新玉ねぎ", "quantity": "1/3", "unit": "個"}, {"name": "にんじん", "quantity": "1/5", "unit": "本"},
+        {"name": "油揚げ", "quantity": "1/2", "unit": "枚"}, {"name": "煮干し", "quantity": "16", "unit": "g"}, {"name": "みそ", "quantity": "大さじ2弱", "unit": ""}, {"name": "水", "quantity": "700", "unit": "ml"},
+    ], "1. 煮干しでだしを取る。\n2. キャベツ、じゃがいも、玉ねぎ、にんじん、油揚げを食べやすく切る。\n3. だしを火にかけ、火の通りにくい具材から順に加えて煮る。\n4. 具材がやわらかくなったら、みそを溶き入れる。"),
+    _matsuzaka_recipe("夏野菜のみそ汁", "soup", "和", 25, [
+        {"name": "かぼちゃ", "quantity": "80", "unit": "g"}, {"name": "なす", "quantity": "1/4", "unit": "本"},
+        {"name": "玉ねぎ", "quantity": "1/3", "unit": "個"}, {"name": "にんじん", "quantity": "1/5", "unit": "本"},
+        {"name": "さやいんげん", "quantity": "2", "unit": "本"}, {"name": "煮干し", "quantity": "16", "unit": "g"}, {"name": "みそ", "quantity": "大さじ2弱", "unit": ""}, {"name": "水", "quantity": "700", "unit": "ml"},
+    ], "1. 煮干しでだしを取る。\n2. かぼちゃ、なす、玉ねぎ、にんじん、いんげんを食べやすく切る。\n3. だしを火にかけ、火の通りにくい具材から順に加えて煮る。\n4. 具材がやわらかくなったら、みそを溶き入れる。"),
+    _matsuzaka_recipe("秋のみそ汁", "soup", "和", 25, [
+        {"name": "さつまいも", "quantity": "60", "unit": "g"}, {"name": "玉ねぎ", "quantity": "1/3", "unit": "個"},
+        {"name": "豆腐", "quantity": "1/5", "unit": "丁"}, {"name": "にんじん", "quantity": "1/5", "unit": "本"},
+        {"name": "長ねぎ", "quantity": "12", "unit": "g"}, {"name": "煮干し", "quantity": "16", "unit": "g"}, {"name": "みそ", "quantity": "32", "unit": "g"}, {"name": "水", "quantity": "700", "unit": "ml"},
+    ], "1. 煮干しでだしを取る。\n2. さつまいも、玉ねぎ、豆腐、にんじん、長ねぎを食べやすく切る。\n3. だしを火にかけ、火の通りにくい具材から加えて煮る。\n4. 具材がやわらかくなったら、みそを溶き入れる。"),
+    _matsuzaka_recipe("冬のみそ汁", "soup", "和", 25, [
+        {"name": "白菜", "quantity": "1.5", "unit": "枚"}, {"name": "大根", "quantity": "60", "unit": "g"},
+        {"name": "玉ねぎ", "quantity": "1/4", "unit": "個"}, {"name": "にんじん", "quantity": "1/5", "unit": "本"},
+        {"name": "長ねぎ", "quantity": "12", "unit": "g"}, {"name": "煮干し", "quantity": "16", "unit": "g"}, {"name": "みそ", "quantity": "32", "unit": "g"}, {"name": "水", "quantity": "700", "unit": "ml"},
+    ], "1. 煮干しでだしを取る。\n2. 白菜、大根、玉ねぎ、にんじん、長ねぎを食べやすく切る。\n3. だしを火にかけ、火の通りにくい具材から加えて煮る。\n4. 具材がやわらかくなったら、みそを溶き入れる。"),
+])
+
+_ITABASHI_BASE = "https://www.city.itabashi.tokyo.jp/_res/projects/default_project/_page_/001/004/390/fukusai/"
+
+
+def _itabashi_side(name: str, pdf: str, minutes: int, ingredients: list[dict], instructions: str) -> dict:
+    return {
+        "name": f"{name}（板橋区立保育園）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": minutes, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "子ども6人分（大人約4人分）", "source_name": "板橋区立保育園給食レシピ",
+        "source_url": _ITABASHI_BASE + pdf,
+        "child_notes": "食べる様子に合わせて、具材の大きさとやわらかさを整えます。",
+        "ingredients": ingredients, "instructions": instructions,
+    }
+
+
+SEED_RECIPES.extend([
+    _itabashi_side("トマトのささみサラダ", "tomatosasami.pdf", 20, [
+        {"name": "トマト", "quantity": "200", "unit": "g"}, {"name": "キャベツ", "quantity": "200", "unit": "g"},
+        {"name": "きゅうり", "quantity": "50", "unit": "g"}, {"name": "鶏ささみ", "quantity": "100", "unit": "g"},
+        {"name": "酢", "quantity": "12", "unit": "g"}, {"name": "サラダ油", "quantity": "15", "unit": "g"}, {"name": "塩", "quantity": "2.5", "unit": "g"},
+    ], "1. トマトは湯むきして一口大に切る。キャベツは食べやすく切り、きゅうりは半月切りにしてゆで、水気を切る。\n2. ささみをゆでて冷まし、細かくほぐす。\n3. 酢、油、塩を混ぜ、野菜とささみを和える。"),
+    _itabashi_side("人参ドレッシングサラダ", "ninjinsarada.pdf", 20, [
+        {"name": "きゅうり", "quantity": "90", "unit": "g"}, {"name": "キャベツ", "quantity": "140", "unit": "g"},
+        {"name": "ブロッコリー", "quantity": "120", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "3", "unit": "g"}, {"name": "酢", "quantity": "6", "unit": "g"},
+        {"name": "塩", "quantity": "少々", "unit": ""}, {"name": "砂糖", "quantity": "1.2", "unit": "g"}, {"name": "植物油", "quantity": "12", "unit": "g"},
+    ], "1. にんじんは輪切りにしてやわらかくゆで、すりおろす。鍋で弱火にかけ、粗熱を取る。\n2. きゅうりは半月切り、キャベツは食べやすく切り、ブロッコリーは小房に分ける。野菜をそれぞれゆでて水気を切る。\n3. しょうゆ、酢、塩、砂糖、油を混ぜ、すりおろしたにんじんを加えてドレッシングにする。\n4. 野菜にドレッシングの一部で下味をつけ、残りをかける。"),
+    _itabashi_side("マセドアンサラダ", "masedoan.pdf", 20, [
+        {"name": "じゃがいも", "quantity": "180", "unit": "g"}, {"name": "にんじん", "quantity": "60", "unit": "g"},
+        {"name": "きゅうり", "quantity": "60", "unit": "g"}, {"name": "ホールコーン", "quantity": "60", "unit": "g"},
+        {"name": "酢", "quantity": "4.2", "unit": "g"}, {"name": "サラダ油", "quantity": "6", "unit": "g"}, {"name": "しょうゆ", "quantity": "9", "unit": "g"},
+    ], "1. じゃがいもとにんじんは皮をむき、約1cm角に切る。\n2. じゃがいもとにんじんをやわらかくゆでて冷まし、コーンは水気を切る。\n3. 酢、油、しょうゆを混ぜ、野菜とコーンを和える。"),
+    _itabashi_side("里芋のそぼろ煮", "satoimosoboro.pdf", 40, [
+        {"name": "里芋", "quantity": "360", "unit": "g"}, {"name": "鶏ひき肉", "quantity": "90", "unit": "g"},
+        {"name": "しょうが汁", "quantity": "1.5", "unit": "g"}, {"name": "サラダ油", "quantity": "6", "unit": "g"},
+        {"name": "水", "quantity": "200", "unit": "g"}, {"name": "削り節", "quantity": "4", "unit": "g"},
+        {"name": "三温糖", "quantity": "9", "unit": "g"}, {"name": "しょうゆ", "quantity": "12", "unit": "g"}, {"name": "片栗粉", "quantity": "3", "unit": "g"},
+    ], "1. 里芋は洗って皮をむき、食べやすく切る。水から約10分下ゆでし、水洗いしてぬめりを取る。\n2. ひき肉にしょうが汁をかける。鍋に油を熱し、ひき肉を炒める。\n3. 里芋を加えて炒め、削り節で取っただしをひたひたに注いで煮る。\n4. 里芋がやわらかくなったら砂糖としょうゆを加えて煮含める。水溶き片栗粉でとろみをつける。"),
+    _itabashi_side("ひじきの炒り煮", "hijikiirini.pdf", 20, [
+        {"name": "ひじき", "quantity": "18", "unit": "g"}, {"name": "油揚げ", "quantity": "24", "unit": "g"},
+        {"name": "にんじん", "quantity": "30", "unit": "g"}, {"name": "さやえんどう", "quantity": "7", "unit": "g"},
+        {"name": "水", "quantity": "270", "unit": "ml"}, {"name": "削り節", "quantity": "3", "unit": "g"},
+        {"name": "砂糖", "quantity": "9", "unit": "g"}, {"name": "しょうゆ", "quantity": "15", "unit": "g"}, {"name": "サラダ油", "quantity": "適量", "unit": ""},
+    ], "1. ひじきはよく洗って水で戻す。さやえんどうは斜め切りにしてゆでる。にんじんは短いせん切りにし、油揚げは細切りにして熱湯をかける。\n2. 油でひじきとにんじんを炒め、油揚げと削り節のだしを加えてやわらかく煮る。\n3. 砂糖を加えて煮てから、しょうゆを加えてさらに煮る。さやえんどうを添える。"),
+    _itabashi_side("切干大根の煮つけ", "kiriboshidaikonnitsuke.pdf", 20, [
+        {"name": "切干大根", "quantity": "30", "unit": "g"}, {"name": "油揚げ", "quantity": "18", "unit": "g"},
+        {"name": "にんじん", "quantity": "60", "unit": "g"}, {"name": "水", "quantity": "270", "unit": "g"},
+        {"name": "削り節", "quantity": "5", "unit": "g"}, {"name": "三温糖", "quantity": "5", "unit": "g"}, {"name": "しょうゆ", "quantity": "10", "unit": "g"},
+    ], "1. 切干大根は水でもみ洗いし、新しい水に浸して戻す。やわらかくなったら水気を絞り、短く切る。\n2. にんじんはせん切り、油揚げは熱湯をかけて短冊切りにする。\n3. 削り節で取っただしに砂糖と具材を入れ、やわらかく煮る。\n4. しょうゆを加え、弱火で煮含める。"),
+    _itabashi_side("なすの鍋しぎ", "nasunonabe.pdf", 20, [
+        {"name": "なす", "quantity": "180", "unit": "g"}, {"name": "ピーマン", "quantity": "24", "unit": "g"},
+        {"name": "豚薄切り肉", "quantity": "60", "unit": "g"}, {"name": "サラダ油", "quantity": "12", "unit": "g"},
+        {"name": "三温糖", "quantity": "9", "unit": "g"}, {"name": "みそ", "quantity": "12", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "1.8", "unit": "g"}, {"name": "水", "quantity": "60", "unit": "g"}, {"name": "削り節", "quantity": "0.6", "unit": "g"},
+    ], "1. 削り節でだしを取る。なすは半月切りにして水にさらし、ピーマンは種を取って食べやすく切る。豚肉も食べやすい大きさに切る。\n2. 油で豚肉となすを炒め、だしと砂糖、みそ、しょうゆを加えて煮る。\n3. なすがやわらかくなったらピーマンを加えてさっと火を通す。"),
+    _itabashi_side("味噌汁（煮干しだし）", "miso.pdf", 20, [
+        {"name": "玉ねぎ", "quantity": "90", "unit": "g"}, {"name": "キャベツ", "quantity": "70", "unit": "g"},
+        {"name": "小ねぎ", "quantity": "10", "unit": "g"}, {"name": "水", "quantity": "900", "unit": "g"},
+        {"name": "煮干し", "quantity": "12", "unit": "g"}, {"name": "みそ", "quantity": "36", "unit": "g"},
+    ], "1. 玉ねぎは薄切り、キャベツは短冊切り、小ねぎは小口切りにする。\n2. 煮干しの頭と腹わたを取り、水に約30分浸す。中火にかけ、沸騰したら弱火で5～10分煮て、煮干しを取り除く。\n3. だしに玉ねぎとキャベツを加えてやわらかく煮る。小ねぎを加える。\n4. 火を止めてみそを溶き、弱火で1～2分温める。"),
+])
+
+SEED_RECIPES.append({
+    "name": "いりなます（新座市立栄保育園）", "meal_type": "side", "cuisine": "和",
+    "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
+    "servings_note": "大人4人分", "source_name": "新座市立栄保育園 給食人気メニュー",
+    "source_url": "https://www.city.niiza.lg.jp/uploaded/attachment/53892.pdf",
+    "child_notes": "野菜はやわらかくゆで、食べやすい長さと大きさに整えます。",
+    "ingredients": [
+        {"name": "大根", "quantity": "180", "unit": "g"}, {"name": "にんじん", "quantity": "60", "unit": "g"},
+        {"name": "れんこん", "quantity": "90", "unit": "g"}, {"name": "油揚げ", "quantity": "18", "unit": "g"},
+        {"name": "干ししいたけ", "quantity": "2", "unit": "枚"}, {"name": "サラダ油", "quantity": "6", "unit": "g"},
+        {"name": "酢", "quantity": "18", "unit": "g"}, {"name": "砂糖", "quantity": "15", "unit": "g"},
+        {"name": "しょうゆ", "quantity": "6", "unit": "g"}, {"name": "白すりごま", "quantity": "3", "unit": "g"},
+    ],
+    "instructions": "1. 干ししいたけは水で戻す。大根とにんじんはせん切りにしてゆで、水気を軽く絞る。\n2. れんこんは薄いいちょう切り、油揚げとしいたけはせん切りにする。\n3. 鍋に油を熱し、れんこん、油揚げ、しいたけを炒める。酢、砂糖、しょうゆを加えて味を調え、冷ます。\n4. ゆでた大根とにんじんを混ぜ、白すりごまをふる。",
+})
+
 # レシピマスタに登録する全カタログへ、幼児食としての提供目安を付与する。
 # 出典のないレシピは「公式」ではなく、アプリ内の家庭向けレシピとして扱う。
 for _recipe in SEED_RECIPES:
