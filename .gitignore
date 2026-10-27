@@ -39,3 +39,4 @@ logs/
 .test_*.db
 *.db
 *.sqlite3
+.vercel
