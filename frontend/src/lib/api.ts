@@ -122,6 +122,12 @@ export interface Recipe {
   cook_time_minutes?: number | null;
   /** 「喜んでた」が押された回数（ログインユーザー分） */
   liked_count?: number;
+  cuisine?: string;
+  age_min_months?: number;
+  age_max_months?: number;
+  is_official?: boolean;
+  is_public?: boolean;
+  is_favorite?: boolean;
 }
 
 export interface RecipeSearchParams {
@@ -255,6 +261,15 @@ const realApi = {
   },
   getRecipe(recipeId: string) {
     return request<Recipe>(`/recipe-master/${recipeId}`);
+  },
+  createRecipe(payload: Record<string, unknown>) {
+    return request<Recipe>("/recipe-master", { method: "POST", body: JSON.stringify(payload) });
+  },
+  listFavoriteRecipes() {
+    return request<Recipe[]>("/recipe-master/my-favorites");
+  },
+  toggleFavorite(recipeId: string) {
+    return request<Recipe>("/recipe-master/" + recipeId + "/favorite", { method: "POST" });
   },
   listMealRecipes() {
     return request<SuggestedMeal[]>("/recipes");

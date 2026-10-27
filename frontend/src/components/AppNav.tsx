@@ -119,6 +119,12 @@ const NAV_ITEMS = [
     icon: IconSearch,
   },
   {
+    href: "/my-recipes",
+    label: "マイレシピ",
+    short: "マイレシピ",
+    icon: IconDocument,
+  },
+  {
     href: "/menus",
     label: "献立表",
     short: "献立表",
