@@ -1,14 +1,9 @@
-"""AI 献立生成サービス。
+"""登録済みレシピから献立を選定するサービス。
 
 レシピマスタ（DB）に登録された料理から、保育園の昼食・冷蔵庫の在庫・
 アレルギー・好き嫌い・前日の夕食を考慮した夕食献立を選定する。
 
-選定方式:
-- Xiaomi MiMo（OpenAI 互換 API）が利用可能なら、レシピカタログと制約を
-  渡して「どのレシピを選ぶか」を決めさせる。
-- API キー未設定時はルールベースで DB から順に選定する。
-- どちらの場合も選定結果を DB の食材情報と照合し、アレルゲンが
-  含まれないことを最終確認する。
+AIで新規レシピを生成せず、DB内の全候補を条件判定・スコアリングする。
 """
 
 from __future__ import annotations
@@ -112,25 +107,8 @@ def generate_menus(
     Returns:
         日付ごとの GeneratedMenu のリスト。
     """
-    settings = get_settings()
     inventory = inventory or []
     recipe_list = recipes if recipes is not None else []
-
-    if settings.openai_api_key:
-        try:
-            return _generate_freeform_with_openai(
-                child_name=child_name,
-                child_age_months=child_age_months,
-                start_date=start_date,
-                days=days,
-                allergies=allergies,
-                preferences=preferences,
-                nursery_menus=nursery_menus,
-                yesterday_menu=yesterday_menu,
-                inventory=inventory,
-            )
-        except Exception as exc:  # noqa: BLE001 - AI 失敗時は必ずルールベースへ
-            logger.warning("OpenAI 献立生成に失敗したためルールベースに切り替えます: %s", exc)
 
     return _generate_rule_based(
         child_name=child_name,
