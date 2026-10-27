@@ -443,31 +443,13 @@ _EXTRA_RECIPES = [
     ("かぼちゃと豆のカレー", "staple", "洋", 30, "大豆水煮", "かぼちゃ", "カレー粉"),
 ]
 
-_QUANTITIES = {"main": ("150", "g"), "side": ("80", "g"), "soup": ("300", "ml"), "staple": ("150", "g")}
+RETIRED_RECIPE_NAMES = {row[0] for row in _EXTRA_RECIPES}
 
-for _name, _type, _cuisine, _minutes, _primary, _vegetable, _seasoning in _EXTRA_RECIPES:
-    _ingredients = [{"name": _primary, "quantity": _QUANTITIES[_type][0], "unit": _QUANTITIES[_type][1]}]
-    if _vegetable and _vegetable != _primary:
-        _ingredients.append({"name": _vegetable, "quantity": "50", "unit": "g"})
-    _ingredients.append({"name": _seasoning, "quantity": "小さじ1", "unit": ""})
-    if _type == "main":
-        _steps = f"1. {_primary}と{_vegetable}を食べやすい大きさに切る。\n2. {_primary}に火が通るまで加熱する。\n3. {_vegetable}を加えて火を通し、{_seasoning}で薄味に調える。"
-    elif _type == "side":
-        _steps = f"1. {_primary}と{_vegetable}を食べやすく切る。\n2. {_primary}と{_vegetable}をやわらかくなるまで加熱する。\n3. {_seasoning}で味を調えて盛り付ける。"
-    elif _type == "soup":
-        _steps = f"1. {_primary}と{_vegetable}を小さく切る。\n2. 水300mlで具材をやわらかく煮る。\n3. {_seasoning}を加え、味を薄めに調える。"
-    else:
-        _steps = f"1. {_primary}と{_vegetable}を準備する。\n2. {_primary}を中心に加熱し、具材に火を通す。\n3. {_seasoning}で薄味に仕上げる。"
-    SEED_RECIPES.append({
-        "name": _name, "meal_type": _type, "cook_time_minutes": _minutes,
-        "ingredients": _ingredients, "instructions": _steps,
-        "cuisine": _cuisine, "age_min_months": 12, "age_max_months": 72,
-    })
-
+# 材料・分量・工程が料理ごとに整備されるまで、テンプレート生成分は配信しない。
 # 出典と子ども用の分量が確認できる公的機関の保育園・食育レシピ。
 # 既存の一般レシピと区別できるよう、出典・対象年齢・分量メモを保存する。
 _CHILD_RECIPE_NOTE = (
-    "保育園・食育向けの出典レシピを参考にしています。食べる量、具材の大きさ・固さは、"
+    "食べる量、具材の大きさ・固さは、"
     "お子さんの発達や咀嚼・嚥下の様子に合わせて調整してください。"
 )
 SEED_RECIPES.extend([
@@ -707,7 +689,6 @@ for _recipe in SEED_RECIPES:
 
     _recipe["servings_note"] = "2人分の目安。幼児の食べる量に合わせて取り分け"
     _recipe["child_notes"] = (
-        "アプリ内レシピ（外部出典未確認）。3〜6歳頃の幼児向けの調理目安です。"
         "味付けは控えめにし、濃い味の調味料は少量から加えてください。"
         "肉・魚・卵は中心まで十分に加熱し、魚の骨や肉の筋を取り除きます。"
         "具材はお子さんの発達や咀嚼・嚥下に合わせて小さく切る、やわらかく煮るなど調整してください。"

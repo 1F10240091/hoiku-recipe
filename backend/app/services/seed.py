@@ -3,12 +3,17 @@
 from sqlalchemy.orm import Session
 
 from app.models import Recipe
-from app.services.seed_data import SEED_RECIPES
+from app.services.seed_data import RETIRED_RECIPE_NAMES, SEED_RECIPES
 
 
 def seed_recipes(db: Session) -> int:
-    """既存のレシピを壊さず、未登録のレシピだけを追加する。"""
+    """運営レシピを更新し、未整備の旧テンプレートを非公開にする。"""
     existing = {r.name: r for r in db.query(Recipe).all()}
+    for name in RETIRED_RECIPE_NAMES:
+        recipe = existing.get(name)
+        if recipe is not None and recipe.owner_id is None:
+            recipe.is_public = False
+            recipe.is_official = False
     added = 0
     for data in SEED_RECIPES:
         recipe = existing.get(data["name"])
