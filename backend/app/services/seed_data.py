@@ -682,7 +682,7 @@ SEED_RECIPES.extend([
 _CHIBA_SIDE_SOURCE = "https://www.city.chiba.jp/kodomomirai/yojikyoiku/shido/c-kids-hukusai.html"
 _CHIBA_SIDE_RECIPES = [
     {
-        "name": "フレンチサラダ（千葉市保育所）", "meal_type": "side", "cuisine": "洋",
+        "name": "フレンチサラダ", "meal_type": "side", "cuisine": "洋",
         "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分",
         "source_name": "千葉市 保育所のおすすめ副菜レシピ",
@@ -697,7 +697,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. りんごは皮をむき、薄いいちょう切りにする。きゅうりは薄切りにして塩をふる。\n2. キャベツはさっとゆで、食べやすい長さのせん切りにする。\n3. 酢、みかん缶汁、塩を混ぜ、サラダ油を少しずつ加えてドレッシングを作る。\n4. 野菜の水気を絞り、りんごとみかんを加えてドレッシングで和える。",
     },
     {
-        "name": "高野豆腐入り含め煮（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "name": "高野豆腐入り含め煮", "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "高野豆腐と野菜は、食べる様子に合わせた大きさとやわらかさに整えます。",
@@ -710,7 +710,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. 高野豆腐は水で戻して食べやすく切る。じゃがいもとにんじんは乱切りにする。\n2. だし汁でじゃがいもとにんじんを煮る。\n3. 野菜がやわらかくなったら砂糖、しょうゆ、塩、みりん、酒を加え、高野豆腐を入れて煮含める。",
     },
     {
-        "name": "ごまお浸し（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "name": "ごまお浸し", "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": 15, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "ゆでた野菜の水気をよく絞り、食べやすい長さに切ります。",
@@ -722,7 +722,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. ほうれん草とキャベツをゆで、食べやすい長さに切る。にんじんはせん切りにしてゆでる。\n2. 野菜の水気を絞り、しょうゆ、だし汁、すりごまと和える。",
     },
     {
-        "name": "中華風春雨サラダ（千葉市保育所）", "meal_type": "side", "cuisine": "中",
+        "name": "中華風春雨サラダ", "meal_type": "side", "cuisine": "中",
         "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "春雨は短く切り、野菜は食べやすい大きさに整えます。",
@@ -736,7 +736,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. 春雨を沸騰した湯で4～5分ゆでて水洗いし、短く切る。\n2. ハムはせん切りにする。キャベツはさっとゆでてせん切りにし、きゅうりもせん切りにする。にんじんはせん切りにしてゆでる。\n3. 酢、塩、砂糖、ごま油、しょうゆを混ぜてドレッシングを作る。\n4. 野菜の水気を絞り、春雨とハムを加えてドレッシングで和える。",
     },
     {
-        "name": "野菜ソテー（千葉市保育所）", "meal_type": "side", "cuisine": "洋",
+        "name": "野菜ソテー", "meal_type": "side", "cuisine": "洋",
         "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "肉と野菜にしっかり火を通し、食べやすい大きさに切ります。",
@@ -750,7 +750,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. にんじん、玉ねぎ、キャベツ、エリンギ、ピーマンをせん切りにする。もやしは食べやすい長さに切る。\n2. フライパンに油を熱し、一口大に切った豚肉を炒める。\n3. 火の通りにくい野菜から加えて炒め、塩、しょうゆ、オイスターソースで味を調える。",
     },
     {
-        "name": "和風サラダ（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "name": "和風サラダ", "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "野菜を食べやすい大きさに切り、ゆでた野菜の水気を絞ります。",
@@ -763,7 +763,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. キャベツはゆでてせん切りにする。きゅうりは薄切り、にんじんはいちょう切りにしてゆでる。ブロッコリーは小房に分けてゆでる。\n2. サラダ油、酢、しょうゆ、塩を混ぜてドレッシングを作る。\n3. 野菜の水気を絞り、ドレッシングで和える。",
     },
     {
-        "name": "切干大根の煮付（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "name": "切干大根の煮付", "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": 30, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "切干大根や油揚げは短く切り、やわらかく煮ます。",
@@ -776,7 +776,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. 切干大根は水で戻してよく洗い、短く切る。にんじんと油揚げはせん切りにする。油揚げは熱湯をかけて油抜きする。\n2. 切干大根、にんじん、油揚げを砂糖、しょうゆ、酒、みりん、だし汁で汁気が少なくなるまで煮る。\n3. 小松菜をゆでて短く切り、煮た具材に混ぜる。",
     },
     {
-        "name": "ひじきと根菜の炒め煮（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "name": "ひじきと根菜の炒め煮", "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": 30, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "根菜はやわらかくなるまで煮て、食べやすい大きさに整えます。",
@@ -791,7 +791,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. ひじきは水で戻してよく洗う。ごぼうは半月切り、れんこんはいちょう切りにして水にさらす。\n2. 赤ピーマンとベーコンは食べやすい長さに切る。\n3. 鍋に油を熱してひじきと根菜を炒め、洋風だしを加えて煮る。やわらかくなったら赤ピーマンとコーンを加え、砂糖、しょうゆ、酒、塩で味を調える。",
     },
     {
-        "name": "れんこんの金平（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "name": "れんこんの金平", "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "れんこんと肉は食べやすく切り、根菜に火が通るまで煮ます。",
@@ -805,7 +805,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. れんこんはいちょう切りにして水にさらす。にんじんもいちょう切りにする。\n2. フライパンに油を熱し、一口大に切った豚肉を炒める。れんこんとにんじんを加えて炒め、だし汁、酒、しょうゆ、砂糖を加えて煮る。\n3. すりごまを混ぜ、ゆでてせん切りにしたさやえんどうを添える。",
     },
     {
-        "name": "中華風お浸し（千葉市保育所）", "meal_type": "side", "cuisine": "中",
+        "name": "中華風お浸し", "meal_type": "side", "cuisine": "中",
         "cook_time_minutes": 15, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "野菜を食べやすい長さに切り、水気をよく絞ります。",
@@ -816,7 +816,7 @@ _CHIBA_SIDE_RECIPES = [
         "instructions": "1. ほうれん草ともやしをゆで、食べやすい長さに切る。\n2. 水気を絞り、しょうゆ、ごま油、すりごまと和える。",
     },
     {
-        "name": "マカロニサラダ（千葉市保育所）", "meal_type": "side", "cuisine": "洋",
+        "name": "マカロニサラダ", "meal_type": "side", "cuisine": "洋",
         "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
         "child_notes": "マカロニと野菜は食べやすい大きさにし、冷ましてから和えます。",
@@ -834,7 +834,7 @@ SEED_RECIPES.extend(_CHIBA_SIDE_RECIPES)
 # 千葉市「その他のレシピ副菜」から、上記の月別レシピと重ならない料理を追加。
 def _chiba_side(name: str, cuisine: str, minutes: int, ingredients: list[dict], instructions: str) -> dict:
     return {
-        "name": f"{name}（千葉市保育所）", "meal_type": "side", "cuisine": cuisine,
+        "name": name, "meal_type": "side", "cuisine": cuisine,
         "cook_time_minutes": minutes, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "幼児4人分", "source_name": "千葉市 保育所の副菜レシピ",
         "source_url": "https://www.city.chiba.jp/kodomomirai/yojikyoiku/shido/c-kids-resipisyuu-hukusai.html",
@@ -978,7 +978,7 @@ _MATSUZAKA_SOURCE = "https://www.city.matsusaka.mie.jp/uploaded/attachment/85725
 
 def _matsuzaka_recipe(name: str, meal_type: str, cuisine: str, minutes: int, ingredients: list[dict], instructions: str) -> dict:
     return {
-        "name": f"{name}（松阪市保育園）", "meal_type": meal_type, "cuisine": cuisine,
+        "name": name, "meal_type": meal_type, "cuisine": cuisine,
         "cook_time_minutes": minutes, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "4人分", "source_name": "松阪市保育園給食レシピ集",
         "source_url": _MATSUZAKA_SOURCE,
@@ -1087,7 +1087,7 @@ _ITABASHI_BASE = "https://www.city.itabashi.tokyo.jp/_res/projects/default_proje
 
 def _itabashi_side(name: str, pdf: str, minutes: int, ingredients: list[dict], instructions: str) -> dict:
     return {
-        "name": f"{name}（板橋区立保育園）", "meal_type": "side", "cuisine": "和",
+        "name": name, "meal_type": "side", "cuisine": "和",
         "cook_time_minutes": minutes, "age_min_months": 36, "age_max_months": 72,
         "servings_note": "子ども6人分（大人約4人分）", "source_name": "板橋区立保育園給食レシピ",
         "source_url": _ITABASHI_BASE + pdf,
@@ -1144,7 +1144,7 @@ SEED_RECIPES.extend([
 ])
 
 SEED_RECIPES.append({
-    "name": "いりなます（新座市立栄保育園）", "meal_type": "side", "cuisine": "和",
+    "name": "いりなます", "meal_type": "side", "cuisine": "和",
     "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
     "servings_note": "大人4人分", "source_name": "新座市立栄保育園 給食人気メニュー",
     "source_url": "https://www.city.niiza.lg.jp/uploaded/attachment/53892.pdf",

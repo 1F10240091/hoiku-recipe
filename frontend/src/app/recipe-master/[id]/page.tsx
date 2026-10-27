@@ -76,11 +76,10 @@ export default function RecipeDetailPage({
               <h1 style={{ marginTop: 8 }}>{recipe.name}</h1>
             </header>
 
-            <section aria-label="対象と出典" style={{ marginBottom: 24 }}>
+            <section aria-label="レシピ情報" style={{ marginBottom: 24 }}>
               <p><strong>対象年齢の目安：</strong>{recipe.age_min_months != null && recipe.age_max_months != null ? `${recipe.age_min_months}〜${recipe.age_max_months}か月` : "年齢に応じて調整"}</p>
               {recipe.servings_note && <p><strong>分量：</strong>{recipe.servings_note}</p>}
               {recipe.child_notes && <p><strong>子ども向けのポイント：</strong>{recipe.child_notes}</p>}
-              {recipe.source_url && <p><strong>出典：</strong><a href={recipe.source_url} target="_blank" rel="noreferrer">{recipe.source_name ?? "参照元を開く"} ↗</a></p>}
             </section>
 
             <h2>材料</h2>
