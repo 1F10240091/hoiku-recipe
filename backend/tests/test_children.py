@@ -25,7 +25,7 @@ def test_add_and_delete_allergy(auth_client):
 
     res = auth_client.post(f"/api/v1/children/{child_id}/allergies", json={"ingredient": "鮭"})
     assert res.status_code == 201
-    assert [a["ingredient"] for a in res.json()["allergies"]] == ["鮭"]
+    assert [a["ingredient"] for a in res.json()["allergies"]] == ["さけ"]
 
     allergy_id = res.json()["allergies"][0]["id"]
     res = auth_client.delete(f"/api/v1/children/{child_id}/allergies/{allergy_id}")

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AppNav from "@/components/AppNav";
+import ChildCreateDialog from "@/components/ChildCreateDialog";
 import ChildEditor from "@/components/ChildEditor";
 import MutationStatus from "@/components/MutationStatus";
 import { api, type Child, type User } from "@/lib/api";
@@ -19,6 +20,8 @@ export default function DashboardPage() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [childNotice, setChildNotice] = useState("");
   const [name, setName] = useState("");
   const [birth, setBirth] = useState("");
   const [rating, setRating] = useState<number | null>(null);
@@ -43,8 +46,10 @@ export default function DashboardPage() {
         <label className="form-field"><span>ユーザーネームの変更</span><input className="input" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={30} required /></label>
         <button className="button" disabled={!username.trim()}>プロフィールを保存</button>
       </form>
-      <h2 style={{marginTop: 32}}>お子様管理</h2>
-      <form className="card" onSubmit={(event) => { event.preventDefault(); if (!name.trim()) return; void mutation.run("お子様を追加中", async () => {
+      <div className="child-card-heading" style={{marginTop: 32, marginBottom: 16}}><h2>お子様管理</h2>
+        {children.length > 0 && <button className="button" type="button" onClick={() => setShowCreate(true)}>＋ お子様を追加</button>}
+      </div>
+      {children.length === 0 && <form className="card" onSubmit={(event) => { event.preventDefault(); if (!name.trim()) return; void mutation.run("お子様を追加中", async () => {
         const child = await api.createChild({name: name.trim(), birth_date: birth ? `${birth}-01` : null, allergies: [], preferences: []});
         setChildren((current) => [...current, child]); setName(""); setBirth("");
       }, "お子様を追加しました。"); }}>
@@ -52,8 +57,10 @@ export default function DashboardPage() {
         <label className="form-field"><span>名前</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="例：ゆうた" maxLength={100} required /></label>
         <label className="form-field"><span>生年月（任意）</span><input type="month" className="input" value={birth} onChange={(e) => setBirth(e.target.value)} /></label>
         <button className="button" disabled={!name.trim()}>{mutation.pending === "お子様を追加中" ? "追加中…" : "お子様を追加"}</button>
-      </form>
+      </form>}
     </fieldset>
+    {childNotice && <p className="mutation-success" role="status">{childNotice}</p>}
+    {showCreate && <ChildCreateDialog onCreated={(child) => { setChildren((current) => [...current, child]); setChildNotice(`${child.name}さんを追加しました。`); }} onDismiss={() => setShowCreate(false)} />}
     {children.length ? children.map((child) => <ChildEditor key={child.id} child={child} ingredients={ingredients}
       onChanged={(updated) => setChildren((current) => current.map((item) => item.id === updated.id ? updated : item))}
       onDeleted={(id) => setChildren((current) => current.filter((item) => item.id !== id))} />) : <div className="card"><p>お子様が登録されていません。上のフォームから登録できます。</p></div>}

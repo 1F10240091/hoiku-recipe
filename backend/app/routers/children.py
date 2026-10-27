@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.services.allergens import canonical_allergen
 from app.models import Allergy, Child, Preference, User
 from app.routers.auth import get_current_user
 from app.schemas import AllergyCreate, ChildCreate, ChildResponse, ChildUpdate, PreferenceCreate
@@ -19,7 +20,7 @@ def list_children(user: User = Depends(get_current_user), db: Session = Depends(
 @router.post("", response_model=ChildResponse, status_code=status.HTTP_201_CREATED)
 def create_child(payload: ChildCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Child:
     child = Child(user_id=user.id, name=payload.name, birth_date=payload.birth_date)
-    child.allergies = [Allergy(ingredient=a.ingredient) for a in payload.allergies]
+    child.allergies = [Allergy(ingredient=name) for name in dict.fromkeys(a.ingredient for a in payload.allergies)]
     child.preferences = [Preference(ingredient=p.ingredient, mode=p.mode) for p in payload.preferences]
     db.add(child)
     db.commit()
@@ -62,7 +63,7 @@ def add_allergy(
     ingredient = payload.ingredient.strip()
     if not ingredient:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="食材名を入力してください")
-    if not any(a.ingredient == ingredient for a in child.allergies):
+    if not any(canonical_allergen(a.ingredient) == ingredient for a in child.allergies):
         child.allergies.append(Allergy(ingredient=ingredient))
     db.commit()
     db.refresh(child)

@@ -24,6 +24,8 @@ import type {
   User,
 } from "./api";
 
+import { allergenCatalog, canonicalAllergen } from "./allergens";
+
 const DEMO_TOKEN = "demo-token";
 const DEMO_USER: User = {
   id: "demo-user",
@@ -60,6 +62,14 @@ const SYNONYMS: Record<string, string[]> = {
   小麦: ["小麦", "うどん", "パン", "麺"],
   大豆: ["大豆", "豆腐", "みそ", "味噌", "しょうゆ", "醤油"],
 };
+
+for (const item of allergenCatalog.items) {
+  const aliases = [item.name, item.label, ...item.aliases];
+  for (const [name, values] of Object.entries(SYNONYMS)) {
+    if (canonicalAllergen(name) === item.name) aliases.push(...values);
+  }
+  SYNONYMS[item.name] = Array.from(new Set(aliases));
+}
 
 function containsAllergen(recipe: DemoRecipe, allergens: string[]): boolean {
   const text = recipe.ingredients.map((i) => [i.name, ...((i as Recipe["ingredients"][number]).components ?? [])].join(" ")).join(" ");
@@ -170,7 +180,8 @@ export const demoApi = {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
     const child = list.find((c) => c.id === childId);
     if (child) {
-      child.allergies.push({ id: uid("a"), ingredient });
+      const name = canonicalAllergen(ingredient);
+      if (!child.allergies.some((item) => canonicalAllergen(item.ingredient) === name)) child.allergies.push({ id: uid("a"), ingredient: name });
       save("demo_children", list);
     }
     return delay(child ?? list[0]);

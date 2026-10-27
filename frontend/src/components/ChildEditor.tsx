@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { api, type Child } from "@/lib/api";
 import { useMutation } from "@/lib/useMutation";
+import { allergenCatalog, canonicalAllergen } from "@/lib/allergens";
+import AllergenPicker from "./AllergenPicker";
 import MutationStatus from "./MutationStatus";
 
 export default function ChildEditor({ child, ingredients, onChanged, onDeleted }: {
@@ -20,6 +22,16 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
     void mutation.run("アレルギーを保存中", async () => {
       onChanged(await api.addAllergy(child.id, allergy.trim())); setAllergy("");
     }, "アレルギーを追加しました。");
+  };
+  const standardNames = new Set(allergenCatalog.items.map((item) => item.name));
+  const otherAllergies = child.allergies.filter((item) => !standardNames.has(canonicalAllergen(item.ingredient)));
+  const toggleStandard = (name: string) => {
+    const matches = child.allergies.filter((item) => canonicalAllergen(item.ingredient) === name);
+    void mutation.run(matches.length ? `${name}を解除中` : `${name}を登録中`, async () => {
+      if (matches.length) {
+        for (const item of matches) onChanged(await api.deleteAllergy(child.id, item.id));
+      } else onChanged(await api.addAllergy(child.id, name));
+    }, matches.length ? `${name}を解除しました。` : `${name}を登録しました。`);
   };
   return <section className="card" aria-label={`${child.name}の情報`} aria-busy={Boolean(mutation.pending)}>
     <div className="child-card-heading"><h2>{child.name}</h2><div className="child-card-actions">
@@ -43,7 +55,9 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
     </form> : <p className="card__text">生年月：{child.birth_date ? child.birth_date.slice(0,7).replace("-", "年") + "月" : "未設定"}</p>}
     <fieldset className="recipe-post-fields" disabled={Boolean(mutation.pending)}>
       <h3>アレルギー</h3>
-      {child.allergies.length ? <ul className="list">{child.allergies.map((item) => <li className="list__item" key={item.id}>
+      <AllergenPicker child={child} disabled={Boolean(mutation.pending)} onToggle={toggleStandard} />
+      <h4>その他のアレルギー・自由入力</h4>
+      {otherAllergies.length ? <ul className="list">{otherAllergies.map((item) => <li className="list__item" key={item.id}>
         <span className="badge">{item.ingredient}</span>
         <button type="button" className="button button--danger button--sm" aria-label={`${item.ingredient}のアレルギーを削除`} onClick={() => void mutation.run("アレルギーを削除中", async () => onChanged(await api.deleteAllergy(child.id, item.id)), "アレルギーを削除しました。")}>削除</button>
       </li>)}</ul> : <p className="card__text">未登録</p>}

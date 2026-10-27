@@ -4,6 +4,8 @@ import re
 from datetime import date, datetime
 from typing import Annotated, Optional
 
+from app.services.allergens import canonical_allergen
+
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 # パスワード強度チェック: 8文字以上・英字・数字を含む
@@ -78,6 +80,12 @@ class UserUpdate(BaseModel):
 # --- お子様 ---
 class AllergyCreate(BaseModel):
     ingredient: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+
+
+    @field_validator("ingredient")
+    @classmethod
+    def normalize_ingredient(cls, value: str) -> str:
+        return canonical_allergen(value)
 
 
 class AllergyResponse(ORMModel):

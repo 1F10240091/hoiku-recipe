@@ -1,0 +1,239 @@
+{
+  "version": "2026-04-01",
+  "source_url": "https://www.caa.go.jp/policies/policy/food_labeling/food_sanitation/allergy/assets/food_labeling_cms204_260401_02.pdf",
+  "items": [
+    {
+      "name": "えび",
+      "label": "えび",
+      "group": "required",
+      "aliases": [
+        "エビ",
+        "海老"
+      ]
+    },
+    {
+      "name": "カシューナッツ",
+      "label": "カシューナッツ",
+      "group": "required",
+      "aliases": []
+    },
+    {
+      "name": "かに",
+      "label": "かに",
+      "group": "required",
+      "aliases": [
+        "カニ",
+        "蟹"
+      ]
+    },
+    {
+      "name": "くるみ",
+      "label": "くるみ",
+      "group": "required",
+      "aliases": [
+        "クルミ",
+        "胡桃"
+      ]
+    },
+    {
+      "name": "小麦",
+      "label": "小麦",
+      "group": "required",
+      "aliases": []
+    },
+    {
+      "name": "そば",
+      "label": "そば",
+      "group": "required",
+      "aliases": [
+        "ソバ",
+        "蕎麦"
+      ]
+    },
+    {
+      "name": "卵",
+      "label": "卵",
+      "group": "required",
+      "aliases": [
+        "たまご",
+        "玉子",
+        "鶏卵"
+      ]
+    },
+    {
+      "name": "乳",
+      "label": "乳",
+      "group": "required",
+      "aliases": [
+        "牛乳",
+        "乳成分"
+      ]
+    },
+    {
+      "name": "落花生",
+      "label": "落花生（ピーナッツ）",
+      "group": "required",
+      "aliases": [
+        "ピーナッツ",
+        "ぴーなっつ",
+        "落花生（ピーナッツ）"
+      ]
+    },
+    {
+      "name": "アーモンド",
+      "label": "アーモンド",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "あわび",
+      "label": "あわび",
+      "group": "recommended",
+      "aliases": [
+        "アワビ",
+        "鮑"
+      ]
+    },
+    {
+      "name": "いか",
+      "label": "いか",
+      "group": "recommended",
+      "aliases": [
+        "イカ",
+        "烏賊"
+      ]
+    },
+    {
+      "name": "いくら",
+      "label": "いくら",
+      "group": "recommended",
+      "aliases": [
+        "イクラ"
+      ]
+    },
+    {
+      "name": "オレンジ",
+      "label": "オレンジ",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "キウイフルーツ",
+      "label": "キウイフルーツ",
+      "group": "recommended",
+      "aliases": [
+        "キウイ"
+      ]
+    },
+    {
+      "name": "牛肉",
+      "label": "牛肉",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "ごま",
+      "label": "ごま",
+      "group": "recommended",
+      "aliases": [
+        "ゴマ",
+        "胡麻"
+      ]
+    },
+    {
+      "name": "さけ",
+      "label": "さけ",
+      "group": "recommended",
+      "aliases": [
+        "鮭",
+        "サケ",
+        "しゃけ",
+        "サーモン"
+      ]
+    },
+    {
+      "name": "さば",
+      "label": "さば",
+      "group": "recommended",
+      "aliases": [
+        "鯖",
+        "サバ"
+      ]
+    },
+    {
+      "name": "大豆",
+      "label": "大豆",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "鶏肉",
+      "label": "鶏肉",
+      "group": "recommended",
+      "aliases": [
+        "とり肉",
+        "鶏もも肉",
+        "鶏むね肉"
+      ]
+    },
+    {
+      "name": "バナナ",
+      "label": "バナナ",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "ピスタチオ",
+      "label": "ピスタチオ",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "豚肉",
+      "label": "豚肉",
+      "group": "recommended",
+      "aliases": []
+    },
+    {
+      "name": "マカダミアナッツ",
+      "label": "マカダミアナッツ",
+      "group": "recommended",
+      "aliases": [
+        "マカデミアナッツ"
+      ]
+    },
+    {
+      "name": "もも",
+      "label": "もも",
+      "group": "recommended",
+      "aliases": [
+        "モモ",
+        "桃"
+      ]
+    },
+    {
+      "name": "やまいも",
+      "label": "やまいも",
+      "group": "recommended",
+      "aliases": [
+        "ヤマイモ",
+        "山芋"
+      ]
+    },
+    {
+      "name": "りんご",
+      "label": "りんご",
+      "group": "recommended",
+      "aliases": [
+        "リンゴ",
+        "林檎"
+      ]
+    },
+    {
+      "name": "ゼラチン",
+      "label": "ゼラチン",
+      "group": "recommended",
+      "aliases": []
+    }
+  ]
+}

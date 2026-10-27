@@ -11,6 +11,7 @@ from app.database import get_db
 from app.models import RecipePhoto, Recipe, RecipeFavorite, RecipeLike
 from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
+from app.services.allergens import ALLERGEN_CATALOG
 from app.services.ingredients import list_recipe_ingredient_names
 
 router = APIRouter(prefix="/recipe-master", tags=["recipe-master"])
@@ -104,6 +105,11 @@ def search_recipes(
         per_page=per_page,
         total_pages=total_pages,
     )
+
+
+@router.get("/allergens")
+def allergen_catalog(user=Depends(get_current_user)) -> dict:
+    return ALLERGEN_CATALOG
 
 
 @router.get("/ingredients", response_model=list[str])

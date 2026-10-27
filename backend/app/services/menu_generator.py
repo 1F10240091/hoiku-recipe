@@ -13,6 +13,7 @@ from datetime import date, timedelta
 import unicodedata
 
 from app.models import Recipe
+from app.services.allergens import ALLERGEN_CATALOG, canonical_allergen
 
 
 @dataclass
@@ -38,6 +39,15 @@ _SYNONYMS: dict[str, list[str]] = {
     "くるみ": ["くるみ", "胡桃"],
     "ごま": ["ごま", "ゴマ", "胡麻"],
 }
+
+# Keep display, registration and ingredient spellings aligned for all standard items.
+for _item in ALLERGEN_CATALOG["items"]:
+    _aliases = [_item["name"], _item["label"], *_item["aliases"]]
+    for _key, _values in list(_SYNONYMS.items()):
+        if canonical_allergen(_key) == _item["name"]:
+            _aliases.extend(_values)
+    _SYNONYMS[_item["name"]] = list(dict.fromkeys(_aliases))
+
 
 def _matches_ingredient(ingredient: str, target: str) -> bool:
     """食材名（表記ゆれ対応）が対象文字列に含まれるか判定する。"""
