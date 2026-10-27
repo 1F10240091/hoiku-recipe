@@ -8,7 +8,7 @@ export default function AllergenPicker({ child, disabled, onToggle }: Props) {
   const count = allergenCatalog.items.filter((item) => selected.has(item.name)).length;
   return <div className="allergen-picker" aria-label={`${child.name}の29品目から選ぶアレルギー`}>
     <div className="allergen-picker__heading"><h4>29品目からかんたん選択</h4><span>{count}品目を登録中</span></div>
-    <p className="note">該当するものを押すと保存します。もう一度押すと解除できます。</p>
+    <p className="note">該当するものを押すと保存します。もう一度押すと解除できます。小麦ならうどん・パンなどの食材名や、登録した原材料も照合します。</p>
     {([ ["required", "表示義務の対象（9品目）"], ["recommended", "表示推奨の対象（20品目）"] ] as const).map(([group, title]) => <details className="allergen-picker__group" key={group}>
       <summary className="allergen-picker__summary"><span>{title}</span><span className="allergen-picker__chevron" aria-hidden="true">▼</span></summary><div className="allergen-picker__options" role="group" aria-label={title}>
         {allergenCatalog.items.filter((item) => item.group === group).map((item) => {

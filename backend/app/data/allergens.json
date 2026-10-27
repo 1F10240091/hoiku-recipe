@@ -39,7 +39,11 @@
       "name": "小麦",
       "label": "小麦",
       "group": "required",
-      "aliases": []
+      "aliases": [
+        "小麦粉",
+        "薄力粉",
+        "強力粉"
+      ]
     },
     {
       "name": "そば",

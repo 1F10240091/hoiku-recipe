@@ -1,3 +1,5 @@
+import { matchesAllergen } from "@/lib/allergens";
+
 function normalize(value: string): string {
   return Array.from(value.normalize("NFKC").trim().toLowerCase(), (character) => {
     const code = character.charCodeAt(0);
@@ -8,7 +10,7 @@ function normalize(value: string): string {
 export function ingredientSuggestions(candidates: string[], query: string, limit = 6): string[] {
   const needle = normalize(query);
   return Array.from(new Set(candidates.map((name) => name.trim()).filter(Boolean)))
-    .filter((name) => normalize(name).includes(needle))
+    .filter((name) => normalize(name).includes(needle) || matchesAllergen(query, name))
     .sort((a, b) => Number(normalize(b).startsWith(needle)) - Number(normalize(a).startsWith(needle)) || a.localeCompare(b, "ja"))
     .slice(0, limit);
 }

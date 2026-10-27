@@ -10,10 +10,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-import unicodedata
 
 from app.models import Recipe
-from app.services.allergens import ALLERGEN_CATALOG, canonical_allergen
+from app.services.allergens import matches_allergen
 
 
 @dataclass
@@ -27,37 +26,9 @@ class GeneratedMenu:
     engine: str = "rule_based"
 
 
-# 表記ゆれ（ひらがな⇔漢字⇔カタカナ）の同義語辞書
-_SYNONYMS: dict[str, list[str]] = {
-    "さけ": ["さけ", "鮭", "サーモン", "しゃけ"],
-    "卵": ["卵", "たまご", "玉子", "エッグ"],
-    "牛乳": ["牛乳", "乳", "バター", "チーズ", "ヨーグルト"],
-    "小麦": ["小麦", "うどん", "パン", "麺"],
-    "そば": ["そば", "蕎麦"],
-    "大豆": ["大豆", "豆腐", "みそ", "味噌", "しょうゆ", "醤油", "油揚げ"],
-    "落花生": ["落花生", "ピーナッツ", "ぴーなっつ"],
-    "くるみ": ["くるみ", "胡桃"],
-    "ごま": ["ごま", "ゴマ", "胡麻"],
-}
-
-# Keep display, registration and ingredient spellings aligned for all standard items.
-for _item in ALLERGEN_CATALOG["items"]:
-    _aliases = [_item["name"], _item["label"], *_item["aliases"]]
-    for _key, _values in list(_SYNONYMS.items()):
-        if canonical_allergen(_key) == _item["name"]:
-            _aliases.extend(_values)
-    _SYNONYMS[_item["name"]] = list(dict.fromkeys(_aliases))
-
-
 def _matches_ingredient(ingredient: str, target: str) -> bool:
-    """食材名（表記ゆれ対応）が対象文字列に含まれるか判定する。"""
-    normalize = lambda value: unicodedata.normalize("NFKC", value).strip().casefold()
-    ingredient, target = normalize(ingredient), normalize(target)
-    if not ingredient:
-        return False
-    aliases = next((values for key, values in _SYNONYMS.items()
-                    if ingredient == normalize(key) or ingredient in [normalize(v) for v in values]), [ingredient])
-    return any(normalize(alias) in target for alias in aliases)
+    """食材・原材料を共通のアレルゲン照合ルールで判定する。"""
+    return matches_allergen(ingredient, target)
 
 
 def _recipe_has_allergen(recipe: Recipe, allergens: list[str]) -> bool:

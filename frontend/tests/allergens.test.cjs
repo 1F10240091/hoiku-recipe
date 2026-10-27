@@ -15,7 +15,7 @@ function compile(file, imports) {
   vm.runInNewContext(source, { exports, require: (name) => name in imports ? imports[name] : require(name) });
   return exports;
 }
-const helpers = compile("../src/lib/allergens.ts", { "../../../backend/app/data/allergens.json": catalog });
+const helpers = compile("../src/lib/allergens.ts", { "../../../backend/app/data/allergens.json": catalog, "../../../backend/app/data/allergen-ingredients.json": require("../../backend/app/data/allergen-ingredients.json") });
 const Picker = compile("../src/components/AllergenPicker.tsx", { "@/lib/allergens": helpers }).default;
 function markup(allergies = [], disabled = false) {
   return renderToStaticMarkup(React.createElement(Picker, { child: { id: "child", name: "test", allergies }, disabled, onToggle: () => {} }));
@@ -43,7 +43,7 @@ test("saving disables all 29 choices to prevent repeated writes", () => {
   assert.equal((markup([], true).match(/disabled=""/g) || []).length, 29);
 });
 
-const { ingredientSuggestions } = compile("../src/lib/ingredient-suggestions.ts", {});
+const { ingredientSuggestions } = compile("../src/lib/ingredient-suggestions.ts", { "@/lib/allergens": helpers });
 test("ingredient suggestions match kana and prioritize prefixes", () => {
   const result = ingredientSuggestions(["にんじん", "にら", "金時にんじん", "トマト"], "ニン");
   assert.equal(result.join(","), "にんじん,金時にんじん");
@@ -74,4 +74,27 @@ test("expanded browser keeps registered ingredients visible and marked", () => {
   assert.match(html, /is-registered/);
   assert.match(html, /登録済み/);
   assert.equal((html.match(/disabled=""/g) || []).length, 1);
+});
+
+test("wheat search includes udon in kana and other related foods", () => {
+  const result = ingredientSuggestions(["ウドン", "ｳﾄﾞﾝ", "パスタ", "食パン", "にんじん"], "小麦", Infinity);
+  assert.equal(result.length, 4);
+  assert.ok(result.includes("ウドン"));
+  assert.ok(!result.includes("にんじん"));
+  assert.equal(helpers.relatedAllergens("ウドン").join(","), "小麦");
+});
+test("custom food names do not expand to the whole standard allergen group", () => {
+  assert.equal(helpers.matchesAllergen("うどん", "パン"), false);
+  assert.equal(helpers.matchesAllergen("小麦", "ウドン"), true);
+});
+test("expanded browser explains udon's related allergen", () => {
+  const html = renderToStaticMarkup(React.createElement(Browser, { id: "udon-related", candidates: ["ウドン"], selected: ["小麦"], onChoose: () => {}, onDismiss: () => {} }));
+  assert.match(html, /関連：小麦/);
+});
+
+test("existing flour registrations select wheat and match udon", () => {
+  assert.equal(helpers.canonicalAllergen("小麦粉"), "小麦");
+  assert.equal(helpers.matchesAllergen("小麦粉", "ウドン"), true);
+  const html = markup([{ id: "old-flour", ingredient: "小麦粉" }]);
+  assert.match(html, /aria-label="小麦を解除"/);
 });

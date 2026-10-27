@@ -24,7 +24,7 @@ import type {
   User,
 } from "./api";
 
-import { allergenCatalog, canonicalAllergen } from "./allergens";
+import { canonicalAllergen, matchesAllergen } from "./allergens";
 
 const DEMO_TOKEN = "demo-token";
 const DEMO_USER: User = {
@@ -54,29 +54,10 @@ function delay<T>(value: T, ms = 300): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-// 表記ゆれを考慮したアレルゲン判定（バックエンドと同様のロジック）
-const SYNONYMS: Record<string, string[]> = {
-  さけ: ["さけ", "鮭", "サーモン", "しゃけ"],
-  卵: ["卵", "たまご", "玉子", "エッグ"],
-  牛乳: ["牛乳", "乳", "バター", "チーズ", "ヨーグルト"],
-  小麦: ["小麦", "うどん", "パン", "麺"],
-  大豆: ["大豆", "豆腐", "みそ", "味噌", "しょうゆ", "醤油"],
-};
-
-for (const item of allergenCatalog.items) {
-  const aliases = [item.name, item.label, ...item.aliases];
-  for (const [name, values] of Object.entries(SYNONYMS)) {
-    if (canonicalAllergen(name) === item.name) aliases.push(...values);
-  }
-  SYNONYMS[item.name] = Array.from(new Set(aliases));
-}
-
+// 本番APIと同じ共通ルールで、食材名と登録済みの原材料を照合する。
 function containsAllergen(recipe: DemoRecipe, allergens: string[]): boolean {
   const text = recipe.ingredients.map((i) => [i.name, ...((i as Recipe["ingredients"][number]).components ?? [])].join(" ")).join(" ");
-  return allergens.some((a) => {
-    const aliases = SYNONYMS[a] ?? [a];
-    return aliases.some((alias) => text.includes(alias));
-  });
+  return allergens.some((allergen) => matchesAllergen(allergen, text));
 }
 
 // デモ用にアレルゲン判定したレシピリストを返す
