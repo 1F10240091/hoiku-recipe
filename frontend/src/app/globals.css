@@ -309,9 +309,10 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-width: 48px;
-  padding: 5px 11px;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 112px;
+  padding: 8px 12px;
   border: 2px solid #ffc9d5;
   border-radius: 999px;
   background: #fff;
@@ -354,6 +355,72 @@ h3 {
   color: inherit;
   font-size: 13px;
   text-align: center;
+}
+
+.like-button__label {
+  font-size: 13px;
+}
+
+.dish-row__main {
+  min-width: 0;
+}
+
+.dish-row .like-button {
+  flex-shrink: 0;
+}
+
+.meal-plan-days {
+  display: grid;
+  gap: 12px;
+}
+
+.meal-plan-day {
+  margin: 0;
+  padding: 16px 20px;
+}
+
+.meal-plan-day__date {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.meal-plan-day__dish {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--color-line);
+}
+
+.meal-plan-day__name {
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.meal-plan-day__name:hover {
+  text-decoration: underline;
+}
+
+.meal-plan-day__text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+
+@media (max-width: 520px) {
+  .meal-plan-day {
+    padding: 14px;
+  }
+
+  .meal-plan-day__dish {
+    align-items: flex-start;
+  }
+
+  .meal-plan-day__name {
+    padding-top: 10px;
+  }
 }
 
 .dish-row {

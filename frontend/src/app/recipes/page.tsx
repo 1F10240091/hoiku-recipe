@@ -84,8 +84,7 @@ export default function RecipesPage() {
           <p className="page-header__en">MENU LOG</p>
           <h1 className="page-header__title">レシピ・買い物リスト</h1>
           <p className="page-header__subtitle">
-            提案された献立の詳細を確認できます。子どもが喜んだ料理には
-            ハート（♡）を押すと、レシピ一覧に回数が記録されます。
+            提案された献立の詳細を確認できます。各料理の「喜んだ」ボタンで、子どもが気に入った料理を記録できます。
           </p>
         </div>
         {error && (
@@ -142,6 +141,7 @@ export default function RecipesPage() {
                           <LikeButton
                             mealId={meal.id}
                             recipeId={recipeId}
+                            recipeName={name}
                             liked={isLiked(meal.id, recipeId)}
                             count={likes.counts[recipeId] ?? 0}
                             onToggled={handleToggled}

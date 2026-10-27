@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 interface LikeButtonProps {
   mealId: string;
   recipeId: string;
+  recipeName: string;
   liked: boolean;
   count: number;
   onToggled?: (
@@ -20,6 +21,7 @@ interface LikeButtonProps {
 export default function LikeButton({
   mealId,
   recipeId,
+  recipeName,
   liked,
   count,
   onToggled,
@@ -49,14 +51,17 @@ export default function LikeButton({
       type="button"
       className={`like-button${liked ? " like-button--on" : ""}`}
       aria-pressed={liked}
-      aria-label={`喜んでた ${count}回`}
+      aria-label={liked
+        ? `${recipeName}の「喜んだ」記録を取り消す`
+        : `${recipeName}を「喜んだ料理」として記録する`}
       onClick={handleClick}
       disabled={busy}
-      title={liked ? "もう一度押すと取り消せます" : "この料理を喜んでたに登録"}
+      title={liked ? "もう一度押すと記録を取り消せます" : "子どもが喜んだ料理として記録します"}
     >
       <span aria-hidden="true">{liked ? "♥" : "♡"}</span>
+      <span className="like-button__label">喜んだ</span>
       <span className="like-button__count" aria-hidden="true">
-        {count}
+        {count}回
       </span>
     </button>
   );

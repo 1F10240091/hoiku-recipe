@@ -106,21 +106,6 @@ export default function MealPlanPage() {
     });
   };
 
-  // 1週間分の献立を一塊のテキストとして整形
-  const formatWeeklyPlan = (meals: GenerateResponse["meals"]) => {
-    if (!meals.length) return "";
-    return meals
-      .map((meal) => {
-        const dayLabel = new Date(meal.date).toLocaleDateString("ja-JP", {
-          month: "short",
-          day: "numeric",
-          weekday: "short",
-        });
-        return `${dayLabel}：${meal.menu_text.replace(`${meal.menu_text.split("\n")[0]}\n`, "")}`;
-      })
-      .join("\n\n");
-  };
-
   return (
     <main className="main">
       <AppNav />
@@ -262,42 +247,59 @@ export default function MealPlanPage() {
                 </span>
               )}
             </div>
-            <div className="card" style={{ padding: 24, whiteSpace: "pre-wrap", fontFamily: "inherit", lineHeight: 1.8, fontSize: 18 }}>
-              {formatWeeklyPlan(mealPlan.meals)}
-            </div>
-            <div className="card" style={{ marginTop: 16 }}>
-              <h3 className="card__title" style={{ marginTop: 0 }}>
-                喜んでた料理を記録
-              </h3>
-              <p className="note" style={{ marginTop: 0, fontSize: 13 }}>
-                子どもが喜んだ料理のハート（♡）を押すと、レシピ一覧に回数が記録されます。
-              </p>
+            <div className="meal-plan-days">
               {mealPlan.meals.map((meal) => {
                 const recipeIds =
                   (meal.ingredients.recipe_ids as string[] | undefined) ?? [];
                 const dishNames =
                   (meal.ingredients.dishes as string[] | undefined) ?? [];
-                if (recipeIds.length === 0) return null;
+                const isFreeform = meal.ingredients.engine === "openai_freeform";
+                const menuLines = meal.menu_text.split("\n");
+                const menuBody = menuLines.slice(1).join("\n").trim() || meal.menu_text;
                 return (
-                  <div key={meal.id} style={{ marginTop: 12 }}>
-                    <p className="dish-row__meta" style={{ margin: "0 0 4px", fontWeight: 700 }}>
-                      {formatDate(meal.date)}
-                    </p>
-                    {recipeIds.map((recipeId, index) => (
-                      <div className="dish-row" key={`${meal.id}-${recipeId}`}>
-                        <span className="dish-row__name">
-                          {dishNames[index] ?? "料理"}
-                        </span>
-                        <LikeButton
-                          mealId={meal.id}
-                          recipeId={recipeId}
-                          liked={isLiked(meal.id, recipeId)}
-                          count={likes.counts[recipeId] ?? 0}
-                          onToggled={handleToggled}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <section className="meal-plan-day card" key={meal.id}>
+                    <h3 className="meal-plan-day__date">{formatDate(meal.date)}</h3>
+                    {isFreeform || recipeIds.length === 0 ? (
+                      <p className="meal-plan-day__text">{menuBody}</p>
+                    ) : (
+                      recipeIds.map((recipeId, index) => {
+                        const name = dishNames[index] ?? "料理";
+                        return (
+                          <div className="meal-plan-day__dish" key={`${meal.id}-${recipeId}`}>
+                            <Link href={`/recipe-master/${recipeId}`} className="meal-plan-day__name">
+                              {name}
+                            </Link>
+                            <LikeButton
+                              mealId={meal.id}
+                              recipeId={recipeId}
+                              recipeName={name}
+                              liked={isLiked(meal.id, recipeId)}
+                              count={likes.counts[recipeId] ?? 0}
+                              onToggled={handleToggled}
+                            />
+                          </div>
+                        );
+                      })
+                    )}
+                    {isFreeform && recipeIds.map((recipeId, index) => {
+                      const name = dishNames[index] ?? "料理";
+                      return (
+                        <div className="meal-plan-day__dish" key={`${meal.id}-${recipeId}`}>
+                          <Link href={`/recipe-master/${recipeId}`} className="meal-plan-day__name">
+                            {name}
+                          </Link>
+                          <LikeButton
+                            mealId={meal.id}
+                            recipeId={recipeId}
+                            recipeName={name}
+                            liked={isLiked(meal.id, recipeId)}
+                            count={likes.counts[recipeId] ?? 0}
+                            onToggled={handleToggled}
+                          />
+                        </div>
+                      );
+                    })}
+                  </section>
                 );
               })}
             </div>
