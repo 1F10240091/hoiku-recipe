@@ -42,3 +42,17 @@ test("existing milk alias appears as one selected standard choice", () => {
 test("saving disables all 29 choices to prevent repeated writes", () => {
   assert.equal((markup([], true).match(/disabled=""/g) || []).length, 29);
 });
+
+const { ingredientSuggestions } = compile("../src/lib/ingredient-suggestions.ts", {});
+test("ingredient suggestions match kana and prioritize prefixes", () => {
+  const result = ingredientSuggestions(["にんじん", "にら", "金時にんじん", "トマト"], "ニン");
+  assert.equal(result.join(","), "にんじん,金時にんじん");
+});
+test("ingredient suggestions are deduplicated and bounded", () => {
+  const result = ingredientSuggestions(["にんじん", " にんじん ", "", "トマト", "じゃがいも", "たまねぎ", "なす", "きゅうり", "大根"], "");
+  assert.equal(result.length, 6);
+  assert.equal(new Set(result).size, 6);
+});
+test("unmatched custom ingredients stay available for free text registration", () => {
+  assert.equal(ingredientSuggestions(["にんじん"], "独自の食材").length, 0);
+});

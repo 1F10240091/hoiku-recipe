@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api, type Child } from "@/lib/api";
 import { useMutation } from "@/lib/useMutation";
 import { allergenCatalog, canonicalAllergen } from "@/lib/allergens";
+import IngredientAutocomplete from "./IngredientAutocomplete";
 import AllergenPicker from "./AllergenPicker";
 import MutationStatus from "./MutationStatus";
 
@@ -25,6 +26,7 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
   };
   const standardNames = new Set(allergenCatalog.items.map((item) => item.name));
   const otherAllergies = child.allergies.filter((item) => !standardNames.has(canonicalAllergen(item.ingredient)));
+  const customCandidates = ingredients.filter((name) => !standardNames.has(canonicalAllergen(name)) && !otherAllergies.some((item) => item.ingredient === name));
   const toggleStandard = (name: string) => {
     const matches = child.allergies.filter((item) => canonicalAllergen(item.ingredient) === name);
     void mutation.run(matches.length ? `${name}を解除中` : `${name}を登録中`, async () => {
@@ -61,13 +63,11 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
         <span className="badge">{item.ingredient}</span>
         <button type="button" className="button button--danger button--sm" aria-label={`${item.ingredient}のアレルギーを削除`} onClick={() => void mutation.run("アレルギーを削除中", async () => onChanged(await api.deleteAllergy(child.id, item.id)), "アレルギーを削除しました。")}>削除</button>
       </li>)}</ul> : <p className="card__text">未登録</p>}
-      <form className="input-row" onSubmit={(e) => { e.preventDefault(); addAllergy(); }}>
-        <label className="sr-only" htmlFor={`allergy-${child.id}`}>アレルギー食材</label>
-        <input id={`allergy-${child.id}`} className="input" list={`ingredients-${child.id}`} value={allergy} onChange={(e) => setAllergy(e.target.value)} placeholder="食材を入力してEnter（例：にんじん、トマト）" maxLength={100} />
-        <datalist id={`ingredients-${child.id}`}>{ingredients.map((name) => <option key={name} value={name} />)}</datalist>
-        <button className="button button--secondary" disabled={!allergy.trim()}>追加</button>
+      <form className="custom-allergy-form" onSubmit={(e) => { e.preventDefault(); addAllergy(); }}>
+        <IngredientAutocomplete id={`allergy-${child.id}`} value={allergy} onChange={setAllergy} candidates={customCandidates} disabled={Boolean(mutation.pending)} />
+        <button className="button custom-allergy-form__add" disabled={!allergy.trim()}>＋ 追加</button>
       </form>
-      <p className="note">候補にない食材も登録できます。商品表示の原材料も確認してください。</p>
+      <p className="note" id={`allergy-${child.id}-hint`}>候補にない食材もEnterで登録できます。商品表示の原材料も確認してください。</p>
       <h3>好き嫌い</h3>
       {child.preferences.length ? <ul className="list">{child.preferences.map((item) => <li className="list__item" key={item.id}>
         <span>{item.ingredient}（{item.mode === "exclude" ? "除外" : "改善優先"}）</span>
