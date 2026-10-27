@@ -677,6 +677,160 @@ SEED_RECIPES.extend([
     },
 ])
 
+# 千葉市「保育所のおすすめ副菜レシピ」掲載の幼児4人分を追加。
+# https://www.city.chiba.jp/kodomomirai/yojikyoiku/shido/c-kids-hukusai.html
+_CHIBA_SIDE_SOURCE = "https://www.city.chiba.jp/kodomomirai/yojikyoiku/shido/c-kids-hukusai.html"
+_CHIBA_SIDE_RECIPES = [
+    {
+        "name": "フレンチサラダ（千葉市保育所）", "meal_type": "side", "cuisine": "洋",
+        "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分",
+        "source_name": "千葉市 保育所のおすすめ副菜レシピ",
+        "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "りんごは皮をむいて薄く切り、野菜は食べやすい大きさに整えます。",
+        "ingredients": [
+            {"name": "キャベツ", "quantity": "100", "unit": "g"}, {"name": "りんご", "quantity": "40", "unit": "g"},
+            {"name": "きゅうり", "quantity": "30", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+            {"name": "みかん缶", "quantity": "40", "unit": "g"}, {"name": "酢", "quantity": "8", "unit": "g"},
+            {"name": "みかん缶汁", "quantity": "8", "unit": "g"}, {"name": "サラダ油", "quantity": "12", "unit": "g"},
+        ],
+        "instructions": "1. りんごは皮をむき、薄いいちょう切りにする。きゅうりは薄切りにして塩をふる。\n2. キャベツはさっとゆで、食べやすい長さのせん切りにする。\n3. 酢、みかん缶汁、塩を混ぜ、サラダ油を少しずつ加えてドレッシングを作る。\n4. 野菜の水気を絞り、りんごとみかんを加えてドレッシングで和える。",
+    },
+    {
+        "name": "高野豆腐入り含め煮（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "高野豆腐と野菜は、食べる様子に合わせた大きさとやわらかさに整えます。",
+        "ingredients": [
+            {"name": "高野豆腐", "quantity": "12", "unit": "g"}, {"name": "じゃがいも", "quantity": "120", "unit": "g"},
+            {"name": "にんじん", "quantity": "40", "unit": "g"}, {"name": "和風だし", "quantity": "200", "unit": "g"},
+            {"name": "砂糖", "quantity": "8", "unit": "g"}, {"name": "しょうゆ", "quantity": "12", "unit": "g"},
+            {"name": "塩", "quantity": "少々", "unit": ""}, {"name": "みりん", "quantity": "4", "unit": "g"}, {"name": "酒", "quantity": "4", "unit": "g"},
+        ],
+        "instructions": "1. 高野豆腐は水で戻して食べやすく切る。じゃがいもとにんじんは乱切りにする。\n2. だし汁でじゃがいもとにんじんを煮る。\n3. 野菜がやわらかくなったら砂糖、しょうゆ、塩、みりん、酒を加え、高野豆腐を入れて煮含める。",
+    },
+    {
+        "name": "ごまお浸し（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": 15, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "ゆでた野菜の水気をよく絞り、食べやすい長さに切ります。",
+        "ingredients": [
+            {"name": "ほうれん草", "quantity": "80", "unit": "g"}, {"name": "キャベツ", "quantity": "60", "unit": "g"},
+            {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "しょうゆ", "quantity": "6", "unit": "g"},
+            {"name": "和風だし", "quantity": "4", "unit": "g"}, {"name": "すり白ごま", "quantity": "12", "unit": "g"},
+        ],
+        "instructions": "1. ほうれん草とキャベツをゆで、食べやすい長さに切る。にんじんはせん切りにしてゆでる。\n2. 野菜の水気を絞り、しょうゆ、だし汁、すりごまと和える。",
+    },
+    {
+        "name": "中華風春雨サラダ（千葉市保育所）", "meal_type": "side", "cuisine": "中",
+        "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "春雨は短く切り、野菜は食べやすい大きさに整えます。",
+        "ingredients": [
+            {"name": "春雨", "quantity": "24", "unit": "g"}, {"name": "ロースハム", "quantity": "20", "unit": "g"},
+            {"name": "キャベツ", "quantity": "80", "unit": "g"}, {"name": "きゅうり", "quantity": "20", "unit": "g"},
+            {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "酢", "quantity": "8", "unit": "g"},
+            {"name": "砂糖", "quantity": "2", "unit": "g"}, {"name": "ごま油", "quantity": "6", "unit": "g"},
+            {"name": "しょうゆ", "quantity": "6", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+        ],
+        "instructions": "1. 春雨を沸騰した湯で4～5分ゆでて水洗いし、短く切る。\n2. ハムはせん切りにする。キャベツはさっとゆでてせん切りにし、きゅうりもせん切りにする。にんじんはせん切りにしてゆでる。\n3. 酢、塩、砂糖、ごま油、しょうゆを混ぜてドレッシングを作る。\n4. 野菜の水気を絞り、春雨とハムを加えてドレッシングで和える。",
+    },
+    {
+        "name": "野菜ソテー（千葉市保育所）", "meal_type": "side", "cuisine": "洋",
+        "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "肉と野菜にしっかり火を通し、食べやすい大きさに切ります。",
+        "ingredients": [
+            {"name": "豚もも肉", "quantity": "40", "unit": "g"}, {"name": "にんじん", "quantity": "40", "unit": "g"},
+            {"name": "玉ねぎ", "quantity": "40", "unit": "g"}, {"name": "キャベツ", "quantity": "100", "unit": "g"},
+            {"name": "エリンギ", "quantity": "20", "unit": "g"}, {"name": "ピーマン", "quantity": "20", "unit": "g"},
+            {"name": "もやし", "quantity": "40", "unit": "g"}, {"name": "サラダ油", "quantity": "4", "unit": "g"},
+            {"name": "塩", "quantity": "少々", "unit": ""}, {"name": "しょうゆ", "quantity": "4", "unit": "g"}, {"name": "オイスターソース", "quantity": "2", "unit": "g"},
+        ],
+        "instructions": "1. にんじん、玉ねぎ、キャベツ、エリンギ、ピーマンをせん切りにする。もやしは食べやすい長さに切る。\n2. フライパンに油を熱し、一口大に切った豚肉を炒める。\n3. 火の通りにくい野菜から加えて炒め、塩、しょうゆ、オイスターソースで味を調える。",
+    },
+    {
+        "name": "和風サラダ（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "野菜を食べやすい大きさに切り、ゆでた野菜の水気を絞ります。",
+        "ingredients": [
+            {"name": "キャベツ", "quantity": "60", "unit": "g"}, {"name": "きゅうり", "quantity": "40", "unit": "g"},
+            {"name": "にんじん", "quantity": "20", "unit": "g"}, {"name": "ブロッコリー", "quantity": "60", "unit": "g"},
+            {"name": "サラダ油", "quantity": "8", "unit": "g"}, {"name": "酢", "quantity": "6", "unit": "g"},
+            {"name": "しょうゆ", "quantity": "6", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+        ],
+        "instructions": "1. キャベツはゆでてせん切りにする。きゅうりは薄切り、にんじんはいちょう切りにしてゆでる。ブロッコリーは小房に分けてゆでる。\n2. サラダ油、酢、しょうゆ、塩を混ぜてドレッシングを作る。\n3. 野菜の水気を絞り、ドレッシングで和える。",
+    },
+    {
+        "name": "切干大根の煮付（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": 30, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "切干大根や油揚げは短く切り、やわらかく煮ます。",
+        "ingredients": [
+            {"name": "切干大根", "quantity": "20", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+            {"name": "油揚げ", "quantity": "20", "unit": "g"}, {"name": "砂糖", "quantity": "8", "unit": "g"},
+            {"name": "しょうゆ", "quantity": "8", "unit": "g"}, {"name": "酒", "quantity": "4", "unit": "g"},
+            {"name": "みりん", "quantity": "4", "unit": "g"}, {"name": "和風だし", "quantity": "200", "unit": "g"}, {"name": "小松菜", "quantity": "20", "unit": "g"},
+        ],
+        "instructions": "1. 切干大根は水で戻してよく洗い、短く切る。にんじんと油揚げはせん切りにする。油揚げは熱湯をかけて油抜きする。\n2. 切干大根、にんじん、油揚げを砂糖、しょうゆ、酒、みりん、だし汁で汁気が少なくなるまで煮る。\n3. 小松菜をゆでて短く切り、煮た具材に混ぜる。",
+    },
+    {
+        "name": "ひじきと根菜の炒め煮（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": 30, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "根菜はやわらかくなるまで煮て、食べやすい大きさに整えます。",
+        "ingredients": [
+            {"name": "芽ひじき", "quantity": "3", "unit": "g"}, {"name": "ごぼう", "quantity": "20", "unit": "g"},
+            {"name": "れんこん", "quantity": "40", "unit": "g"}, {"name": "赤ピーマン", "quantity": "20", "unit": "g"},
+            {"name": "ベーコン", "quantity": "12", "unit": "g"}, {"name": "ホールコーン", "quantity": "40", "unit": "g"},
+            {"name": "サラダ油", "quantity": "4", "unit": "g"}, {"name": "洋風だし", "quantity": "100", "unit": "g"},
+            {"name": "砂糖", "quantity": "2", "unit": "g"}, {"name": "しょうゆ", "quantity": "4", "unit": "g"},
+            {"name": "酒", "quantity": "4", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+        ],
+        "instructions": "1. ひじきは水で戻してよく洗う。ごぼうは半月切り、れんこんはいちょう切りにして水にさらす。\n2. 赤ピーマンとベーコンは食べやすい長さに切る。\n3. 鍋に油を熱してひじきと根菜を炒め、洋風だしを加えて煮る。やわらかくなったら赤ピーマンとコーンを加え、砂糖、しょうゆ、酒、塩で味を調える。",
+    },
+    {
+        "name": "れんこんの金平（千葉市保育所）", "meal_type": "side", "cuisine": "和",
+        "cook_time_minutes": 25, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "れんこんと肉は食べやすく切り、根菜に火が通るまで煮ます。",
+        "ingredients": [
+            {"name": "豚もも肉", "quantity": "40", "unit": "g"}, {"name": "れんこん", "quantity": "120", "unit": "g"},
+            {"name": "にんじん", "quantity": "40", "unit": "g"}, {"name": "サラダ油", "quantity": "4", "unit": "g"},
+            {"name": "和風だし", "quantity": "200", "unit": "g"}, {"name": "酒", "quantity": "4", "unit": "g"},
+            {"name": "しょうゆ", "quantity": "10", "unit": "g"}, {"name": "砂糖", "quantity": "8", "unit": "g"},
+            {"name": "すり白ごま", "quantity": "4", "unit": "g"}, {"name": "さやえんどう", "quantity": "12", "unit": "g"},
+        ],
+        "instructions": "1. れんこんはいちょう切りにして水にさらす。にんじんもいちょう切りにする。\n2. フライパンに油を熱し、一口大に切った豚肉を炒める。れんこんとにんじんを加えて炒め、だし汁、酒、しょうゆ、砂糖を加えて煮る。\n3. すりごまを混ぜ、ゆでてせん切りにしたさやえんどうを添える。",
+    },
+    {
+        "name": "中華風お浸し（千葉市保育所）", "meal_type": "side", "cuisine": "中",
+        "cook_time_minutes": 15, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "野菜を食べやすい長さに切り、水気をよく絞ります。",
+        "ingredients": [
+            {"name": "ほうれん草", "quantity": "100", "unit": "g"}, {"name": "もやし", "quantity": "60", "unit": "g"},
+            {"name": "しょうゆ", "quantity": "6", "unit": "g"}, {"name": "ごま油", "quantity": "4", "unit": "g"}, {"name": "すり白ごま", "quantity": "4", "unit": "g"},
+        ],
+        "instructions": "1. ほうれん草ともやしをゆで、食べやすい長さに切る。\n2. 水気を絞り、しょうゆ、ごま油、すりごまと和える。",
+    },
+    {
+        "name": "マカロニサラダ（千葉市保育所）", "meal_type": "side", "cuisine": "洋",
+        "cook_time_minutes": 20, "age_min_months": 36, "age_max_months": 72,
+        "servings_note": "幼児4人分", "source_name": "千葉市 保育所のおすすめ副菜レシピ", "source_url": _CHIBA_SIDE_SOURCE,
+        "child_notes": "マカロニと野菜は食べやすい大きさにし、冷ましてから和えます。",
+        "ingredients": [
+            {"name": "マカロニ", "quantity": "25", "unit": "g"}, {"name": "ロースハム", "quantity": "20", "unit": "g"},
+            {"name": "キャベツ", "quantity": "80", "unit": "g"}, {"name": "にんじん", "quantity": "20", "unit": "g"},
+            {"name": "きゅうり", "quantity": "20", "unit": "g"}, {"name": "塩", "quantity": "少々", "unit": ""},
+            {"name": "マヨネーズ", "quantity": "28", "unit": "g"}, {"name": "酢", "quantity": "4", "unit": "g"},
+        ],
+        "instructions": "1. マカロニはゆでて冷ます。\n2. ハムとキャベツはせん切りにし、キャベツはゆでる。にんじんはせん切りにしてゆでる。きゅうりはせん切りにして塩をふる。\n3. 具材の水気を切り、マヨネーズと酢で和える。",
+    },
+]
+SEED_RECIPES.extend(_CHIBA_SIDE_RECIPES)
+
 # レシピマスタに登録する全カタログへ、幼児食としての提供目安を付与する。
 # 出典のないレシピは「公式」ではなく、アプリ内の家庭向けレシピとして扱う。
 for _recipe in SEED_RECIPES:
