@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppNav from "@/components/AppNav";
-import { api } from "@/lib/api";
+import RecipeCard from "@/components/RecipeCard";
+import { api, type Recipe } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function MyRecipesPage() {
@@ -15,6 +16,20 @@ export default function MyRecipesPage() {
   const [instructions, setInstructions] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [mine, setMine] = useState<Recipe[]>([]);
+  const [favorites, setFavorites] = useState<Recipe[]>([]);
+  const [actionError, setActionError] = useState("");
+
+  const reload = async () => {
+    setActionError("");
+    const [own, saved] = await Promise.all([api.listMyRecipes(), api.listFavoriteRecipes()]);
+    setMine(own);
+    setFavorites(saved);
+  };
+
+  useEffect(() => {
+    if (ready) reload().catch(() => undefined);
+  }, [ready]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -33,9 +48,31 @@ export default function MyRecipesPage() {
       });
       setMessage("マイレシピに保存しました。");
       setName(""); setIngredients(""); setInstructions("");
+      await reload();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "保存に失敗しました");
     } finally { setSaving(false); }
+  };
+
+  const togglePublic = async (recipe: Recipe) => {
+    setActionError("");
+    try {
+      const updated = await api.updateRecipe(recipe.id, { is_public: !recipe.is_public });
+      setMine((items) => items.map((item) => item.id === updated.id ? updated : item));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "公開設定を更新できませんでした。");
+    }
+  };
+
+  const removeRecipe = async (recipe: Recipe) => {
+    if (!window.confirm("「" + recipe.name + "」を削除しますか？")) return;
+    setActionError("");
+    try {
+      await api.deleteRecipe(recipe.id);
+      setMine((items) => items.filter((item) => item.id !== recipe.id));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "レシピを削除できませんでした。");
+    }
   };
 
   if (!ready) return null;
@@ -48,5 +85,14 @@ export default function MyRecipesPage() {
       <label className="form-field"><span className="form-field__label">調理方法</span><textarea className="textarea" rows={7} value={instructions} onChange={(e) => setInstructions(e.target.value)} required /></label>
       {message && <div className="alert alert--success">{message}</div>}<button className="button" disabled={saving}>{saving ? "保存中..." : "マイレシピに保存"}</button>
     </form>
+    <section className="recipe-library-section">
+      <h2 className="home-section-title">自分が投稿したレシピ（{mine.length}）</h2>
+      {actionError && <div className="alert alert--error" role="alert">{actionError}</div>}
+      {mine.length === 0 ? <div className="card"><p>まだ登録したレシピはありません。</p></div> : <div className="recipe-grid">{mine.map((recipe) => <div key={recipe.id}><RecipeCard recipe={recipe} /><div className="recipe-owner-actions"><button className="button button--secondary button--sm" onClick={() => togglePublic(recipe)}>{recipe.is_public ? "公開中・非公開にする" : "非公開・公開する"}</button><button className="button button--danger button--sm" onClick={() => removeRecipe(recipe)}>削除</button></div></div>)}</div>}
+    </section>
+    <section className="recipe-library-section">
+      <h2 className="home-section-title">お気に入り（{favorites.length}）</h2>
+      {favorites.length === 0 ? <div className="card"><p>レシピの♡を押すとここに保存されます。</p></div> : <div className="recipe-grid">{favorites.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} />)}</div>}
+    </section>
   </div></main>;
 }

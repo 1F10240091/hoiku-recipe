@@ -32,11 +32,15 @@ def _favorites(db: Session, user_id: str) -> set[str]:
     return {row.recipe_id for row in db.query(RecipeFavorite).filter(RecipeFavorite.user_id == user_id).all()}
 
 
+def _visible_to_user(user_id: str):
+    return Recipe.is_official.is_(True) | Recipe.is_public.is_(True) | (Recipe.owner_id == user_id)
+
+
 @router.get("", response_model=list[RecipeResponse])
 def list_recipes(
     meal_type: str | None = None, user=Depends(get_current_user), db: Session = Depends(get_db)
 ) -> list[RecipeResponse]:
-    query = db.query(Recipe)
+    query = db.query(Recipe).filter(_visible_to_user(user.id))
     if meal_type:
         query = query.filter(Recipe.meal_type == meal_type)
     counts = _like_counts(db, user.id)
@@ -56,7 +60,7 @@ def search_recipes(
     user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RecipeSearchResponse:
-    query = db.query(Recipe)
+    query = db.query(Recipe).filter(_visible_to_user(user.id))
 
     if keyword:
         like = f"%{keyword}%"
@@ -106,7 +110,7 @@ def list_ingredients(user=Depends(get_current_user), db: Session = Depends(get_d
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
-def create_recipe(payload: RecipeCreate, user=Depends(get_current_user), db: Session = Depends(get_db)) -> Recipe:
+def create_recipe(payload: RecipeCreate, user=Depends(get_current_user), db: Session = Depends(get_db)) -> RecipeResponse:
     if db.query(Recipe).filter(Recipe.name == payload.name).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="同じ名前のレシピが既に存在します")
     recipe = Recipe(
@@ -128,9 +132,31 @@ def create_recipe(payload: RecipeCreate, user=Depends(get_current_user), db: Ses
     return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
 
 
+@router.get("/mine", response_model=list[RecipeResponse])
+def list_my_recipes(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[RecipeResponse]:
+    recipes = db.query(Recipe).filter(Recipe.owner_id == user.id, Recipe.is_official.is_(False)).order_by(Recipe.name).all()
+    counts = _like_counts(db, user.id)
+    favorites = _favorites(db, user.id)
+    return [_to_response(recipe, counts, favorites) for recipe in recipes]
+
+
+@router.get("/favorites", response_model=list[RecipeResponse])
+def list_favorites(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[RecipeResponse]:
+    recipes = (
+        db.query(Recipe)
+        .join(RecipeFavorite, RecipeFavorite.recipe_id == Recipe.id)
+        .filter(RecipeFavorite.user_id == user.id, _visible_to_user(user.id))
+        .order_by(Recipe.name)
+        .all()
+    )
+    favorite_ids = {recipe.id for recipe in recipes}
+    counts = _like_counts(db, user.id)
+    return [_to_response(recipe, counts, favorite_ids) for recipe in recipes]
+
+
 @router.get("/{recipe_id}", response_model=RecipeResponse)
-def get_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = Depends(get_db)) -> Recipe:
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+def get_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = Depends(get_db)) -> RecipeResponse:
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, _visible_to_user(user.id)).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
     return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
@@ -139,8 +165,8 @@ def get_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = Dep
 @router.put("/{recipe_id}", response_model=RecipeResponse)
 def update_recipe(
     recipe_id: str, payload: RecipeUpdate, user=Depends(get_current_user), db: Session = Depends(get_db)
-) -> Recipe:
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, (Recipe.is_official == True) | (Recipe.owner_id == user.id)).first()
+) -> RecipeResponse:
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, Recipe.owner_id == user.id, Recipe.is_official.is_(False)).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
 
@@ -176,21 +202,9 @@ def delete_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = 
     db.commit()
 
 
-@router.get("/my-favorites", response_model=list[RecipeResponse])
-def list_favorites(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[RecipeResponse]:
-    recipes = (
-        db.query(Recipe)
-        .join(RecipeFavorite, RecipeFavorite.recipe_id == Recipe.id)
-        .filter(RecipeFavorite.user_id == user.id)
-        .order_by(Recipe.name)
-        .all()
-    )
-    return [_to_response(r, _like_counts(db, user.id), {x.id for x in recipes}) for r in recipes]
-
-
 @router.post("/{recipe_id}/favorite", response_model=RecipeResponse)
 def toggle_favorite(recipe_id: str, user=Depends(get_current_user), db: Session = Depends(get_db)) -> RecipeResponse:
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, (Recipe.is_official == True) | (Recipe.owner_id == user.id)).first()
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, _visible_to_user(user.id)).first()
     if recipe is None:
         raise HTTPException(status_code=404, detail="レシピが見つかりません")
     favorite = db.query(RecipeFavorite).filter(RecipeFavorite.user_id == user.id, RecipeFavorite.recipe_id == recipe_id).first()

@@ -6,8 +6,11 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from app.config import get_settings
 
 settings = get_settings()
-
-engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
+database_url = settings.database_url
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+engine = create_engine(database_url, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -32,6 +35,10 @@ def migrate_recipe_columns() -> None:
         "cuisine": "VARCHAR(20) NOT NULL DEFAULT '和'",
         "age_min_months": "INTEGER NOT NULL DEFAULT 12",
         "age_max_months": "INTEGER NOT NULL DEFAULT 72",
+        "source_name": "VARCHAR(120)",
+        "source_url": "VARCHAR(500)",
+        "servings_note": "VARCHAR(160)",
+        "child_notes": "TEXT",
         "is_official": "BOOLEAN NOT NULL DEFAULT 1",
         "owner_id": "VARCHAR(36)",
         "is_public": "BOOLEAN NOT NULL DEFAULT 0",

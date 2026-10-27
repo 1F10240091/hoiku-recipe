@@ -187,6 +187,10 @@ class RecipeResponse(ORMModel):
     cuisine: str = "和"
     age_min_months: int = 12
     age_max_months: int = 72
+    source_name: str | None = None
+    source_url: str | None = None
+    servings_note: str | None = None
+    child_notes: str | None = None
     is_official: bool = True
     is_public: bool = False
     is_favorite: bool = False

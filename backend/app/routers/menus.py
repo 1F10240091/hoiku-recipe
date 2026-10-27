@@ -4,6 +4,7 @@ import logging
 from datetime import date
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("", response_model=list[NurseryMenuResponse])
 def list_menus(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[NurseryMenu]:
-    return db.query(NurseryMenu).filter(NurseryMenu.user_id == user.id).order_by(NurseryMenu.date.desc()).all()
+    return db.query(NurseryMenu).filter(NurseryMenu.user_id == user.id).order_by(NurseryMenu.date.asc()).all()
 
 
 @router.post("/upload", response_model=NurseryMenuResponse, status_code=status.HTTP_201_CREATED)
@@ -40,13 +41,20 @@ async def upload_menu(
     if not ocr_ai.is_available():
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY が設定されていません")
     try:
-        entries = ocr_ai.extract_entries(
+        # 画像変換と外部API呼び出しは同期処理なので、イベントループを塞がない。
+        entries = await run_in_threadpool(
+            ocr_ai.extract_entries,
             filename=file.filename or "",
             content_type=file.content_type or "",
             data=data,
         )
     except ocr_ai.AIOCRError as exc:
         logger.warning("Gemini による献立表解析に失敗しました: %s", exc)
+        if "タイムアウト" in str(exc):
+            raise HTTPException(
+                status_code=504,
+                detail="Geminiの解析に時間がかかっています。画像の解像度を下げるか、PDFを数ページずつに分けて再度お試しください。",
+            ) from exc
         raise HTTPException(status_code=422, detail="献立表を解析できませんでした") from exc
     saved = _save_ai_entries(db, user, entries)
     if not saved:

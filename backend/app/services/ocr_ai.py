@@ -27,7 +27,7 @@ MAX_FILE_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_WIDTH = 1600
 _JSON_BLOCK = re.compile(r"\{.*\}", re.DOTALL)
 _ISO_DATE = re.compile(r"^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$")
-_MD_DATE = re.compile(r"^(\d{1,2})[-/月](\d{1,2})日?$")
+_MD_DATE = re.compile(r"^(\d{1,2})[-/・.月](\d{1,2})日?$")
 
 
 class AIOCRError(RuntimeError):
@@ -47,11 +47,15 @@ _PROMPT = """あなたは保育園の献立表を読み取るアシスタント�
 添付された献立表の画像から、記載されている献立を正確に抜き出してください。
 
 ルール:
-- 日付・曜日・昼食/夕食/おやつなどの区分を読み取る。
+- 表の向きや配置（横長/縦長、週ごとの段組み）にかかわらず、献立表の全日を読む。
+- 表題にある年・月を使い、各日を YYYY-MM-DD で返す。日付欄に「4・18」のように複数日が並ぶ場合は、同じ献立をそれぞれの日付に分ける。
+- 日付・曜日・朝おやつ/給食/昼食/夕食/午後おやつなどの区分を読み取る。1日に複数区分がある場合は、区分名を「朝おやつ・給食・3時おやつ」のように1つにまとめ、日ごとに1件だけ返す。
 - 料理名は献立表の表記のまま、1品ずつに分ける。
 - 箇条書きの記号や栄養値・アレルギー表記は料理名に含めない。
+- イラスト、写真、園のロゴ、季節のコラムは無視し、献立の表を優先する。
 - 読み取れない項目は推測せず null にする。
 - 年が書かれていない場合は今年（{year}年）として扱う。
+- 出力は簡潔にし、読み取れた全日分を省略しない。
 - 出力は JSON のみ。前後に説明文や Markdown のコードフェンスを付けない。
 
 出力形式:
@@ -192,14 +196,39 @@ def _request_gemini(api_key: str, prompt: str, images: list[bytes]) -> str:
         "contents": [{"role": "user", "parts": parts}],
         "generationConfig": {
             "temperature": 0,
-            "maxOutputTokens": 1200,
+            # 1か月分・複数食区分の表でも JSON が途中で切れないよう余裕を持たせる。
+            # 実際に使う量は出力内容に応じて決まり、上限を増やしても常に消費するわけではない。
+            "maxOutputTokens": 4096,
             "responseMimeType": "application/json",
+            "responseSchema": {
+                "type": "OBJECT",
+                "properties": {
+                    "menus": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "date": {"type": "STRING", "description": "YYYY-MM-DD; unknown dates are empty strings"},
+                                "meal_type": {"type": "STRING"},
+                                "dishes": {"type": "ARRAY", "items": {"type": "STRING"}},
+                            },
+                            "required": ["date", "meal_type", "dishes"],
+                        },
+                    }
+                },
+                "required": ["menus"],
+            },
+            # 献立表の読み取りに深い推論は不要。Gemini 3.x の既定値より
+            # 低いレイテンシとトークン消費を優先する。
+            "thinkingConfig": {"thinkingLevel": "low"},
         },
     }
     url = f"{settings.gemini_base_url.rstrip('/')}/models/{settings.gemini_model}:generateContent?key={api_key}"
     try:
         with httpx.Client(timeout=settings.ai_timeout_seconds) as client:
             response = client.post(url, json=payload)
+    except httpx.TimeoutException as exc:
+        raise AIOCRError("Gemini の解析がタイムアウトしました") from exc
     except httpx.HTTPError as exc:
         raise AIOCRError(f"Gemini への接続に失敗しました（{type(exc).__name__}）") from exc
     if response.status_code >= 400:
@@ -207,7 +236,18 @@ def _request_gemini(api_key: str, prompt: str, images: list[bytes]) -> str:
         raise AIOCRError(f"Gemini API がエラーを返しました（{response.status_code}）: {snippet}")
     try:
         data = response.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"]
+        candidate = data["candidates"][0]
+        parts = candidate["content"]["parts"]
+        text_parts = [
+            part["text"]
+            for part in parts
+            if isinstance(part, dict) and isinstance(part.get("text"), str) and not part.get("thought")
+        ]
+        if not text_parts:
+            text_parts = [part["text"] for part in parts if isinstance(part, dict) and isinstance(part.get("text"), str)]
+        if not text_parts:
+            raise KeyError("text")
+        return "\n".join(text_parts)
     except (ValueError, KeyError, IndexError, TypeError) as exc:
         raise AIOCRError("Gemini の応答形式が不正です") from exc
 

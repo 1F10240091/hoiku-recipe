@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 import { api, type Recipe } from "@/lib/api";
+import RecipeIllustration from "@/components/RecipeIllustration";
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
   main: "主菜",
@@ -61,6 +62,7 @@ export default function RecipeDetailPage({
 
         {recipe && !loading && (
           <article className="card">
+            <div className="recipe-detail__visual"><RecipeIllustration recipe={recipe} /></div>
             <header style={{ marginBottom: 16 }}>
               <span className="recipe-card__badge">
                 {MEAL_TYPE_LABELS[recipe.meal_type] ?? recipe.meal_type}
@@ -72,6 +74,13 @@ export default function RecipeDetailPage({
               )}
               <h1 style={{ marginTop: 8 }}>{recipe.name}</h1>
             </header>
+
+            <section aria-label="対象と出典" style={{ marginBottom: 24 }}>
+              <p><strong>対象年齢の目安：</strong>{recipe.age_min_months != null && recipe.age_max_months != null ? `${recipe.age_min_months}〜${recipe.age_max_months}か月` : "年齢に応じて調整"}</p>
+              {recipe.servings_note && <p><strong>分量：</strong>{recipe.servings_note}</p>}
+              {recipe.child_notes && <p><strong>子ども向けのポイント：</strong>{recipe.child_notes}</p>}
+              {recipe.source_url && <p><strong>出典：</strong><a href={recipe.source_url} target="_blank" rel="noreferrer">{recipe.source_name ?? "参照元を開く"} ↗</a></p>}
+            </section>
 
             <h2>材料</h2>
             <ul className="recipe-detail__ingredients">

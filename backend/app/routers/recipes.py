@@ -7,6 +7,7 @@
 from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -44,7 +45,11 @@ def generate_recipe(
     inventory = [item.name for item in db.query(InventoryItem).filter(InventoryItem.user_id == user.id).all()]
 
     # レシピマスタを DB から取得（アレルゲン照合・選定の真実源）
-    recipes = db.query(Recipe).all()
+    recipes = (
+        db.query(Recipe)
+        .filter(or_(Recipe.is_official.is_(True), Recipe.is_public.is_(True), Recipe.owner_id == user.id))
+        .all()
+    )
 
     # 前日の夕食を取得（週の境目をまたぐ場合も重複を避けるため開始日前日の献立を探す）
     yesterday = (
@@ -55,6 +60,9 @@ def generate_recipe(
     )
     yesterday_menu = yesterday.menu_text if yesterday else None
 
+    # 過去の園献立表と照合する場合でも、レシピの対象年齢は現在の子どもの月齢で判定する。
+    # 将来日を指定した場合は、その開始日時点の月齢を使う。
+    age_reference_date = max(payload.menu_date, date.today())
     generated = generate_menus(
         child_name=child.name,
         start_date=payload.menu_date,
@@ -65,36 +73,37 @@ def generate_recipe(
         yesterday_menu=yesterday_menu,
         inventory=inventory,
         recipes=recipes,
-        child_age_months=_age_months(child.birth_date, payload.menu_date),
+        child_age_months=_age_months(child.birth_date, age_reference_date),
     )
+
+    if not generated or any(not menu.dishes for menu in generated):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="お子さんの対象月齢に合うレシピがありません。プロフィールの生年月日とレシピの対象年齢を確認してください。",
+        )
 
     meals: list[SuggestedMeal] = []
     for menu in generated:
         recipe_ids = list(menu.recipe_ids)
-        if menu.dish_details:
-            # AI が新しく考案した料理をレシピ一覧に登録する（同名は再利用）
-            recipe_ids = []
-            for detail in menu.dish_details:
-                recipe = db.query(Recipe).filter(Recipe.name == detail["name"]).first()
-                if recipe is None:
-                    recipe = Recipe(
-                        name=detail["name"],
-                        meal_type=detail["meal_type"],
-                        ingredients=detail["ingredients"],
-                        instructions=detail["instructions"],
-                        cook_time_minutes=detail["cook_time_minutes"],
-                    )
-                    db.add(recipe)
-                    db.flush()
-                recipe_ids.append(recipe.id)
-
-        meal = SuggestedMeal(
-            user_id=user.id,
-            date=menu.date,
-            menu_text=menu.menu_text,
-            ingredients={"dishes": menu.dishes, "engine": menu.engine, "recipe_ids": recipe_ids},
+        ingredients = {"dishes": menu.dishes, "engine": menu.engine, "recipe_ids": recipe_ids}
+        # 以前の空提案が同じ日付にある場合は、再生成結果で補完する。
+        existing = (
+            db.query(SuggestedMeal)
+            .filter(SuggestedMeal.user_id == user.id, SuggestedMeal.date == menu.date)
+            .first()
         )
-        db.add(meal)
+        if existing is not None and not (existing.ingredients or {}).get("dishes"):
+            existing.menu_text = menu.menu_text
+            existing.ingredients = ingredients
+            meal = existing
+        else:
+            meal = SuggestedMeal(
+                user_id=user.id,
+                date=menu.date,
+                menu_text=menu.menu_text,
+                ingredients=ingredients,
+            )
+            db.add(meal)
         meals.append(meal)
     db.commit()
     for meal in meals:

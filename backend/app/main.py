@@ -25,6 +25,7 @@ if settings.rate_limit_enabled:
         RateLimitMiddleware,
         max_requests=settings.rate_limit_max_requests,
         window_seconds=settings.rate_limit_window_seconds,
+        trusted_proxy_ips=settings.trusted_proxy_ips,
     )
 
 app.add_middleware(

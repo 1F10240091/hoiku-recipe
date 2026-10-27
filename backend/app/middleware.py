@@ -6,6 +6,7 @@
 """
 
 import time
+import ipaddress
 from collections import defaultdict, deque
 from typing import Callable
 
@@ -13,20 +14,34 @@ from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import Request, Response
 from starlette.responses import JSONResponse
+from app.config import get_settings
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: Starlette, max_requests: int = 5, window_seconds: int = 60) -> None:
+    def __init__(
+        self, app: Starlette, max_requests: int = 5, window_seconds: int = 60,
+        trusted_proxy_ips: list[str] | None = None,
+    ) -> None:
         super().__init__(app)
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self._hits: dict[str, deque] = defaultdict(deque)
+        self._trusted_proxy_ips = set(trusted_proxy_ips or [])
 
     def _client_key(self, request: Request) -> str:
-        forwarded = request.headers.get("x-forwarded-for")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        return request.client.host if request.client else "unknown"
+        peer = request.client.host if request.client else "unknown"
+        if peer not in self._trusted_proxy_ips:
+            return peer
+        forwarded = request.headers.get("x-forwarded-for", "")
+        for candidate in reversed(forwarded.split(",")):
+            candidate = candidate.strip()
+            try:
+                parsed = str(ipaddress.ip_address(candidate))
+            except ValueError:
+                continue
+            if parsed not in self._trusted_proxy_ips:
+                return parsed
+        return peer
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
         path = request.url.path
@@ -64,4 +79,6 @@ def _security_headers(response: Response) -> Response:
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if get_settings().environment == "production":
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
     return response

@@ -1,5 +1,7 @@
 // バックエンド API クライアント
 const API_BASE = "/api/v1";
+// 長時間かかるファイル解析は Next.js の rewrite proxy を経由させない。
+const UPLOAD_API_BASE = `${(process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/+$/, "")}/api/v1`;
 
 const AUTH_PATHS = ["/login", "/register"];
 
@@ -26,7 +28,11 @@ function extractErrorMessage(body: string, status: number): string {
   return body;
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  baseUrl = API_BASE,
+): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   };
@@ -41,7 +47,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${baseUrl}${path}`, { ...options, headers });
   if (!res.ok) {
     const body = await res.text();
 
@@ -125,6 +131,10 @@ export interface Recipe {
   cuisine?: string;
   age_min_months?: number;
   age_max_months?: number;
+  source_name?: string | null;
+  source_url?: string | null;
+  servings_note?: string | null;
+  child_notes?: string | null;
   is_official?: boolean;
   is_public?: boolean;
   is_favorite?: boolean;
@@ -236,7 +246,7 @@ const realApi = {
     return request<NurseryMenu>("/menus/upload", {
       method: "POST",
       body: formData,
-    });
+    }, UPLOAD_API_BASE);
   },
   listRecipes() {
     return request<Recipe[]>("/recipe-master");
@@ -266,10 +276,19 @@ const realApi = {
     return request<Recipe>("/recipe-master", { method: "POST", body: JSON.stringify(payload) });
   },
   listFavoriteRecipes() {
-    return request<Recipe[]>("/recipe-master/my-favorites");
+    return request<Recipe[]>("/recipe-master/favorites");
+  },
+  listMyRecipes() {
+    return request<Recipe[]>("/recipe-master/mine");
   },
   toggleFavorite(recipeId: string) {
     return request<Recipe>("/recipe-master/" + recipeId + "/favorite", { method: "POST" });
+  },
+  updateRecipe(recipeId: string, payload: Record<string, unknown>) {
+    return request<Recipe>("/recipe-master/" + recipeId, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  deleteRecipe(recipeId: string) {
+    return request<void>("/recipe-master/" + recipeId, { method: "DELETE" });
   },
   listMealRecipes() {
     return request<SuggestedMeal[]>("/recipes");

@@ -481,3 +481,156 @@
     padding: 8px 8px 8px 16px;
   }
 }
+
+/* Refined landing page: preserve the friendly palette, reduce paper-like ornament. */
+.header {
+  padding-top: 12px;
+  background: rgba(255, 250, 246, 0.88);
+  border-bottom: 1px solid var(--color-line);
+  backdrop-filter: blur(14px);
+}
+
+.headerInner {
+  max-width: 1120px;
+  padding: 8px 4px;
+}
+
+.logoMark {
+  color: var(--color-pink-deep);
+}
+
+.loginLink {
+  border-radius: 9px;
+}
+
+.registerLink {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(189, 89, 104, 0.18);
+}
+
+.hero {
+  padding-top: 68px;
+  background:
+    radial-gradient(ellipse at 82% 25%, rgba(255, 224, 209, 0.68), transparent 26rem),
+    linear-gradient(180deg, #fff5ec 0%, #fffaf6 100%);
+}
+
+.sun {
+  opacity: 0.62;
+  transform: scale(0.78);
+}
+
+.cloud {
+  opacity: 0.42;
+}
+
+.kicker {
+  padding: 6px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+}
+
+.title {
+  font-size: clamp(36px, 5vw, 52px);
+  letter-spacing: 0.015em;
+  line-height: 1.35;
+}
+
+.subtitle {
+  max-width: 36em;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.cta,
+.ctaGhost {
+  border-radius: 11px;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.cta {
+  box-shadow: 0 5px 15px rgba(189, 89, 104, 0.2);
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(189, 89, 104, 0.24);
+}
+
+.ctaGhost {
+  border: 1px solid var(--color-line);
+}
+
+.heroPaper {
+  border: 1px solid var(--color-line);
+  outline: 0;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(81, 54, 39, 0.08);
+  transform: none;
+}
+
+.heroPaperHead,
+.heroPaperFoot {
+  border-radius: 0;
+}
+
+.lunch,
+.night {
+  border-radius: 11px;
+}
+
+.lunch {
+  border: 1px solid #f1e2c9;
+}
+
+.night {
+  border: 1px solid #f3d4d7;
+}
+
+.features {
+  max-width: 1120px;
+  padding-top: 56px;
+}
+
+.feature {
+  border: 1px solid var(--color-line);
+  outline: 0;
+  border-radius: 15px;
+  box-shadow: 0 4px 16px rgba(81, 54, 39, 0.035);
+}
+
+.featureNo {
+  border-radius: 999px;
+}
+
+.safetyInner {
+  border: 1px solid var(--color-line);
+  outline: 0;
+  border-radius: 17px;
+  box-shadow: 0 5px 20px rgba(81, 54, 39, 0.04);
+}
+
+.safetyKicker {
+  border-radius: 999px;
+}
+
+.safetyLink {
+  border-radius: 10px;
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding-top: 46px;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .cta,
+  .ctaGhost {
+    padding: 13px 22px;
+  }
+}
