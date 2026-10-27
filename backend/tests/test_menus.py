@@ -44,7 +44,9 @@ def test_upload_unsupported_type_rejected(auth_client):
     assert res.status_code == 415
 
 
-def test_upload_corrupt_pdf_rejected(auth_client):
+def test_upload_corrupt_pdf_rejected(auth_client, monkeypatch):
+    from app.services import ocr_ai
+    monkeypatch.setattr(ocr_ai, "is_available", lambda: True)
     res = auth_client.post(
         "/api/v1/menus/upload",
         files={"file": ("menu.pdf", b"not a real pdf", "application/pdf")},
@@ -57,10 +59,13 @@ def test_get_unknown_menu_404(auth_client):
     assert res.status_code == 404
 
 
-def test_upload_valid_pdf(auth_client):
+def test_upload_valid_pdf(auth_client, monkeypatch):
     """テキスト埋め込み PDF の OCR 抽出が成功することを確認する回帰テスト。"""
     if not SAMPLE_PDF.exists():
         return  # 実 PDF が無い環境ではスキップ
+    from app.services import ocr_ai
+    monkeypatch.setattr(ocr_ai, "is_available", lambda: True)
+    monkeypatch.setattr(ocr_ai, "extract_entries", lambda **kwargs: [ocr_ai.AIMenuEntry("2026-08-03", "昼食", ["ごはん"])])
     data = SAMPLE_PDF.read_bytes()
     res = auth_client.post(
         "/api/v1/menus/upload",

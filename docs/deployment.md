@@ -1,61 +1,95 @@
-# 本番デプロイガイド
+# Vercel 本番デプロイガイド
 
-このアプリはNext.jsフロントエンド、FastAPIバックエンド、PostgreSQLで構成します。フロントエンドとAPIはHTTPSで公開し、SQLiteファイルを一時ストレージ上で運用しないでください。
+フロントエンドとAPIを同じGitリポジトリから別々のVercelプロジェクトとして作成します。DBはVercel Marketplaceなどで用意する永続PostgreSQL（Neon等）を使用します。SQLiteは本番では使えません。
 
-## 1. バックエンド環境変数
+## 1. データベースと秘密情報
 
-ホスティングサービスの環境変数画面に設定します。`.env`やAPIキーをGitへ登録しないでください。
+- 本番とPreviewのDBは必ず分けます。Previewに本番の子ども情報を接続しないでください。
+- `DATABASE_URL`にはTLS接続のURLを設定します。サーバーレス用のプール接続URLを推奨します。
+- ランダムなJWT鍵は `python -c "import secrets; print(secrets.token_hex(32))"` で生成できます。
+- DBバックアップと復元手順をホスティング側で設定します。
+- `.env`、DB接続URL、APIキーをGitに追加しないでください。
 
-| 変数 | 本番値 |
+## 2. FastAPI用のVercelプロジェクト
+
+同じリポジトリをImportし、Root Directoryを **backend**、Framework Presetを **FastAPI** にします。Pythonは`.python-version`で3.12を指定済みです。エントリポイントは`app/main.py`です。外部公開用のuvicorn常駐プロセスは不要です。
+
+| 環境変数 | 設定 |
 |---|---|
-| `ENVIRONMENT` | `production` |
-| `DATABASE_URL` | PostgreSQL接続URL。`postgresql+psycopg://...`または`postgresql://...` |
-| `JWT_SECRET_KEY` | 下記コマンドで生成したランダム値 |
-| `CORS_ORIGINS` | `https://`から始まるフロントエンドのオリジンをJSON配列で指定 |
-| `GEMINI_API_KEY` | 献立表解析を使う場合に設定 |
-| `GEMINI_MODEL` | `gemini-3.5-flash-lite`（必要に応じて変更） |
-| `TRUSTED_PROXY_IPS` | 既知のリバースプロキシIPがある場合だけJSON配列で指定 |
+| `ENVIRONMENT` | `production`（Previewでも必須） |
+| `DATABASE_URL` | 永続PostgreSQLのTLS接続URL |
+| `JWT_SECRET_KEY` | 32文字以上のランダム値 |
+| `CORS_ORIGINS` | `["https://実際のフロントのドメイン"]` |
+| `GEMINI_API_KEY` | 献立表解析用のAPIキー |
+| `GEMINI_MODEL` | 利用するGeminiモデルID。利用アカウントで提供状況を確認 |
+| `GEMINI_MAX_PAGES` | `5` |
+| `RATE_LIMIT_ENABLED` | `true` |
+| `RATE_LIMIT_MAX_REQUESTS` | `5`（1分間・IP・対象パスごと） |
+| `RATE_LIMIT_WINDOW_SECONDS` | `60` |
 
-JWT鍵の生成例（Pythonが使える端末で実行）：
+`backend/vercel.json`で東京リージョンと180秒の実行上限を指定しています。利用するプランがこの値を許可することを確認してください。
 
-```sh
-python -c "import secrets; print(secrets.token_hex(32))"
-```
+### DB初期化・更新（API公開前に1回）
 
-本番モードは、短い/既知のJWT鍵、SQLite、HTTPまたはlocalhostのCORS設定では起動しません。PostgreSQL用の依存パッケージは`backend/requirements.txt`に含まれています。
-
-## 2. バックエンドの起動
-
-ホスティングサービスのビルドコマンドを`pip install -r requirements.txt`、起動コマンドを次のように設定します。`PORT`はサービスが割り当てるポートを利用します。
+必要な環境変数を設定した信頼できる端末またはリリースジョブから、`backend`ディレクトリで実行します。
 
 ```sh
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
+python -m pip install -r requirements.txt
+python -m app.release
+alembic check
 ```
 
-サービスに永続PostgreSQLを割り当ててからAPIを起動してください。初回起動ではSQLAlchemyが不足テーブルを作成します。既存DBを更新する場合は、バックアップを取り、`backend/app/models.py`に合わせたスキーマ変更を先に適用してください。現状、Alembic等の自動バージョン管理は導入していません。
+`app.release`はAlembicによるスキーマ更新とレシピシード投入を実行します。APIワーカー起動時にテーブル作成やシード更新を実行しないため、複数ワーカーや読み取り専用ファイルシステムで動作します。同じリリース処理を同時実行しないでください。
 
-ヘルスチェックには`/health`を指定できます。
+新規DBではそのまま実行できます。既存DBでは必ずバックアップし、モデルと実スキーマを照合してから導入してください。既存テーブルのあるDBに初期マイグレーションをそのまま適用できません。全テーブル・列・外部キー・インデックスが0001と一致する既存DBに限り `alembic stamp 0001` の後に更新します。SQLiteの開発データを本番へ自動移行する処理はありません。
 
-## 3. フロントエンドのビルドと起動
+`/health`が200を返すことを確認します。このエンドポイントはDBへの接続も確認します。
 
-`NEXT_PUBLIC_API_URL`には公開されたバックエンドのHTTPSオリジン（例：`https://api.example.com`）を設定してからビルドします。APIキーなどの秘密情報を`NEXT_PUBLIC_`変数に入れないでください。
+## 3. Next.js用のVercelプロジェクト
 
-```sh
-npm ci
-npm run build
-npm run start:frontend:production -- -p $PORT
-```
+同じリポジトリをImportし、Root Directoryを **frontend**、Framework Presetを **Next.js** に設定します。Node.jsは **22.x** を選択します。Install/Build CommandはVercelのNext.js自動設定を利用します（ローカルのルートからの検証は`npm ci && npm run build`）。
 
-`NEXT_PUBLIC_API_URL`はブラウザーの献立表アップロード先とNext.jsのAPIプロキシ先に使われるため、フロントエンドのビルド時に正しい公開URLを設定してください。API側の`CORS_ORIGINS`にはフロントエンドの本番オリジンを設定します。
+| 環境変数 | 設定 |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://実際のAPIのドメイン`（パスなし） |
+| `NEXT_PUBLIC_DEMO_MODE` | `false` |
 
-## 4. 公開前の確認
+`NEXT_PUBLIC_API_URL`はビルド時に埋め込まれるため、変更後は再デプロイします。VercelビルドはAPI URLの未設定・HTTP指定・デモモード有効時に失敗するようにしています。
 
-- 本番環境変数がすべて設定され、APIキーがログやフロントエンド配信物に出ていない。
-- API `/health`、フロントページ、ログイン/新規登録をHTTPS経由で確認した。
-- PostgreSQLの永続化、バックアップ、復元手順を確認した。
-- 献立表PDF/画像をアップロードし、解析・ユーザー別保存・一覧表示を確認した。
-- 別アカウントから子ども情報、献立、在庫、非公開レシピが見えないことを確認した。
-- 運営者の問い合わせ先、データ削除依頼の対応、Geminiへの送信内容を利用者へ案内した。
-- Gemini APIの利用上限と課金設定を確認した。
+ブラウザからAPIへ直接接続するので、APIのCORS設定には正確なフロントドメインが必要です。ProductionとPreviewそれぞれで設定してください。Previewは固定ブランチドメイン等を使い、`*`による全面許可を避けます。
 
-本番公開前に、実際のホスティング事業者のネットワーク設定でCORS、プロキシIP、環境変数名を照合してください。レート制限は現在プロセス内メモリ方式のため、複数APIインスタンスでは共有されません。複数インスタンスで公開する場合は、ホスティング側/WAFまたは共有ストアを使った制限へ切り替えてください。
+APIのDeployment Protectionが有効だと、ブラウザからのCORSプリフライトやAPIアクセスがブロックされます。本番APIはトークン認証を前提として到達可能にするか、組織の保護設定に合わせた経路を別途設計してください。保護バイパス用の秘密情報を`NEXT_PUBLIC_`変数に設定してはいけません。
+
+## 4. Vercel向けの動作制限
+
+- 献立表は **4MB以下**。Vercel Functionsの4.5MBリクエスト上限にmultipartの余裕を確保しています。
+- PDFは設定したページ数以下に分割してください。上限を超えるPDFを黙って途中まで保存しません。
+- 本番の認証・登録・OCR・フィードバックPOSTはPostgreSQL上の共有カウンターで制限します。成功も含めて数えるので、複数インスタンスから同時アクセスしても制限が共有されます。IPはHMAC化して保存し、古い枠は次回対象リクエスト時に削除します。
+- Vercel実行環境のみ、Vercelが上書きする`x-vercel-forwarded-for`を利用します。他のホストでは明示した信頼プロキシ以外の転送ヘッダーを信用しません。
+- DB接続は本番でNullPoolを使い、実行環境ごとの遊休接続の増加を抑えます。DB側の接続プールも設定してください。
+- フィードバックの全件取得APIは本番で無効です。
+
+## 5. 公開前に実環境で行う確認
+
+- GitHub ActionsのFrontend/Backendチェックが成功する。
+- HTTPSで新規登録、ログイン、子どもの登録、アレルギー設定、献立提案、レシピ詳細、お気に入り、買い物リスト、在庫追加・削除が動く。
+- 異なるアカウントで非公開レシピ・子ども・献立・在庫へアクセスできない。
+- Geminiの実際のAPIキーを使い、PDFと画像の解析・複数日保存・日付確認を行う。キー未設定やAPI障害で既存データが壊れないことも確認する。
+- APIへの直接アクセスでCORS、タイムアウト、レート制限、Vercel保護設定を確認する。
+- 実在する運営者・問い合わせ先、データ削除依頼窓口を利用者へ案内する。現在のプライバシーページの一般表現だけでは窓口が分からないので、公開前に実際の連絡先を確定する。
+- Geminiの利用上限・課金上限、DBバックアップ、障害時の復元と運用担当を確定する。
+
+## 公式資料
+
+- [FastAPI on Vercel](https://vercel.com/docs/frameworks/backend/fastapi)
+- [Vercel Functionsの制限](https://vercel.com/docs/functions/limitations)
+- [Vercelのリクエストヘッダー](https://vercel.com/docs/headers/request-headers)
+
+
+## レシピ写真の保存
+
+レシピ投稿では任意で1枚の料理写真を添付できます。入力はJPEG・PNG・WebPの4MB以下の写真で、ブラウザ側で縮小し、サーバーで形式と内容を検証して最大1200pxのWebPへ再変換します。アニメーションとSVGには対応していません。保存画像は512KB以下に制限し、EXIF/GPS等の付加情報を除去します。
+
+写真はPostgreSQLの`recipe_photos`テーブルに保存されます。Vercelの一時ディスクや公開URLには保存しません。APIの認証とレシピの公開範囲に従って配信し、レシピ削除時には写真も削除します。写真なしの既存レシピは従来のイラストで表示します。既存環境では公開前に`python -m app.release`を実行して0003マイグレーションを適用してください。
+
+DBバックアップには画像も含まれます。投稿数に応じてDB容量を監視してください。多数の投稿を扱う段階では、認証付きオブジェクトストレージへの移行を検討します。

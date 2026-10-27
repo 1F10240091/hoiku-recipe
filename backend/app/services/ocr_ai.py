@@ -23,7 +23,7 @@ import httpx
 
 from app.config import get_settings
 
-MAX_FILE_BYTES = 15 * 1024 * 1024
+MAX_FILE_BYTES = 4 * 1024 * 1024
 MAX_IMAGE_WIDTH = 1600
 _JSON_BLOCK = re.compile(r"\{.*\}", re.DOTALL)
 _ISO_DATE = re.compile(r"^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$")
@@ -78,10 +78,10 @@ def extract_entries(filename: str, content_type: str, data: bytes) -> list[AIMen
     settings = get_settings()
     api_key = settings.gemini_api_key.strip()
     if not api_key:
-        raise AIOCRError("AI_API_KEY が設定されていません")
+        raise AIOCRError("GEMINI_API_KEY が設定されていません")
 
     if len(data) > MAX_FILE_BYTES:
-        raise AIOCRError("ファイルサイズが大きすぎます（15MB 以下にしてください）")
+        raise AIOCRError("ファイルサイズが大きすぎます（4MB 以下にしてください）")
 
     images = _to_png_images(filename, content_type, data, max_pages=settings.gemini_max_pages)
     if not images:
@@ -125,9 +125,12 @@ def parse_menus_json(text: str) -> list[AIMenuEntry]:
         dishes = _normalize_dishes(item.get("dishes"))
         if not dishes:
             continue
+        menu_date = normalize_date(item.get("date"))
+        if menu_date is None:
+            continue
         entries.append(
             AIMenuEntry(
-                date=normalize_date(item.get("date")),
+                date=menu_date,
                 meal_type=_clean_text(item.get("meal_type")),
                 dishes=dishes,
             )
@@ -223,17 +226,16 @@ def _request_gemini(api_key: str, prompt: str, images: list[bytes]) -> str:
             "thinkingConfig": {"thinkingLevel": "low"},
         },
     }
-    url = f"{settings.gemini_base_url.rstrip('/')}/models/{settings.gemini_model}:generateContent?key={api_key}"
+    url = f"{settings.gemini_base_url.rstrip('/')}/models/{settings.gemini_model}:generateContent"
     try:
         with httpx.Client(timeout=settings.ai_timeout_seconds) as client:
-            response = client.post(url, json=payload)
+            response = client.post(url, json=payload, headers={"x-goog-api-key": api_key})
     except httpx.TimeoutException as exc:
         raise AIOCRError("Gemini の解析がタイムアウトしました") from exc
     except httpx.HTTPError as exc:
         raise AIOCRError(f"Gemini への接続に失敗しました（{type(exc).__name__}）") from exc
     if response.status_code >= 400:
-        snippet = response.text[:200].replace(api_key, "***")
-        raise AIOCRError(f"Gemini API がエラーを返しました（{response.status_code}）: {snippet}")
+        raise AIOCRError(f"Gemini API がエラーを返しました（{response.status_code}）")
     try:
         data = response.json()
         candidate = data["candidates"][0]
@@ -276,8 +278,12 @@ def _pdf_to_pngs(data: bytes, max_pages: int) -> list[bytes]:
 
     images: list[bytes] = []
     try:
+        if len(document) > max_pages:
+            raise AIOCRError(f"PDFは{max_pages}ページ以下に分けてください")
         for page_index in range(min(len(document), max(1, max_pages))):
-            pixmap = document[page_index].get_pixmap(dpi=200)
+            page = document[page_index]
+            scale = min(200 / 72, MAX_IMAGE_WIDTH / max(page.rect.width, page.rect.height, 1))
+            pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale))
             images.append(_shrink_image(pixmap.tobytes("png")))
     finally:
         document.close()
@@ -295,9 +301,7 @@ def _shrink_image(data: bytes) -> bytes:
         image = Image.open(io.BytesIO(data))
         if image.mode not in ("RGB", "L"):
             image = image.convert("RGB")
-        if image.width > MAX_IMAGE_WIDTH:
-            ratio = MAX_IMAGE_WIDTH / image.width
-            image = image.resize((MAX_IMAGE_WIDTH, max(1, int(image.height * ratio))))
+        image.thumbnail((MAX_IMAGE_WIDTH, MAX_IMAGE_WIDTH))
         buffer = io.BytesIO()
         image.save(buffer, format="PNG", optimize=True)
         return buffer.getvalue()

@@ -8,16 +8,18 @@
   ],
   "scripts": {
     "setup": "npm install && npm run setup:backend",
-    "setup:backend": "cd backend && python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt",
+    "setup:backend": "node scripts/backend.js setup",
     "dev": "node scripts/dev.js",
     "dev:frontend": "npm run dev --workspace frontend -- -H 127.0.0.1",
-    "dev:backend": "cd backend && .venv\\Scripts\\uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "dev:backend": "node scripts/backend.js",
     "start:frontend": "npm run start --workspace frontend -- -H 127.0.0.1",
     "start:frontend:production": "npm run start --workspace frontend -- -H 0.0.0.0",
     "build": "npm run build --workspace frontend",
-    "lint": "npm run lint --workspace frontend"
+    "lint": "npm run lint --workspace frontend",
+    "typecheck": "npm run typecheck --workspace frontend",
+    "test:frontend": "npm run test --workspace frontend"
   },
   "engines": {
-    "node": ">=18.17.0"
+    "node": ">=20.19.0"
   }
 }

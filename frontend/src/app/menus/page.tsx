@@ -29,18 +29,17 @@ export default function MenusPage() {
 
   useEffect(() => {
     if (authReady) loadMenus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady]);
 
   const uploadFile = async (file?: File) => {
-    if (!file) return;
+    if (!file || uploading) return;
     const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
     if (!allowed.includes(file.type)) {
       setError("PDF・PNG・JPEG・WebPのファイルを選択してください");
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      setError("ファイルサイズは15MB以下にしてください");
+    if (file.size > 4 * 1024 * 1024) {
+      setError("ファイルサイズは4MB以下にしてください");
       return;
     }
     setUploading(true);
@@ -51,6 +50,7 @@ export default function MenusPage() {
       setUploadStatus("saved");
       loadMenus();
     } catch (err) {
+      setUploadStatus("idle");
       setError(
         err instanceof Error ? err.message : "アップロードに失敗しました",
       );
@@ -117,6 +117,7 @@ export default function MenusPage() {
               type="file"
               accept=".pdf,image/png,image/jpeg,image/webp"
               onChange={handleUpload}
+              disabled={uploading}
               hidden
             />
           </label>

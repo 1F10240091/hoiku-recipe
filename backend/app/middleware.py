@@ -1,11 +1,11 @@
 """レート制限ミドルウェア。
 
 ログイン試行などの認証関連エンドポイントを IP ごとに制限する。
-プロセス内のインメモリ実装のため、複数プロセス構成では不正確になるが、
-学内・学祭向けアプリとしては十分な抑止力となる。
+本番ではPostgreSQLの共有カウンター、開発ではプロセス内メモリを使用する。
 """
 
 import time
+import os
 import ipaddress
 from collections import defaultdict, deque
 from typing import Callable
@@ -15,6 +15,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import Request, Response
 from starlette.responses import JSONResponse
 from app.config import get_settings
+from sqlalchemy.exc import SQLAlchemyError
+from starlette.concurrency import run_in_threadpool
+from app.services.rate_limit import consume_budget
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -30,6 +33,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def _client_key(self, request: Request) -> str:
         peer = request.client.host if request.client else "unknown"
+        # Vercel overwrites this header at its trusted edge. Never trust it off-platform.
+        if os.environ.get("VERCEL") == "1":
+            candidate = request.headers.get("x-vercel-forwarded-for", "").split(",")[0].strip()
+            try:
+                return str(ipaddress.ip_address(candidate))
+            except ValueError:
+                pass
         if peer not in self._trusted_proxy_ips:
             return peer
         forwarded = request.headers.get("x-forwarded-for", "")
@@ -46,10 +56,23 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
         path = request.url.path
         # レート制限を適用するエンドポイント
-        limited_paths = {"/api/v1/auth/login", "/api/v1/auth/register"}
+        limited_paths = {"/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/menus/upload", "/api/v1/feedback", "/api/v1/recipe-master"}
         if path not in limited_paths:
             response = await call_next(request)
             return _security_headers(response)
+
+        settings = get_settings()
+        if settings.environment == "production" and request.method == "POST":
+            try:
+                allowed = await run_in_threadpool(consume_budget, self._client_key(request), path,
+                    settings.jwt_secret_key, self.max_requests, self.window_seconds)
+            except SQLAlchemyError:
+                return _security_headers(JSONResponse(status_code=503, content={"detail": "しばらく待ってから再度お試しください"}))
+            if not allowed:
+                return _security_headers(JSONResponse(status_code=429,
+                    headers={"Retry-After": str(self.window_seconds)},
+                    content={"detail": "試行回数が多すぎます。しばらく待ってから再度お試しください。"}))
+            return _security_headers(await call_next(request))
 
         key = f"{self._client_key(request)}:{path}"
         now = time.monotonic()

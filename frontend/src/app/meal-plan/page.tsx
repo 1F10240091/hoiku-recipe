@@ -25,8 +25,12 @@ export default function MealPlanPage() {
   const authReady = useRequireAuth();
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChild, setSelectedChild] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  });
   const [days, setDays] = useState(7);
+  const [generating, setGenerating] = useState(false);
   const [mealPlan, setMealPlan] = useState<GenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [inventory, setInventory] = useState<ShoppingItem[]>([]);
@@ -36,24 +40,28 @@ export default function MealPlanPage() {
 
   useEffect(() => {
     if (!authReady) return;
-    api.listChildren().then((list) => {
-      setChildren(list);
-      if (list.length > 0) setSelectedChild(list[0].id);
-    });
-    api.listInventory().then((inv) => {
-      setInventory(inv);
-      setLoadingInventory(false);
-    });
+    Promise.all([api.listChildren(), api.listInventory()])
+      .then(([list, inv]) => {
+        setChildren(list);
+        if (list.length > 0) setSelectedChild(list[0].id);
+        setInventory(inv);
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "読み込みに失敗しました"))
+      .finally(() => setLoadingInventory(false));
     api.listLikes().then(setLikes).catch(() => undefined);
   }, [authReady]);
 
   const handleGenerate = async () => {
+    if (generating || !selectedChild || !date) return;
+    setGenerating(true);
     setError(null);
     try {
       const result = await api.generateRecipe(selectedChild, date, days);
       setMealPlan(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "献立の生成に失敗しました");
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -182,6 +190,10 @@ export default function MealPlanPage() {
           )}
         </div>
 
+        {!loadingInventory && children.length === 0 && (
+          <div className="card"><p>献立を提案するため、お子さんの情報を登録してください。</p>
+            <Link href="/dashboard" className="button">お子さんを登録する</Link></div>
+        )}
         {/* 献立生成フォーム */}
         <div className="card" style={{ marginBottom: 16 }}>
           <label className="form-field">
@@ -221,14 +233,14 @@ export default function MealPlanPage() {
               ))}
             </select>
           </label>
-          {error && <div className="alert alert--error">{error}</div>}
+          {error && <div className="alert alert--error" role="alert">{error}</div>}
           <button
             className="button"
             onClick={handleGenerate}
-            disabled={!selectedChild}
+            disabled={!selectedChild || !date || generating}
             style={{ width: "100%", padding: 14, fontSize: 18, marginTop: 8 }}
           >
-            献立を生成する
+            {generating ? "献立を選んでいます..." : "献立を生成する"}
           </button>
         </div>
 
@@ -295,7 +307,7 @@ export default function MealPlanPage() {
               })}
             </div>
             <p className="note" style={{ marginTop: 12, fontSize: 14 }}>
-              上記は AI・ルールベースによる自動提案です。実際の前日の献立や家族の予定に合わせて、自由に書き換えてお使いください。
+              登録レシピからの自動提案です。食材表示と調理方法を確認し、お子さんに合う量や形に調整してください。
             </p>
             <div className="action-links" style={{ marginTop: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
               <Link href="/recipes" className="button">

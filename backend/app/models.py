@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, LargeBinary, JSON, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -123,6 +123,18 @@ class Recipe(Base):
     is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    photo: Mapped["RecipePhoto | None"] = relationship(cascade="all, delete-orphan", lazy="selectin", uselist=False)
+
+    @property
+    def has_image(self) -> bool:
+        return self.photo is not None
+
+
+class RecipePhoto(Base):
+    __tablename__ = "recipe_photos"
+    recipe_id: Mapped[str] = mapped_column(ForeignKey("recipes.id"), primary_key=True)
+    data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False, deferred=True)
+
 
 class RecipeLike(Base):
     """献立の料理に対する「喜んでた」評価。
@@ -162,3 +174,11 @@ class Feedback(Base):
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1〜5
     comment: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class RateLimitBucket(Base):
+    """Shared fixed-window request budgets; client keys are HMAC digests."""
+    __tablename__ = "rate_limit_buckets"
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window: Mapped[int] = mapped_column(Integer, nullable=False)
+    hits: Mapped[int] = mapped_column(Integer, nullable=False)

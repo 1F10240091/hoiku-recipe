@@ -1,6 +1,8 @@
 """FastAPI エントリポイント。"""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
@@ -11,12 +13,14 @@ from app.services.seed import seed_recipes
 
 settings = get_settings()
 
-Base.metadata.create_all(bind=engine)
-migrate_recipe_columns()
+if settings.environment != "production":
+    Base.metadata.create_all(bind=engine)
+    migrate_recipe_columns()
 
 # レシピマスタのシード投入（初回起動時のみ追加）
-with SessionLocal() as db:
-    seed_recipes(db)
+if settings.environment != "production":
+    with SessionLocal() as db:
+        seed_recipes(db)
 
 app = FastAPI(title=settings.app_name, version=settings.version)
 
@@ -48,4 +52,9 @@ app.include_router(feedback.router, prefix="/api/v1")
 
 @app.get("/health", tags=["health"])
 def health_check() -> dict[str, str]:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail="データベースに接続できません")
     return {"status": "ok", "service": settings.app_name}

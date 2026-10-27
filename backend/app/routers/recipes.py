@@ -11,7 +11,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Child, InventoryItem, NurseryMenu, Recipe, SuggestedMeal, User
+from app.models import RecipeLike, Child, InventoryItem, NurseryMenu, Recipe, SuggestedMeal, User
 from app.routers.auth import get_current_user
 from app.schemas import GenerateRequest, GenerateResponse, MealResponse
 from app.services.menu_generator import generate_menus
@@ -92,7 +92,9 @@ def generate_recipe(
             .filter(SuggestedMeal.user_id == user.id, SuggestedMeal.date == menu.date)
             .first()
         )
-        if existing is not None and not (existing.ingredients or {}).get("dishes"):
+        if existing is not None:
+            # 再提案した料理へ以前の評価を引き継がない。
+            db.query(RecipeLike).filter(RecipeLike.meal_id == existing.id).delete(synchronize_session=False)
             existing.menu_text = menu.menu_text
             existing.ingredients = ingredients
             meal = existing

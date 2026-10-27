@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { prepareRecipeImage } from "@/lib/recipe-image";
 import AppNav from "@/components/AppNav";
 import RecipeCard from "@/components/RecipeCard";
 import { api, type Recipe } from "@/lib/api";
@@ -16,6 +17,32 @@ export default function MyRecipesPage() {
   const [instructions, setInstructions] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
+  const [preparingImage, setPreparingImage] = useState(false);
+  const imageInput = useRef<HTMLInputElement>(null);
+  const imageVersion = useRef(0);
+  const [saveError, setSaveError] = useState("");
+
+  const selectImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const version = ++imageVersion.current;
+    const file = event.target.files?.[0];
+    setImageData(null);
+    setImageError("");
+    if (!file) { setPreparingImage(false); return; }
+    setPreparingImage(true);
+    try {
+      const data = await prepareRecipeImage(file);
+      if (version === imageVersion.current) setImageData(data);
+    } catch (error) {
+      if (version === imageVersion.current) setImageError(error instanceof Error ? error.message : "写真を読み込めませんでした。");
+    } finally { if (version === imageVersion.current) setPreparingImage(false); }
+  };
+  const removeImage = () => {
+    imageVersion.current += 1;
+    setImageData(null); setImageError(""); setPreparingImage(false);
+    if (imageInput.current) imageInput.current.value = "";
+  };
   const [mine, setMine] = useState<Recipe[]>([]);
   const [favorites, setFavorites] = useState<Recipe[]>([]);
   const [actionError, setActionError] = useState("");
@@ -28,15 +55,18 @@ export default function MyRecipesPage() {
   };
 
   useEffect(() => {
-    if (ready) reload().catch(() => undefined);
+    if (ready) reload().catch((err: unknown) => setActionError(err instanceof Error ? err.message : "読み込みに失敗しました"));
   }, [ready]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (saving || preparingImage || imageError) return;
     setSaving(true);
+    setSaveError("");
     setMessage("");
     try {
       await api.createRecipe({
+        image_data: imageData,
         name: name.trim(), meal_type: mealType, cuisine,
         age_min_months: 12, age_max_months: 72,
         cook_time_minutes: Number(time) || undefined,
@@ -48,9 +78,10 @@ export default function MyRecipesPage() {
       });
       setMessage("マイレシピに保存しました。");
       setName(""); setIngredients(""); setInstructions("");
+      removeImage();
       await reload();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "保存に失敗しました");
+      setSaveError(error instanceof Error ? error.message : "保存に失敗しました");
     } finally { setSaving(false); }
   };
 
@@ -79,11 +110,26 @@ export default function MyRecipesPage() {
   return <main className="main"><AppNav /><div className="container" style={{ paddingBottom: 80 }}>
     <div className="page-header"><p className="page-header__en">MY RECIPES</p><h1 className="page-header__title">マイレシピを追加</h1><p className="page-header__subtitle">家庭の料理を登録すると、献立提案の候補に加えられます。</p></div>
     <form className="card" onSubmit={submit}>
+      <fieldset disabled={saving} className="recipe-post-fields">
+      <div className="form-field">
+        <label htmlFor="recipe-photo" className="form-field__label">料理の写真（任意・1枚）</label>
+        <p id="recipe-photo-hint" className="note">JPEG・PNG・WebP／4MB以下。写真はレシピと同じ公開範囲で保存されます。</p>
+        <input id="recipe-photo" ref={imageInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={selectImage} aria-describedby="recipe-photo-hint" />
+        {preparingImage && <p role="status">写真を準備しています...</p>}
+        {imageError && <p className="alert alert--error" role="alert">{imageError}</p>}
+        {imageData && <div className="recipe-photo-preview">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="recipe-photo" src={imageData} alt="投稿する料理の写真プレビュー" />
+        </div>}
+        {(imageData || imageError) && <button type="button" className="button button--secondary button--sm" onClick={removeImage}>写真を外す</button>}
+      </div>
       <label className="form-field"><span className="form-field__label">料理名</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></label>
       <div className="form-grid"><label className="form-field"><span className="form-field__label">分類</span><select className="select" value={mealType} onChange={(e) => setMealType(e.target.value)}><option value="main">主菜</option><option value="side">副菜</option><option value="soup">汁物</option><option value="staple">主食</option></select></label><label className="form-field"><span className="form-field__label">料理ジャンル</span><select className="select" value={cuisine} onChange={(e) => setCuisine(e.target.value)}><option>和</option><option>洋</option><option>中</option><option>伊</option><option>仏</option></select></label><label className="form-field"><span className="form-field__label">所要時間（分）</span><input className="input" type="number" min="1" value={time} onChange={(e) => setTime(e.target.value)} /></label></div>
       <label className="form-field"><span className="form-field__label">材料（材料名,分量,単位）</span><textarea className="textarea" rows={6} value={ingredients} onChange={(e) => setIngredients(e.target.value)} placeholder="鶏もも肉,200,g" required /></label>
       <label className="form-field"><span className="form-field__label">調理方法</span><textarea className="textarea" rows={7} value={instructions} onChange={(e) => setInstructions(e.target.value)} required /></label>
-      {message && <div className="alert alert--success">{message}</div>}<button className="button" disabled={saving}>{saving ? "保存中..." : "マイレシピに保存"}</button>
+      {saveError && <div className="alert alert--error" role="alert">{saveError}</div>}
+      {message && <div className="alert alert--success" role="status">{message}</div>}<button className="button" disabled={saving || preparingImage || Boolean(imageError)}>{saving ? "保存中..." : "マイレシピに保存"}</button>
+      </fieldset>
     </form>
     <section className="recipe-library-section">
       <h2 className="home-section-title">自分が投稿したレシピ（{mine.length}）</h2>

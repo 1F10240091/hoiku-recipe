@@ -13,6 +13,8 @@ _PASSWORD_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 def validate_password_strength(value: str) -> str:
     if not _PASSWORD_RE.match(value):
         raise ValueError("パスワードは8文字以上で、英字と数字をそれぞれ1文字以上含めてください")
+    if len(value.encode("utf-8")) > 72:
+        raise ValueError("パスワードはUTF-8で72バイト以内にしてください")
     return value
 
 
@@ -30,7 +32,7 @@ class ORMModel(BaseModel):
 # --- 認証 ---
 class RegisterRequest(BaseModel):
     username: str = Field(min_length=1, max_length=30)
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=8, max_length=72)
 
     @field_validator("username")
     @classmethod
@@ -45,7 +47,7 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=30)
-    password: str
+    password: str = Field(max_length=256)
 
 
 class TokenResponse(BaseModel):
@@ -60,7 +62,7 @@ class UserResponse(ORMModel):
 
 class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=1, max_length=30)
-    password: Optional[str] = Field(default=None, min_length=8)
+    password: Optional[str] = Field(default=None, min_length=8, max_length=72)
 
     @field_validator("username")
     @classmethod
@@ -69,46 +71,46 @@ class UserUpdate(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def check_password(cls, v: str) -> str:
-        return validate_password_strength(v)
+    def check_password(cls, v: str | None) -> str | None:
+        return validate_password_strength(v) if v is not None else None
 
 
 # --- お子様 ---
 class AllergyCreate(BaseModel):
-    ingredient: str
+    ingredient: str = Field(min_length=1, max_length=100)
 
 
 class AllergyResponse(ORMModel):
     id: str
-    ingredient: str
+    ingredient: str = Field(min_length=1, max_length=100)
 
 
 class PreferenceCreate(BaseModel):
-    ingredient: str
-    mode: str = "exclude"
+    ingredient: str = Field(min_length=1, max_length=100)
+    mode: str = Field(default="exclude", pattern="^(exclude|improve)$")
 
 
 class PreferenceResponse(ORMModel):
     id: str
-    ingredient: str
+    ingredient: str = Field(min_length=1, max_length=100)
     mode: str
 
 
 class ChildCreate(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     birth_date: Optional[date] = None
     allergies: list[AllergyCreate] = []
     preferences: list[PreferenceCreate] = []
 
 
 class ChildUpdate(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
     birth_date: Optional[date] = None
 
 
 class ChildResponse(ORMModel):
     id: str
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     birth_date: Optional[date] = None
     allergies: list[AllergyResponse] = []
     preferences: list[PreferenceResponse] = []
@@ -153,8 +155,9 @@ class Ingredient(BaseModel):
 
 
 class RecipeCreate(BaseModel):
-    name: str
-    meal_type: str = "main"
+    image_data: str | None = Field(default=None, max_length=2_800_000)
+    name: str = Field(min_length=1, max_length=100)
+    meal_type: str = Field(default="main", pattern="^(main|side|soup|staple)$")
     ingredients: list[Ingredient] = []
     instructions: str = ""
     cook_time_minutes: int | None = Field(default=None, ge=1)
@@ -165,8 +168,8 @@ class RecipeCreate(BaseModel):
 
 
 class RecipeUpdate(BaseModel):
-    name: str | None = None
-    meal_type: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    meal_type: str | None = Field(default=None, pattern="^(main|side|soup|staple)$")
     ingredients: list[Ingredient] | None = None
     instructions: str | None = None
     cook_time_minutes: int | None = Field(default=None, ge=1)
@@ -177,6 +180,7 @@ class RecipeUpdate(BaseModel):
 
 
 class RecipeResponse(ORMModel):
+    has_image: bool = False
     id: str
     name: str
     meal_type: str

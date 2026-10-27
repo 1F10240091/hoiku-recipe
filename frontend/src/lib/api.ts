@@ -1,5 +1,7 @@
 // バックエンド API クライアント
-const API_BASE = "/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "")}/api/v1`
+  : "/api/v1";
 // 長時間かかるファイル解析は Next.js の rewrite proxy を経由させない。
 const UPLOAD_API_BASE = `${(process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/+$/, "")}/api/v1`;
 
@@ -25,13 +27,14 @@ function extractErrorMessage(body: string, status: number): string {
   } catch {
     // JSON でない場合は本文をそのまま使う
   }
-  return body;
+  return `リクエストに失敗しました（${status}）。時間をおいて再度お試しください。`;
 }
 
 async function request<T>(
   path: string,
   options: RequestInit = {},
   baseUrl = API_BASE,
+  responseType: "json" | "blob" = "json",
 ): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
@@ -59,13 +62,15 @@ async function request<T>(
           window.location.pathname.startsWith(p),
         );
         if (!onAuthPage) {
-          window.location.href = "/login";
+          window.location.replace(new URL("/login", window.location.origin).href);
         }
       }
     }
 
     throw new Error(extractErrorMessage(body, res.status));
   }
+  if (res.status === 204) return undefined as T;
+  if (responseType === "blob") return res.blob() as Promise<T>;
   return res.json() as Promise<T>;
 }
 
@@ -120,6 +125,7 @@ export interface ShoppingList {
 }
 
 export interface Recipe {
+  has_image?: boolean;
   id: string;
   name: string;
   meal_type: string;
@@ -271,6 +277,9 @@ const realApi = {
   },
   getRecipe(recipeId: string) {
     return request<Recipe>(`/recipe-master/${recipeId}`);
+  },
+  getRecipeImage(recipeId: string) {
+    return request<Blob>(`/recipe-master/${recipeId}/image`, {}, API_BASE, "blob");
   },
   createRecipe(payload: Record<string, unknown>) {
     return request<Recipe>("/recipe-master", { method: "POST", body: JSON.stringify(payload) });

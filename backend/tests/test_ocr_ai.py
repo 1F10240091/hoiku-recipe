@@ -52,7 +52,7 @@ def test_normalize_date_variants():
 
 
 def test_extract_entries_without_api_key(monkeypatch):
-    settings = get_settings().model_copy(update={"ai_api_key": ""})
+    settings = get_settings().model_copy(update={"gemini_api_key": ""})
     monkeypatch.setattr(ocr_ai, "get_settings", lambda: settings)
     with pytest.raises(ocr_ai.AIOCRError):
         ocr_ai.extract_entries("menu.png", "image/png", b"dummy")
@@ -72,7 +72,7 @@ def test_upload_uses_ai_result_and_saves_dates(auth_client, monkeypatch):
     )
     assert res.status_code == 201, res.text
     assert res.json()["date"] == "2026-10-21"
-    assert res.json()["ingredients"]["engine"] == "mimo"
+    assert res.json()["ingredients"]["engine"] == "gemini"
 
     dates = {m["date"] for m in auth_client.get("/api/v1/menus").json()}
     assert {"2026-10-21", "2026-10-22"} <= dates
@@ -94,7 +94,7 @@ def test_upload_upserts_same_date(auth_client, monkeypatch):
     assert len(same_date) == 1
 
 
-def test_upload_falls_back_to_text_extraction(auth_client, monkeypatch):
+def test_upload_ai_failure_is_reported(auth_client, monkeypatch):
     def _boom(**_kwargs):
         raise ocr_ai.AIOCRError("AI ダウン")
 
@@ -108,5 +108,45 @@ def test_upload_falls_back_to_text_extraction(auth_client, monkeypatch):
         "/api/v1/menus/upload",
         files={"file": ("sample_menu.pdf", SAMPLE_PDF.read_bytes(), "application/pdf")},
     )
-    assert res.status_code == 201, res.text
-    assert res.json()["ingredients"]["engine"] == "pypdf"
+    assert res.status_code == 422, res.text
+
+
+def test_pdf_conversion_is_bounded_and_rejects_extra_pages():
+    import pymupdf
+    from PIL import Image
+    import io
+    with pymupdf.open() as doc:
+        doc.new_page(width=10000, height=10000)
+        data = doc.tobytes()
+    images = ocr_ai._pdf_to_pngs(data, 5)
+    with Image.open(io.BytesIO(images[0])) as image:
+        assert max(image.size) <= ocr_ai.MAX_IMAGE_WIDTH
+    with pymupdf.open() as doc:
+        doc.new_page()
+        doc.new_page()
+        data = doc.tobytes()
+    with pytest.raises(ocr_ai.AIOCRError):
+        ocr_ai._pdf_to_pngs(data, 1)
+
+
+def test_corrupt_pdf_conversion_rejected():
+    with pytest.raises(ocr_ai.AIOCRError):
+        ocr_ai._pdf_to_pngs(b'not a PDF', 5)
+
+
+def test_gemini_key_is_sent_in_header_only(monkeypatch):
+    settings = get_settings().model_copy(update={'gemini_api_key':'test-secret'})
+    monkeypatch.setattr(ocr_ai, 'get_settings', lambda: settings)
+    class FakeClient:
+        def __init__(self, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def post(self, url, *, json, headers):
+            assert 'test-secret' not in url
+            assert headers['x-goog-api-key'] == 'test-secret'
+            class Response:
+                status_code = 200
+                def json(self): return {'candidates':[{'content':{'parts':[{'text':'{}'}]}}]}
+            return Response()
+    monkeypatch.setattr(ocr_ai.httpx, 'Client', FakeClient)
+    assert ocr_ai._request_gemini('test-secret', 'test', [b'test-image']) == '{}'

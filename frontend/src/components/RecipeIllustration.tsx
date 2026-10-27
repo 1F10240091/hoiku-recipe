@@ -20,23 +20,20 @@ function hashText(text: string) {
 
 export default function RecipeIllustration({ recipe }: { recipe: Pick<Recipe, "name" | "meal_type" | "cuisine" | "ingredients"> }) {
   const seed = hashText(`${recipe.name}-${recipe.cuisine ?? "和"}`);
-  let state = seed || 1;
-  const random = () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
+  const random = (index: number, channel: number) =>
+    hashText(`${seed}-${index}-${channel}`) / 4294967296;
   const ingredientText = recipe.ingredients.map((item) => item.name).join(" ");
   const palette = INGREDIENT_COLORS.filter(([pattern]) => pattern.test(ingredientText)).map(([, color]) => color);
   const colors = palette.length ? palette : ["#e88a50", "#6f9a65", "#f0cd78", "#ca7772"];
   const isSoup = recipe.meal_type === "soup";
   const isStaple = recipe.meal_type === "staple";
   const food = Array.from({ length: 13 }, (_, index) => {
-    const x = 95 + random() * 210;
-    const y = 65 + random() * 90;
-    const rx = 7 + random() * 9;
-    const ry = 5 + random() * 6;
+    const x = 95 + random(index, 0) * 210;
+    const y = 65 + random(index, 1) * 90;
+    const rx = 7 + random(index, 2) * 9;
+    const ry = 5 + random(index, 3) * 6;
     const color = colors[index % colors.length];
-    const rotation = Math.round(random() * 100 - 50);
+    const rotation = Math.round(random(index, 4) * 100 - 50);
     return <ellipse key={index} cx={x} cy={y} rx={rx} ry={ry} fill={color} transform={`rotate(${rotation} ${x} ${y})`} opacity={index % 4 === 0 ? 0.78 : 1} />;
   });
 

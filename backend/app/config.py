@@ -1,12 +1,13 @@
 """アプリケーション設定。"""
 
 import ipaddress
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -31,8 +32,8 @@ class Settings(BaseSettings):
 
     # レート制限（ログイン・登録へのブルートフォース対策）
     rate_limit_enabled: bool = True
-    rate_limit_max_requests: int = 5
-    rate_limit_window_seconds: int = 60
+    rate_limit_max_requests: int = Field(default=5, ge=1)
+    rate_limit_window_seconds: int = Field(default=60, ge=1)
 
     ai_timeout_seconds: int = 120
 
@@ -44,6 +45,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> "Settings":
+        if os.environ.get("VERCEL") == "1" and self.environment != "production":
+            raise ValueError("VercelではENVIRONMENT=productionを設定してください")
         if self.environment != "production":
             return self
 

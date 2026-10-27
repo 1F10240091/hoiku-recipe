@@ -66,7 +66,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (authReady) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady]);
 
   const handleLogout = () => {

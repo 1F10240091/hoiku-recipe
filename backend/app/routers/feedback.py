@@ -1,7 +1,8 @@
 """フィードバック API（ユーザーテスト・学祭アンケート収集）。"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from app.config import get_settings
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -20,8 +21,7 @@ class FeedbackResponse(BaseModel):
     rating: int | None
     comment: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 @router.post("", response_model=FeedbackResponse, status_code=status.HTTP_201_CREATED)
@@ -37,4 +37,6 @@ def create_feedback(payload: FeedbackCreate, db: Session = Depends(get_db)) -> F
 
 @router.get("", response_model=list[FeedbackResponse])
 def list_feedback(db: Session = Depends(get_db)) -> list[Feedback]:
+    if get_settings().environment == "production":
+        raise HTTPException(status_code=404, detail="見つかりません")
     return db.query(Feedback).order_by(Feedback.created_at.desc()).all()

@@ -1,11 +1,14 @@
 """レシピマスタ API（一覧・検索・作成・更新・削除）。"""
 
+from fastapi.responses import Response
+from app.services.recipe_images import normalize_photo
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.database import get_db
-from app.models import Recipe, RecipeFavorite, RecipeLike
+from app.models import RecipePhoto, Recipe, RecipeFavorite, RecipeLike
 from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
 from app.services.ingredients import list_recipe_ingredient_names
@@ -106,7 +109,7 @@ def search_recipes(
 @router.get("/ingredients", response_model=list[str])
 def list_ingredients(user=Depends(get_current_user), db: Session = Depends(get_db)) -> list[str]:
     """レシピで使われている食材名の一覧（重複なし）。アレルギー登録の選択肢に使う。"""
-    return list_recipe_ingredient_names(db)
+    return list_recipe_ingredient_names(db, user.id)
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
@@ -126,8 +129,14 @@ def create_recipe(payload: RecipeCreate, user=Depends(get_current_user), db: Ses
         owner_id=user.id,
         is_public=payload.is_public,
     )
+    if payload.image_data:
+        recipe.photo = RecipePhoto(data=normalize_photo(payload.image_data))
     db.add(recipe)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="同じ名前のレシピが既に存在します")
     db.refresh(recipe)
     return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
 
@@ -171,6 +180,9 @@ def update_recipe(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
 
     if payload.name is not None:
+        duplicate = db.query(Recipe).filter(Recipe.name == payload.name, Recipe.id != recipe.id).first()
+        if duplicate:
+            raise HTTPException(status_code=409, detail="同じ名前のレシピが既に存在します")
         recipe.name = payload.name
     if payload.meal_type is not None:
         recipe.meal_type = payload.meal_type
@@ -185,10 +197,16 @@ def update_recipe(
     if payload.age_min_months is not None:
         recipe.age_min_months = payload.age_min_months
     if payload.age_max_months is not None:
-        recipe.age_max_months = max(recipe.age_min_months, payload.age_max_months)
+        recipe.age_max_months = payload.age_max_months
+    if recipe.age_min_months > recipe.age_max_months:
+        raise HTTPException(status_code=422, detail="対象月齢の上限は下限以上にしてください")
     if payload.is_public is not None and not recipe.is_official:
         recipe.is_public = payload.is_public
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="同じ名前のレシピが既に存在します")
     db.refresh(recipe)
     return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
 
@@ -198,6 +216,8 @@ def delete_recipe(recipe_id: str, user=Depends(get_current_user), db: Session = 
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id, Recipe.owner_id == user.id, Recipe.is_official == False).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="レシピが見つかりません")
+    db.query(RecipeFavorite).filter(RecipeFavorite.recipe_id == recipe.id).delete(synchronize_session=False)
+    db.query(RecipeLike).filter(RecipeLike.recipe_id == recipe.id).delete(synchronize_session=False)
     db.delete(recipe)
     db.commit()
 
@@ -214,3 +234,12 @@ def toggle_favorite(recipe_id: str, user=Depends(get_current_user), db: Session 
         db.add(RecipeFavorite(user_id=user.id, recipe_id=recipe_id))
     db.commit()
     return _to_response(recipe, _like_counts(db, user.id), _favorites(db, user.id))
+
+
+@router.get("/{recipe_id}/image")
+def get_recipe_image(recipe_id: str, user=Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id, _visible_to_user(user.id)).first()
+    if recipe is None or recipe.photo is None:
+        raise HTTPException(status_code=404, detail="画像が見つかりません")
+    return Response(content=recipe.photo.data, media_type="image/webp",
+                    headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})

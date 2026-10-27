@@ -29,7 +29,6 @@ export default function ShoppingPage() {
 
   useEffect(() => {
     if (authReady) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady]);
 
   const handleAdd = async () => {
@@ -83,7 +82,7 @@ export default function ShoppingPage() {
             <h2 className="card__title">不足食材</h2>
             <ul className="list">
               {items.map((item) => (
-                <li key={item.name} className="list__item">
+                <li key={`${item.name}-${item.unit ?? ""}`} className="list__item">
                   <div>
                     <p className="list__item-title">{item.name}</p>
                     {item.needed && (

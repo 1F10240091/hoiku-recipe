@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
+import unicodedata
 
 from app.models import Recipe
 
@@ -40,8 +41,13 @@ _SYNONYMS: dict[str, list[str]] = {
 
 def _matches_ingredient(ingredient: str, target: str) -> bool:
     """食材名（表記ゆれ対応）が対象文字列に含まれるか判定する。"""
-    aliases = _SYNONYMS.get(ingredient.lower(), [ingredient])
-    return any(alias in target for alias in aliases)
+    normalize = lambda value: unicodedata.normalize("NFKC", value).strip().casefold()
+    ingredient, target = normalize(ingredient), normalize(target)
+    if not ingredient:
+        return False
+    aliases = next((values for key, values in _SYNONYMS.items()
+                    if ingredient == normalize(key) or ingredient in [normalize(v) for v in values]), [ingredient])
+    return any(normalize(alias) in target for alias in aliases)
 
 
 def _recipe_has_allergen(recipe: Recipe, allergens: list[str]) -> bool:
@@ -54,8 +60,9 @@ def _recipe_has_allergen(recipe: Recipe, allergens: list[str]) -> bool:
 
 def _shared_names(a: list[str], b: list[str]) -> bool:
     """2つの献立に同じ料理が含まれているか判定する。"""
-    sa = set(a)
-    sb = set(b)
+    basics = {"ごはん", "白ごはん", "みそ汁"}
+    sa = set(a) - basics
+    sb = set(b) - basics
     return bool(sa & sb)
 
 

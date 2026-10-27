@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
 import { api, type Recipe } from "@/lib/api";
-import RecipeIllustration from "@/components/RecipeIllustration";
+import RecipePhoto from "@/components/RecipePhoto";
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
   main: "主菜",
@@ -16,21 +16,22 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
 export default function RecipeDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
-      .getRecipe(params.id)
+      .getRecipe(id)
       .then(setRecipe)
       .catch((e: unknown) =>
         setError(e instanceof Error ? e.message : "レシピの取得に失敗しました"),
       )
       .finally(() => setLoading(false));
-  }, [params.id]);
+  }, [id]);
 
   return (
     <main className="main">
@@ -62,7 +63,7 @@ export default function RecipeDetailPage({
 
         {recipe && !loading && (
           <article className="card">
-            <div className="recipe-detail__visual"><RecipeIllustration recipe={recipe} /></div>
+            <div className="recipe-detail__visual"><RecipePhoto recipe={recipe} /></div>
             <header style={{ marginBottom: 16 }}>
               <span className="recipe-card__badge">
                 {MEAL_TYPE_LABELS[recipe.meal_type] ?? recipe.meal_type}

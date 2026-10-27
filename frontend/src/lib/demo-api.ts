@@ -88,7 +88,12 @@ function likeCounts(): Record<string, number> {
   return counts;
 }
 
-function withLikedCounts(recipes: DemoRecipe[]): Recipe[] {
+type SavedRecipe = Recipe & { image_data?: string | null };
+function allRecipes(): SavedRecipe[] {
+  return [...DEMO_RECIPES, ...load<SavedRecipe[]>("demo_my_recipes", [])];
+}
+
+function withLikedCounts(recipes: Recipe[]): Recipe[] {
   const counts = likeCounts();
   return recipes.map((r) => ({ ...r, liked_count: counts[r.id] ?? 0 }));
 }
@@ -228,8 +233,50 @@ export const demoApi = {
     return delay(menu);
   },
 
+  async createRecipe(payload: Record<string, unknown>): Promise<Recipe> {
+    const recipes = load<SavedRecipe[]>("demo_my_recipes", []);
+    if (allRecipes().some((recipe) => recipe.name === payload.name)) throw new Error("同じ名前のレシピが既に存在します");
+    const recipe = { ...payload, id: uid("recipe"), is_official: false,
+      has_image: Boolean(payload.image_data) } as unknown as SavedRecipe;
+    save("demo_my_recipes", [...recipes, recipe]);
+    return delay(recipe);
+  },
+  async listMyRecipes(): Promise<Recipe[]> {
+    return delay(load<SavedRecipe[]>("demo_my_recipes", []));
+  },
+  async listFavoriteRecipes(): Promise<Recipe[]> {
+    const ids = load<string[]>("demo_favorites", []);
+    return delay(allRecipes().filter((recipe) => ids.includes(recipe.id)));
+  },
+  async toggleFavorite(id: string): Promise<Recipe> {
+    const recipe = allRecipes().find((item) => item.id === id);
+    if (!recipe) throw new Error("レシピが見つかりません");
+    const ids = load<string[]>("demo_favorites", []);
+    const favorite = !ids.includes(id);
+    save("demo_favorites", favorite ? [...ids, id] : ids.filter((value) => value !== id));
+    return delay({ ...recipe, is_favorite: favorite });
+  },
+  async updateRecipe(id: string, payload: Record<string, unknown>): Promise<Recipe> {
+    const recipes = load<SavedRecipe[]>("demo_my_recipes", []);
+    const index = recipes.findIndex((recipe) => recipe.id === id);
+    if (index < 0) throw new Error("レシピが見つかりません");
+    recipes[index] = { ...recipes[index], ...payload };
+    save("demo_my_recipes", recipes);
+    return delay(recipes[index]);
+  },
+  async deleteRecipe(id: string): Promise<void> {
+    save("demo_my_recipes", load<SavedRecipe[]>("demo_my_recipes", []).filter((recipe) => recipe.id !== id));
+  },
+  async getRecipeImage(id: string): Promise<Blob> {
+    const image = allRecipes().find((recipe) => recipe.id === id)?.image_data;
+    if (!image) throw new Error("画像が見つかりません");
+    const [header, encoded] = image.split(",");
+    const bytes = Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0));
+    return new Blob([bytes], { type: header.slice(5).split(";")[0] });
+  },
+
   async listRecipes(): Promise<Recipe[]> {
-    return delay(withLikedCounts(DEMO_RECIPES));
+    return delay(withLikedCounts(allRecipes()));
   },
 
   async listRecipeIngredients(): Promise<string[]> {
@@ -252,7 +299,7 @@ export const demoApi = {
     page?: number;
     per_page?: number;
   }): Promise<RecipeSearchResponse> {
-    let list: Recipe[] = withLikedCounts(DEMO_RECIPES);
+    let list: Recipe[] = withLikedCounts(allRecipes());
     if (params.keyword) {
       const kw = params.keyword.toLowerCase();
       list = list.filter(
@@ -300,7 +347,7 @@ export const demoApi = {
   },
 
   async getRecipe(recipeId: string): Promise<Recipe> {
-    const recipe = DEMO_RECIPES.find((r) => r.id === recipeId);
+    const recipe = allRecipes().find((r) => r.id === recipeId);
     if (!recipe) throw new Error("レシピが見つかりません");
     return delay(withLikedCounts([recipe])[0]);
   },

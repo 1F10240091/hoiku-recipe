@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Recipe } from "@/lib/api";
 import { api } from "@/lib/api";
-import RecipeIllustration from "@/components/RecipeIllustration";
+import RecipePhoto from "@/components/RecipePhoto";
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
   main: "主菜",
@@ -36,7 +36,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
 
   return (
     <article className="recipe-card">
-      <div className="recipe-card__visual"><RecipeIllustration recipe={recipe} /></div>
+      <div className="recipe-card__visual"><RecipePhoto recipe={recipe} /></div>
       <div className="recipe-card__header">
         <span className="recipe-card__badge">
           {MEAL_TYPE_LABELS[recipe.meal_type] ?? recipe.meal_type}

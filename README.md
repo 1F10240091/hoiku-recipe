@@ -43,7 +43,7 @@
 
 | 要件 | バージョン |
 |------|-----------|
-| Node.js | 18 以上 |
+| Node.js | 22.x 推奨（最低20.19以上） |
 | Python | 3.10 以上 |
 | OS | Windows / macOS / Linux |
 
@@ -101,7 +101,7 @@ NEXT_PUBLIC_DEMO_MODE=true
 
 ## テスト
 
-バックエンドの API テストは pytest で実行します（認証・お子様・レシピ・献立生成・AI 自由生成・「喜んでた」・買い物リスト・献立表 OCR・セキュリティ・フィードバックの 68 件）。
+バックエンドの API テストは pytest で実行します（認証・お子様・レシピ・献立生成・「喜んでた」・買い物リスト・献立表 OCR・セキュリティ・フィードバックの 現行の回帰テスト）。
 
 ```bash
 cd backend
@@ -153,15 +153,12 @@ hoiku-recipe/
 │   │   │   ├── shopping.py   # 買い物リスト API
 │   │   │   └── feedback.py   # フィードバック API
 │   │   └── services/
-│   │       ├── ocr.py        # テキスト抽出（PDF / 画像）
 │   │       ├── ocr_ai.py     # AI 画像認識 OCR
-│   │       ├── menu_parser.py # 献立テキスト構造化
 │   │       ├── menu_generator.py # AI 献立生成（自由生成・ルールベース）
 │   │       ├── shopping_list.py # 買い物リスト集計
 │   │       └── seed.py       # レシピシード 23 件
 │   ├── tests/                # pytest テスト
 │   ├── requirements.txt
-│   ├── requirements-ocr.txt  # easyocr 等（画像 OCR のみ）
 │   └── requirements-dev.txt  # pytest 等
 └── frontend/
     ├── src/
@@ -192,3 +189,18 @@ hoiku-recipe/
 ## ライセンス
 
 MIT
+
+
+## 公開品質の検証
+
+```sh
+npm ci
+npm run lint
+npm run test:frontend
+npm run build
+cd backend
+python -m pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest tests -q
+```
+
+GitHub ActionsはPostgreSQL 17でマイグレーションとAPIテストを検証します。本番のDB更新は公開前に`python -m app.release`で実行してください。Vercelは`frontend`と`backend`をそれぞれRoot Directoryに設定する構成です。詳細は[デプロイガイド](docs/deployment.md)を参照してください。

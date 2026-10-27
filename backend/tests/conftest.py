@@ -12,8 +12,9 @@ import pytest
 
 # テスト用 DB パスを最優先で設定（リポジトリ直下の一時領域に置く）
 TEST_DB = Path(__file__).resolve().parent.parent / ".test_hoiku_recipe.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB}"
-os.environ["AI_API_KEY"] = ""  # テストではルールベースを使用
+os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", f"sqlite:///{TEST_DB}")
+os.environ["ENVIRONMENT"] = "development"
+os.environ["GEMINI_API_KEY"] = ""  # テストではルールベースを使用
 os.environ["RATE_LIMIT_ENABLED"] = "false"  # テストではレート制限を無効化（専用テストで検証）
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))

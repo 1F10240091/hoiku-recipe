@@ -4,6 +4,7 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.config import get_settings
 from app.database import get_db
@@ -51,7 +52,11 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         hashed_password=hash_password(payload.password),
     )
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="このユーザーネームは既に登録されています")
     db.refresh(user)
     return TokenResponse(access_token=create_access_token(user.id))
 
@@ -78,6 +83,10 @@ def update_me(payload: UserUpdate, user: User = Depends(get_current_user), db: S
         user.username = payload.username
     if payload.password:
         user.hashed_password = hash_password(payload.password)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="このユーザーネームは既に登録されています")
     db.refresh(user)
     return user

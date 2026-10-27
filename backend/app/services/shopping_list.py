@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass, field
 
 
@@ -33,7 +34,7 @@ def build_shopping_list(*, recipe_ids: list[str], recipes_by_id: dict[str, objec
         不足食材のリスト（在庫にある食材は除外済み）。
     """
     # レシピごとの食材を集計
-    needed_by_name: dict[str, dict] = {}
+    needed_by_name: dict[tuple[str, str], dict] = {}
     source_by_name: dict[str, list[str]] = defaultdict(list)
 
     for recipe_id in recipe_ids:
@@ -45,8 +46,11 @@ def build_shopping_list(*, recipe_ids: list[str], recipes_by_id: dict[str, objec
             name = ing.get("name", "")
             if not name:
                 continue
-            if name not in needed_by_name:
-                needed_by_name[name] = {"name": name, "quantity": ing.get("quantity", ""), "unit": ing.get("unit", "")}
+            quantity, unit = str(ing.get("quantity", "")), str(ing.get("unit", ""))
+            key = (name, unit)
+            if key not in needed_by_name:
+                needed_by_name[key] = {"name": name, "quantities": [], "unit": unit}
+            needed_by_name[key]["quantities"].append(quantity)
             source_by_name[name].append(recipe_name)
 
     # 在庫にある食材を除外（表記ゆれ対応のため部分一致で判定）
@@ -55,10 +59,17 @@ def build_shopping_list(*, recipe_ids: list[str], recipes_by_id: dict[str, objec
         return any(lowered in inv.lower() or inv.lower() in lowered for inv in inventory if inv)
 
     items: list[ShoppingItem] = []
-    for name, info in needed_by_name.items():
+    for (name, _unit), info in needed_by_name.items():
         if in_inventory(name):
             continue
-        qty = info["quantity"]
+        quantities = info["quantities"]
+        try:
+            numbers = [Decimal(q) for q in quantities]
+            if not all(n.is_finite() and n >= 0 for n in numbers):
+                raise InvalidOperation
+            qty = format(sum(numbers), "f").rstrip("0").rstrip(".") if any("." in q for q in quantities) else str(sum(numbers))
+        except InvalidOperation:
+            qty = " + ".join(q for q in quantities if q)
         unit = info["unit"]
         items.append(
             ShoppingItem(

@@ -10,7 +10,7 @@ from app.main import app
 from app.middleware import RateLimitMiddleware
 
 
-def _limited_app(max_requests: int = 2, window_seconds: int = 60, fail: bool = False) -> TestClient:
+def _limited_app(max_requests: int = 2, window_seconds: int = 60, fail: bool = False, trusted_proxy_ips=None) -> TestClient:
     """レート制限付きの独立したアプリを作る。"""
     from fastapi import HTTPException
 
@@ -22,7 +22,7 @@ def _limited_app(max_requests: int = 2, window_seconds: int = 60, fail: bool = F
             raise HTTPException(status_code=401, detail="認証失敗")
         return {"ok": True}
 
-    test_app.add_middleware(RateLimitMiddleware, max_requests=max_requests, window_seconds=window_seconds)
+    test_app.add_middleware(RateLimitMiddleware, max_requests=max_requests, window_seconds=window_seconds, trusted_proxy_ips=trusted_proxy_ips)
     return TestClient(test_app)
 
 
@@ -56,7 +56,7 @@ def test_rate_limit_blocks_excess_failures():
 
 
 def test_rate_limit_per_ip_is_independent():
-    tc = _limited_app(max_requests=2, fail=True)
+    tc = _limited_app(max_requests=2, fail=True, trusted_proxy_ips=["testclient"])
     for _ in range(2):
         assert tc.post("/api/v1/auth/login", headers={"x-forwarded-for": "1.1.1.1"}).status_code == 401
     assert tc.post("/api/v1/auth/login", headers={"x-forwarded-for": "1.1.1.1"}).status_code == 429

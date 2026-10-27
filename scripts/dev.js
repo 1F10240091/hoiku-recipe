@@ -3,7 +3,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const windows = process.platform === "win32";
-const python = path.join(root, "backend", ".venv", "Scripts", "python.exe");
+const python = path.join(root, "backend", ".venv", windows ? "Scripts" : "bin", windows ? "python.exe" : "python");
 const nextCli = path.join(root, "node_modules", "next", "dist", "bin", "next");
 
 const services = [

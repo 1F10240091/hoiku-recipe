@@ -35,7 +35,7 @@ class ShoppingListResponse(BaseModel):
 
 class InventoryCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    quantity: str | None = None
+    quantity: str | None = Field(default=None, max_length=50)
 
 
 @router.get("/list", response_model=ShoppingListResponse)

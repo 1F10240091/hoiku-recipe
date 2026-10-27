@@ -34,9 +34,9 @@ async def upload_menu(
     """
     if file.content_type not in {"application/pdf", "image/png", "image/jpeg", "image/webp"}:
         raise HTTPException(status_code=415, detail="PDF・PNG・JPEG・WebPのみ対応しています")
-    data = await file.read(15 * 1024 * 1024 + 1)
-    if len(data) > 15 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="ファイルサイズは15MB以下にしてください")
+    data = await file.read(4 * 1024 * 1024 + 1)
+    if len(data) > 4 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="ファイルサイズは4MB以下にしてください")
 
     if not ocr_ai.is_available():
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY が設定されていません")

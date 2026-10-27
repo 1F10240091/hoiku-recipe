@@ -21,7 +21,7 @@ def list_children(user: User = Depends(get_current_user), db: Session = Depends(
 def create_child(payload: ChildCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Child:
     # アレルギーはレシピで使われている食材のみ受け付ける
     for allergy in payload.allergies:
-        if not is_recipe_ingredient(db, allergy.ingredient):
+        if not is_recipe_ingredient(db, allergy.ingredient, user.id):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"「{allergy.ingredient}」はレシピで使われている食材ではありません",
@@ -70,7 +70,7 @@ def add_allergy(
     ingredient = payload.ingredient.strip()
     if not ingredient:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="食材名を入力してください")
-    if not is_recipe_ingredient(db, ingredient):
+    if not is_recipe_ingredient(db, ingredient, user.id):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"「{ingredient}」はレシピで使われている食材ではありません",
