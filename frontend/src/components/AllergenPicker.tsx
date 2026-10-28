@@ -9,7 +9,7 @@ export default function AllergenPicker({ child, disabled, onToggle }: Props) {
   return <div className="allergen-picker" aria-label={`${child.name}の29品目から選ぶアレルギー`}>
     <div className="allergen-picker__heading"><h4>29品目からかんたん選択</h4><span>{count}品目を登録中</span></div>
     <p className="note">該当するものを押すと保存します。もう一度押すと解除できます。小麦ならうどん・パンなどの食材名や、登録した原材料も照合します。</p>
-    {([ ["required", "表示義務の対象（9品目）"], ["recommended", "表示推奨の対象（20品目）"] ] as const).map(([group, title]) => <details className="allergen-picker__group" key={group}>
+    {([ ["required", "9品目"], ["recommended", "20品目"] ] as const).map(([group, title]) => <details className="allergen-picker__group" key={group}>
       <summary className="allergen-picker__summary"><span>{title}</span><span className="allergen-picker__chevron" aria-hidden="true">▼</span></summary><div className="allergen-picker__options" role="group" aria-label={title}>
         {allergenCatalog.items.filter((item) => item.group === group).map((item) => {
           const active = selected.has(item.name);
@@ -21,6 +21,6 @@ export default function AllergenPicker({ child, disabled, onToggle }: Props) {
       </div>
     </details>)}
     <p className="allergen-picker__source"><a href={allergenCatalog.source_url} target="_blank" rel="noreferrer">消費者庁・2026年4月版に基づく29品目</a></p>
-    <p className="note">未選択は「安全」の判定ではありません。実際の商品表示も確認してください。</p>
+    <p className="note">未選択でも安全とは限りません。アレルギーがある場合は、商品パッケージの原材料表示もご確認ください。</p>
   </div>;
 }

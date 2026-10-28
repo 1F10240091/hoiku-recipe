@@ -110,7 +110,7 @@ function IconCart() {
   );
 }
 
-// 並び順: 先頭がアプリのトップ（レシピ検索）、末尾がプロフィール。
+// プロフィールは独立させ、デスクトップでは右端にアイコン表示する。
 const NAV_ITEMS = [
   {
     href: "/recipe-search",
@@ -148,13 +148,8 @@ const NAV_ITEMS = [
     short: "買い物",
     icon: IconCart,
   },
-  {
-    href: "/dashboard",
-    label: "お子さん・プロフィール",
-    short: "プロフィール",
-    icon: IconProfile,
-  },
 ];
+const PROFILE_ITEM = { href: "/dashboard", label: "プロフィール", short: "プロフィール", icon: IconProfile };
 
 export default function AppNav() {
   const pathname = usePathname();
@@ -185,13 +180,22 @@ export default function AppNav() {
               );
             })}
           </ul>
+          <Link
+            href={PROFILE_ITEM.href}
+            className={`app-nav__profile${pathname.startsWith(PROFILE_ITEM.href) ? " app-nav__profile--active" : ""}`}
+            aria-label={PROFILE_ITEM.label}
+            title={PROFILE_ITEM.label}
+            aria-current={pathname.startsWith(PROFILE_ITEM.href) ? "page" : undefined}
+          >
+            <IconProfile active={pathname.startsWith(PROFILE_ITEM.href)} />
+          </Link>
         </div>
       </nav>
       <nav
         className="app-bottom-nav"
         aria-label="メインナビゲーション（モバイル）"
       >
-        {NAV_ITEMS.map((item) => {
+        {[...NAV_ITEMS, PROFILE_ITEM].map((item) => {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;
           return (

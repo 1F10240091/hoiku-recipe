@@ -67,8 +67,10 @@ def search_recipes(
     query = db.query(Recipe).filter(_visible_to_user(user.id))
 
     if keyword:
-        like = f"%{keyword}%"
-        query = query.filter(Recipe.name.like(like) | Recipe.instructions.like(like))
+        # Escape SQL LIKE wildcards so user input remains a literal substring.
+        escaped = keyword.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{escaped}%"
+        query = query.filter(Recipe.name.ilike(like, escape="\\") | Recipe.instructions.ilike(like, escape="\\"))
     if meal_type:
         query = query.filter(Recipe.meal_type == meal_type)
     if max_cook_time is not None:
@@ -79,11 +81,11 @@ def search_recipes(
     # 材料は JSON の Unicode エスケープで保存されるため LIKE 不可。
     # デコードしてから Python 側で部分一致フィルタする。
     if ingredient:
-        needle = ingredient.lower()
+        needle = ingredient.strip().casefold()
         recipes = [
             r
             for r in recipes
-            if any(needle in ing.get("name", "").lower() for ing in r.ingredients)
+            if any(needle in ing.get("name", "").casefold() for ing in r.ingredients)
         ]
 
     counts = _like_counts(db, user.id)

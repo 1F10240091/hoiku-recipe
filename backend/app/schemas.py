@@ -130,6 +130,11 @@ class NurseryMenuCreate(BaseModel):
     menu_text: str
 
 
+class NurseryMenuUpdate(BaseModel):
+    date: date
+    menu_text: str
+
+
 class NurseryMenuResponse(ORMModel):
     id: str
     date: date

@@ -9,6 +9,7 @@ import MutationStatus from "@/components/MutationStatus";
 import { api, type Child, type User } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useMutation } from "@/lib/useMutation";
+import { allergenCatalog, canonicalAllergen } from "@/lib/allergens";
 
 export default function DashboardPage() {
   const ready = useRequireAuth();
@@ -24,6 +25,27 @@ export default function DashboardPage() {
   const [childNotice, setChildNotice] = useState("");
   const [name, setName] = useState("");
   const [birth, setBirth] = useState("");
+  const [initialAllergies, setInitialAllergies] = useState<string[]>([]);
+  const [customAllergy, setCustomAllergy] = useState("");
+  const birthYear = birth.split("-")[0] ?? "";
+  const birthMonth = birth.split("-")[1] ?? "";
+  const setBirthPart = (part: "year" | "month", value: string) => {
+    const [year = "", month = ""] = birth.split("-");
+    const nextYear = part === "year" ? value : year;
+    const nextMonth = part === "month" ? value : month;
+    setBirth(nextYear || nextMonth ? `${nextYear}-${nextMonth}` : "");
+  };
+  const toggleInitialAllergy = (ingredient: string) => {
+    setInitialAllergies((current) => current.some((item) => canonicalAllergen(item) === ingredient)
+      ? current.filter((item) => canonicalAllergen(item) !== ingredient)
+      : [...current, ingredient]);
+  };
+  const addCustomAllergy = () => {
+    const value = customAllergy.trim();
+    if (!value || initialAllergies.some((item) => canonicalAllergen(item) === canonicalAllergen(value))) return;
+    setInitialAllergies((current) => [...current, value]);
+    setCustomAllergy("");
+  };
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -50,12 +72,38 @@ export default function DashboardPage() {
         {children.length > 0 && <button className="button" type="button" onClick={() => setShowCreate(true)}>＋ お子様を追加</button>}
       </div>
       {children.length === 0 && <form className="card" onSubmit={(event) => { event.preventDefault(); if (!name.trim()) return; void mutation.run("お子様を追加中", async () => {
-        const child = await api.createChild({name: name.trim(), birth_date: birth ? `${birth}-01` : null, allergies: [], preferences: []});
-        setChildren((current) => [...current, child]); setName(""); setBirth("");
+        const child = await api.createChild({name: name.trim(), birth_date: birthYear && birthMonth ? `${birthYear}-${birthMonth}-01` : null, allergies: initialAllergies.map((ingredient) => ({ingredient})), preferences: []});
+        setChildren((current) => [...current, child]); setName(""); setBirth(""); setInitialAllergies([]);
       }, "お子様を追加しました。"); }}>
         <h3 className="card__title">お子様を追加</h3>
         <label className="form-field"><span>名前</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="例：ゆうた" maxLength={100} required /></label>
-        <label className="form-field"><span>生年月（任意）</span><input type="month" className="input" value={birth} onChange={(e) => setBirth(e.target.value)} /></label>
+        <div className="form-field"><span>生年月（任意）</span>
+          <input type="month" className="input birth-month-input" value={birth} onChange={(e) => setBirth(e.target.value)} />
+          <div className="birth-month-selects">
+            <select className="select" aria-label="生まれた年" value={birthYear} onChange={(e) => setBirthPart("year", e.target.value)}><option value="">年を選択</option>{Array.from({length: Math.max(0, new Date().getFullYear() - 2015 + 1)}, (_, index) => 2015 + index).map((year) => <option key={year} value={year}>{year}年</option>)}</select>
+            <select className="select" aria-label="生まれた月" value={birthMonth} onChange={(e) => setBirthPart("month", e.target.value)}><option value="">月を選択</option>{Array.from({length: 12}, (_, index) => index + 1).map((month) => <option key={month} value={String(month).padStart(2, "0")}>{month}月</option>)}</select>
+          </div>
+        </div>
+        <section className="allergen-picker" aria-label="アレルギー登録">
+          <div className="allergen-picker__heading"><h4>アレルギー（任意）</h4><span>{initialAllergies.length}品目を登録中</span></div>
+          <p className="note">該当する食材を選択してください。登録後もいつでも追加できます。</p>
+          {([ ["required", "9品目"], ["recommended", "20品目"] ] as const).map(([group, title]) => <details className="allergen-picker__group" key={group}>
+            <summary className="allergen-picker__summary"><span>{title}</span><span className="allergen-picker__chevron" aria-hidden="true">▼</span></summary>
+            <div className="allergen-picker__options" role="group" aria-label={title}>
+              {allergenCatalog.items.filter((item) => item.group === group).map((item) => {
+                const active = initialAllergies.some((value) => canonicalAllergen(value) === item.name);
+                return <button type="button" key={item.name} className={`allergen-chip${active ? " allergen-chip--selected" : ""}`} aria-pressed={active} onClick={() => toggleInitialAllergy(item.name)}><span className="allergen-chip__mark" aria-hidden="true">{active ? "✓" : "+"}</span>{item.label}</button>;
+              })}
+            </div>
+          </details>)}
+          <p className="allergen-picker__source"><a href={allergenCatalog.source_url} target="_blank" rel="noreferrer">消費者庁・2026年4月版に基づく29品目</a></p>
+          <ul className="list">{initialAllergies.filter((value) => !allergenCatalog.items.some((item) => item.name === canonicalAllergen(value))).map((value) => <li className="list__item" key={value}><span>{value}</span><button type="button" className="button button--danger button--sm" onClick={() => toggleInitialAllergy(value)}>削除</button></li>)}</ul>
+          <div className="custom-allergy-form">
+            <input className="input" value={customAllergy} onChange={(event) => setCustomAllergy(event.target.value)} maxLength={100} placeholder="その他のアレルギー" aria-label="その他のアレルギー" />
+            <button type="button" className="button custom-allergy-form__add" disabled={!customAllergy.trim()} onClick={addCustomAllergy}>＋ 追加</button>
+          </div>
+          <p className="note">未選択でも安全とは限りません。アレルギーがある場合は、商品パッケージの原材料表示もご確認ください。</p>
+        </section>
         <button className="button" disabled={!name.trim()}>{mutation.pending === "お子様を追加中" ? "追加中…" : "お子様を追加"}</button>
       </form>}
     </fieldset>

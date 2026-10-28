@@ -92,6 +92,13 @@ export interface Child {
   preferences: { id: string; ingredient: string; mode: string }[];
 }
 
+export interface ChildCreatePayload {
+  name: string;
+  birth_date: string | null;
+  allergies: { ingredient: string }[];
+  preferences: { ingredient: string; mode: string }[];
+}
+
 export interface NurseryMenu {
   id: string;
   date: string;
@@ -203,7 +210,7 @@ const realApi = {
   listChildren() {
     return request<Child[]>("/children");
   },
-  createChild(payload: Omit<Child, "id">) {
+  createChild(payload: ChildCreatePayload) {
     return request<Child>("/children", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -253,6 +260,12 @@ const realApi = {
       method: "POST",
       body: formData,
     }, UPLOAD_API_BASE);
+  },
+  updateMenu(menuId: string, payload: { date: string; menu_text: string }) {
+    return request<NurseryMenu>(`/menus/${menuId}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  deleteMenu(menuId: string) {
+    return request<void>(`/menus/${menuId}`, { method: "DELETE" });
   },
   listRecipes() {
     return request<Recipe[]>("/recipe-master");

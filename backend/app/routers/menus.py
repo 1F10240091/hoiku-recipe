@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.database import get_db
 from app.models import NurseryMenu, User
 from app.routers.auth import get_current_user
-from app.schemas import NurseryMenuCreate, NurseryMenuResponse
+from app.schemas import NurseryMenuCreate, NurseryMenuResponse, NurseryMenuUpdate
 from app.services import ocr_ai
 
 router = APIRouter(prefix="/menus", tags=["menus"])
@@ -123,4 +123,28 @@ def get_menu(menu_id: str, user: User = Depends(get_current_user), db: Session =
     if menu is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="献立が見つかりません")
     return menu
+
+
+@router.put("/{menu_id}", response_model=NurseryMenuResponse)
+def update_menu(
+    menu_id: str, payload: NurseryMenuUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> NurseryMenu:
+    menu = db.query(NurseryMenu).filter(NurseryMenu.id == menu_id, NurseryMenu.user_id == user.id).first()
+    if menu is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="献立が見つかりません")
+    menu.date = payload.date
+    menu.menu_text = payload.menu_text
+    menu.ingredients = {}
+    db.commit()
+    db.refresh(menu)
+    return menu
+
+
+@router.delete("/{menu_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_menu(menu_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> None:
+    menu = db.query(NurseryMenu).filter(NurseryMenu.id == menu_id, NurseryMenu.user_id == user.id).first()
+    if menu is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="献立が見つかりません")
+    db.delete(menu)
+    db.commit()
 

@@ -121,12 +121,14 @@ export const demoApi = {
     return delay(load<DemoChild[]>("demo_children", DEMO_CHILDREN));
   },
 
-  async createChild(payload: Omit<Child, "id">): Promise<Child> {
+  async createChild(payload: { name: string; birth_date: string | null; allergies: { ingredient: string }[]; preferences: { ingredient: string; mode: string }[] }): Promise<Child> {
     const list = load<DemoChild[]>("demo_children", DEMO_CHILDREN);
     const child: DemoChild = {
       ...payload,
       id: uid("c"),
       birth_date: payload.birth_date ?? null,
+      allergies: payload.allergies.map((allergy) => ({ id: uid("a"), ingredient: allergy.ingredient })),
+      preferences: payload.preferences.map((preference) => ({ id: uid("p"), ...preference })),
     };
     list.push(child);
     save("demo_children", list);
@@ -209,6 +211,21 @@ export const demoApi = {
 
   async listMenus(): Promise<NurseryMenu[]> {
     return delay(load<NurseryMenu[]>("demo_menus", DEMO_NURSERY_MENUS));
+  },
+
+  async updateMenu(id: string, payload: { date: string; menu_text: string }): Promise<NurseryMenu> {
+    const list = load<NurseryMenu[]>("demo_menus", DEMO_NURSERY_MENUS);
+    const index = list.findIndex((menu) => menu.id === id);
+    if (index < 0) throw new Error("献立が見つかりません");
+    list[index] = { ...list[index], ...payload, ingredients: {} };
+    localStorage.setItem("demo_menus", JSON.stringify(list));
+    return delay(list[index]);
+  },
+
+  async deleteMenu(id: string): Promise<void> {
+    const list = load<NurseryMenu[]>("demo_menus", DEMO_NURSERY_MENUS).filter((menu) => menu.id !== id);
+    localStorage.setItem("demo_menus", JSON.stringify(list));
+    return delay(undefined);
   },
 
   async uploadMenu(file: File): Promise<NurseryMenu> {

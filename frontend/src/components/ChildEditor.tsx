@@ -17,6 +17,16 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(child.name);
   const [birth, setBirth] = useState(child.birth_date?.slice(0, 7) ?? "");
+  const birthYear = birth.split("-")[0] ?? "";
+  const birthMonth = birth.split("-")[1] ?? "";
+  const setBirthPart = (part: "year" | "month", value: string) => {
+    const [year = "", month = ""] = birth.split("-");
+    const nextYear = part === "year" ? value : year;
+    const nextMonth = part === "month" ? value : month;
+    setBirth(nextYear || nextMonth ? `${nextYear}-${nextMonth}` : "");
+  };
+  const currentYear = new Date().getFullYear();
+  const firstYear = 2015;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const addAllergy = () => {
     if (!allergy.trim()) return;
@@ -47,11 +57,16 @@ export default function ChildEditor({ child, ingredients, onChanged, onDeleted }
       <button type="button" className="button button--secondary" disabled={Boolean(mutation.pending)} onClick={() => setConfirmDelete(false)}>キャンセル</button>
     </div>}
     {editing ? <form onSubmit={(event) => { event.preventDefault(); void mutation.run("お子様の情報を保存中", async () => {
-      onChanged(await api.updateChild(child.id, { name: name.trim(), birth_date: birth ? `${birth}-01` : null })); setEditing(false);
+      onChanged(await api.updateChild(child.id, { name: name.trim(), birth_date: birthYear && birthMonth ? `${birthYear}-${birthMonth}-01` : null })); setEditing(false);
     }); }}>
-      <fieldset className="recipe-post-fields" disabled={Boolean(mutation.pending)}>
+      <fieldset className="recipe-post-fields child-editor-fields" disabled={Boolean(mutation.pending)}>
         <label className="form-field"><span>名前</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} required /></label>
-        <label className="form-field"><span>生年月</span><input className="input" type="month" value={birth} onChange={(e) => setBirth(e.target.value)} /></label>
+        <div className="form-field"><span>生年月</span>
+          <div className="birth-month-selects birth-month-selects--visible">
+            <select className="select" aria-label={`${child.name}の生まれた年`} value={birthYear} onChange={(e) => setBirthPart("year", e.target.value)}><option value="">年を選択</option>{Array.from({length: currentYear - firstYear + 1}, (_, index) => firstYear + index).map((year) => <option key={year} value={year}>{year}年</option>)}</select>
+            <select className="select" aria-label={`${child.name}の生まれた月`} value={birthMonth} onChange={(e) => setBirthPart("month", e.target.value)}><option value="">月を選択</option>{Array.from({length: 12}, (_, index) => index + 1).map((month) => <option key={month} value={String(month).padStart(2, "0")}>{month}月</option>)}</select>
+          </div>
+        </div>
         <button className="button" disabled={!name.trim()}>変更を保存</button>
       </fieldset>
     </form> : <p className="card__text">生年月：{child.birth_date ? child.birth_date.slice(0,7).replace("-", "年") + "月" : "未設定"}</p>}

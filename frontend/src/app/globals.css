@@ -212,26 +212,54 @@ h3 {
 }
 
 .menu-upload-card {
-  border: 2px dashed #f3c7b0;
-  background: linear-gradient(135deg, #fffdf9 0%, #fff5eb 100%);
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #dedde6;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .menu-upload-card--dragging {
   border-color: var(--color-pink-deep);
-  background: var(--color-pink-wash);
-  transform: scale(1.01);
+  box-shadow: 0 0 0 3px var(--color-pink-wash);
 }
 
-.drop-hint {
-  margin: 14px 0 10px;
-  color: var(--color-muted);
-  font-size: 13px;
+.menu-drop-zone {
+  display: flex;
+  min-height: 258px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border-bottom: 1px solid #dedde6;
+  background: #f7f7fa;
+  cursor: pointer;
   text-align: center;
 }
 
-.upload-button {
-  min-width: 210px;
+.menu-drop-zone:focus-within { outline: 3px solid #426a95; outline-offset: -5px; }
+.menu-drop-zone svg {
+  width: min(100%, 368px);
+  height: 126px;
+  padding: 25px;
+  border: 2px dashed #c8c8d4;
+  border-radius: 12px;
+  color: #888a9b;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+.menu-drop-zone__title { color: var(--color-ink); font-size: 15px; font-weight: 700; }
+.menu-drop-zone__hint, .menu-drop-zone__formats { color: var(--color-muted); font-size: 13px; }
+.menu-upload-details { padding: 20px; }
+.menu-upload-details > .card__text { margin-top: 0; }
+
+@media (max-width: 640px) {
+  .menu-drop-zone { min-height: 230px; padding: 22px 16px; }
+  .menu-upload-details { padding: 16px; }
 }
 
 .privacy-note {
@@ -878,6 +906,21 @@ h3 {
   text-underline-offset: 4px;
 }
 
+.app-nav__profile {
+  display: inline-flex;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  border-radius: 50%;
+  color: #655951;
+}
+
+.app-nav__profile svg { width: 23px; height: 23px; }
+.app-nav__profile:hover, .app-nav__profile--active { color: var(--color-pink-deep); background: #fff0f1; }
+
 /* --- モバイル下部ナビゲーション（アイコン付き） --- */
 .app-bottom-nav {
   display: none;
@@ -934,6 +977,8 @@ h3 {
   .app-bottom-nav {
     display: grid;
   }
+
+  .app-nav__profile { display: none; }
 
   .main {
     padding-bottom: 78px;
@@ -1605,6 +1650,8 @@ h4 {
   gap: 5px;
 }
 
+.app-nav__profile { flex-basis: 38px; width: 38px; height: 38px; }
+
 .app-nav__link {
   padding: 9px 11px;
   border-radius: 9px;
@@ -1739,14 +1786,24 @@ h4 {
 
 @media (max-width: 792px) {
   .app-bottom-nav {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    overflow: hidden;
     padding: 7px 8px calc(5px + env(safe-area-inset-bottom));
   }
 
   .app-bottom-nav__link {
-    flex: 0 0 68px;
+    min-width: 0;
     min-height: 54px;
-    font-size: 10px;
+    padding-inline: 1px;
+    font-size: clamp(8px, 2.4vw, 10px);
+  }
+
+  .app-bottom-nav__link span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .app-bottom-nav__link--active::after {
@@ -1821,6 +1878,8 @@ h4 {
 
 .child-card-heading, .child-card-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .child-card-heading { justify-content: space-between; }
+.menu-entry__text { margin: 10px 0 0; font-family: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.menu-edit-form .form-field { margin-bottom: 14px; }
 .mutation-progress { position: sticky; top: 12px; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 14px; margin: 12px 0; background: #fff6da; color: #584217; border: 1px solid #e7cf8b; border-radius: 12px; }
 .mutation-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #dbc78e; border-top-color: #79601c; border-radius: 50%; animation: mutation-spin .8s linear infinite; }
 .mutation-success { color: #226045; }
@@ -1854,6 +1913,20 @@ h4 {
 .child-create-dialog::backdrop { background: #21170f80; }
 .child-create-dialog h2 { margin: 0; }
 .child-create-dialog .form-field { margin-bottom: 16px; }
+
+.birth-month-selects { display: none; }
+.birth-month-selects--visible { display: grid; }
+.child-editor-fields input[type="month"] { width: 100%; max-width: 100%; min-width: 0; }
+.child-editor-fields .form-field { min-width: 0; }
+
+@media (min-width: 793px) {
+  .birth-month-input { display: none !important; }
+  .birth-month-selects { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; }
+}
+
+@media (max-width: 640px) {
+  .child-editor-fields input[type="month"] { box-sizing: border-box; }
+}
 
 .custom-allergy-form { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
 .custom-allergy-form__add { min-height: 50px; white-space: nowrap; padding-inline: 20px; }
