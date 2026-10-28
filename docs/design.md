@@ -1,150 +1,78 @@
-# 詳細設計書
+# システム設計
 
-## 1. アーキテクチャ
+> 2026-10-28時点のコードに基づく。デプロイ実績や外部サービスの設定状況は別途確認する。
 
-```
-┌──────────────┐    HTTP    ┌──────────────┐          ┌──────────────┐
-│   Frontend   │ ─────────▶ │   Backend    │ ───────▶ │      AI      │
-│ (Next.js/TS) │ ◀───────── │  (FastAPI)   │ ◀─────── │ (Xiaomi MiMo)│
-└──────────────┘   REST     └──────┬───────┘   API    └──────────────┘
-                                   │
-                            ┌──────▼───────┐
-                            │  Database    │
-                            │(Supabase/PostgreSQL)│
-                            └──────────────┘
-```
+## 1. 構成
 
-- フロントエンドは Next.js + TypeScript。App Router によるページ構成。
-- バックエンドは FastAPI（Python）による REST API。
-- AI（Xiaomi MiMo）をバックエンドから呼び出し、献立を自動生成する。
-- データベースは開発時 SQLite、本番は Supabase（PostgreSQL）。
+| 層 | 実装 |
+|---|---|
+| フロントエンド | Next.js 16.4.3 / React 19.3.1 / TypeScript |
+| API | FastAPI / Python 3.12 / SQLAlchemy |
+| 開発DB | SQLite。開発時は起動時にテーブル作成と互換処理を行う |
+| 本番DB | PostgreSQL必須。Alembicのリリース処理でスキーマ更新 |
+| 献立表解析 | Gemini API。献立提案の新規レシピ生成には使わない |
+| レシピ画像 | 検証・縮小後、WebPをPostgreSQLの`recipe_photos`に保存 |
 
-## 2. API 設計
+Node.jsはルート`package.json`で20.19以上を要求する。Vercel設定・手順では22.xを推奨。APIはJWT認証を使い、ユーザー所有データとレシピの公開範囲を確認する。
 
-ベース URL: `/api/v1`
+## 2. 主な機能
 
-### 認証
+- アカウント登録・ログイン、プロフィール
+- 子どもの登録、生年月、29品目の標準アレルゲン候補と自由入力、好き嫌い設定
+- 保育園献立の手入力・ファイル解析・日付ごとの保存
+- 登録済みレシピからの夕食献立提案
+- レシピ検索・投稿・編集・公開設定・写真・お気に入り・「喜んでた」記録
+- 在庫管理と、提案レシピに基づく買い物リスト
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/v1/auth/register` | 新規ユーザー登録 |
-| POST | `/api/v1/auth/login` | ログイン（JWT 発行） |
-| GET | `/api/v1/auth/me` | ログインユーザー情報取得 |
+## 3. APIルート
 
-### お子様管理
+APIの接頭辞は`/api/v1`。詳細な形式はFastAPIの`/docs`を参照。
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/api/v1/children` | お子様一覧取得 |
-| POST | `/api/v1/children` | お子様登録 |
-| GET | `/api/v1/children/{id}` | お子様詳細取得 |
-| PUT | `/api/v1/children/{id}` | お子様情報更新 |
-| DELETE | `/api/v1/children/{id}` | お子様削除 |
+| グループ | 主なルート | 用途 |
+|---|---|---|
+| 認証 | `/auth/register`, `/auth/login`, `/auth/me` | 登録・ログイン・本人情報 |
+| 子ども | `/children` | 子ども、アレルギー、好き嫌い |
+| 園の献立 | `/menus`, `/menus/upload` | 献立の登録・一覧・Gemini解析 |
+| 提案献立 | `/recipes`, `/recipes/generate` | 提案の一覧・生成 |
+| レシピ | `/recipe-master` | 検索・投稿・更新・公開・お気に入り・写真 |
+| アレルゲン | `/recipe-master/allergens`, `/recipe-master/ingredients` | 共通候補、閲覧可能なレシピ食材 |
+| 評価 | `/likes` | 提案内レシピの「喜んでた」記録 |
+| 買い物 | `/shopping` | 買い物リスト・在庫 |
+| フィードバック | `/feedback` | 投稿。本番の全件取得は404 |
+| ヘルス | `/health` | DB接続を含む稼働確認 |
 
-### 献立表（OCR）
+## 4. 献立表解析
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/v1/menus/upload` | 献立表 PDF/画像をアップロードし OCR 実行 |
-| GET | `/api/v1/menus` | 取り込み済み献立一覧 |
-| GET | `/api/v1/menus/{id}` | 献立詳細 |
+`POST /api/v1/menus/upload` はPDF、PNG、JPEG、WebPを受け付け、ファイルは4MB以下、PDFは既定で最大5ページ。画像/PDFをPNG画像にしてGeminiへ送り、日付・食事区分・料理名を読み取る。`GEMINI_API_KEY`が空なら503。別OCRやテキスト抽出への自動フォールバックはない。
 
-### AI 献立提案
+同日付のデータは解析結果で上書きされる。解析結果に日付がない場合は現行コード上、今日の日付で保存されるため、読み取り後に日付と内容を確認する。
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/v1/recipes/generate` | 献立自動生成（保育園食・在庫・アレルギー・好みを考慮） |
-| GET | `/api/v1/recipes` | 提案済み献立一覧 |
-| GET | `/api/v1/recipes/{id}` | レシピ詳細 |
+## 5. 献立提案の選定ロジック
 
-### 買い物リスト
+AIで新しいレシピを考案せず、DB登録済みの公式・公開レシピと本人のレシピから選ぶ。
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/api/v1/shopping/list` | 買い物リスト取得 |
-| POST | `/api/v1/shopping/generate` | 不足食材リスト生成 |
-| PATCH | `/api/v1/shopping/{item_id}` | 買い物リスト項目更新 |
+1. 子どもの月齢でレシピ対象年齢を絞る。
+2. アレルギーと「除外」設定を、食材名・記録済みの原材料名に対して照合する。
+3. 園の献立に料理名が含まれる主菜候補を避ける。
+4. 前日や同じ提案期間内の主菜重複を避ける（ごはん・みそ汁などの基本料理は重複扱いから除く）。
+5. 在庫食材を使う候補を優先し、料理区分やジャンルを使って献立を組み合わせる。
 
-## 3. データベース設計
+「改善優先」は提案スコアに反映しない。昼食との重複回避は食材単位ではない。関連食材・表記ゆれは共有カタログで照合するが、未記録の加工品原材料や商品組成までは判定できず、安全を保証しない。
 
-### users（ユーザー）
+## 6. レシピ・アレルゲン
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| username | TEXT | ログインID（ユニーク、1〜30文字） |
-| hashed_password | TEXT | パスワードハッシュ |
-| display_name | TEXT | 表示名 |
-| created_at | TIMESTAMP | 作成日時 |
+`backend/app/services/seed_data.py`の公式カタログは100件で、77件に`source_url`が登録されている。これは参照情報の有無を示すもので、個々の掲載内容の使用許諾を意味しない。利用者の投稿は初期状態で非公開。
 
-### children（お子様）
+共通アレルゲン候補は消費者庁資料に基づく29品目。候補外の食材も登録できる。照合時は名称・別名・関連食材と、レシピ材料の任意`components`配列を使う。写真は静止JPEG/PNG/WebPを受け付け、検証後に最大1200px・512KB以下のWebPへ変換し、EXIF等を除いてDBに保存する。写真がない場合は料理イラストを表示する。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| user_id | UUID | 外部キー（users） |
-| name | TEXT | お子様名 |
-| birth_date | DATE | 生年月日 |
-| gender | TEXT | 性別 |
-| created_at | TIMESTAMP | 作成日時 |
+## 7. 買い物リスト
 
-### allergies（アレルギー）
+直近7件の提案献立に紐づくレシピ材料を集計する。同じ材料名・単位は数量を合算し、在庫名と部分一致する食材は除外する。単位違いや数値化できない分量の集計、在庫数量との差分計算には制約がある。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| child_id | UUID | 外部キー（children） |
-| ingredient | TEXT | アレルギー食材 |
+## 8. DB更新・運用
 
-### preferences（好き嫌い）
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| child_id | UUID | 外部キー（children） |
-| ingredient | TEXT | 対象食材 |
-| mode | TEXT | `exclude`（除外）/ `improve`（改善優先） |
-
-### nursery_menus（保育園献立）
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| user_id | UUID | 外部キー（users） |
-| date | DATE | 日付 |
-| menu_text | TEXT | OCR で取得した献立テキスト |
-| ingredients | JSON | 食材リスト |
-| created_at | TIMESTAMP | 作成日時 |
-
-### inventory_items（冷蔵庫の在庫）
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| user_id | UUID | 外部キー（users） |
-| name | TEXT | 食材名 |
-| quantity | TEXT | 数量 |
-| updated_at | TIMESTAMP | 更新日時 |
-
-### suggested_meals（提案献立）
-
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | UUID | 主キー |
-| user_id | UUID | 外部キー（users） |
-| date | DATE | 対象日 |
-| menu_text | TEXT | 提案内容 |
-| ingredients | JSON | 使用食材 |
-| created_at | TIMESTAMP | 作成日時 |
-
-## 4. AI 献立生成ロジック（設計）
-
-1. 指定日の保育園献立（nursery_menus）を取得
-2. 対象児のアレルギー（allergies）・好き嫌い（preferences）を取得
-3. 冷蔵庫の在庫（inventory_items）を取得
-4. 上記をプロンプトに組み込み、Xiaomi MiMo に夕食献立を生成させる
-5. 制約：
-   - 園の昼食と使用食材が重複しない
-   - アレルギー食材を除外する
-   - 「改善優先」食材は少量から段階的に取り入れる
-   - 在庫を優先的に活用し、不足食材のみ買い物リストに追加する
+- 本番DBはPostgreSQL。初期化・更新はバックエンドで`python -m app.release`を実行し、Alembicマイグレーション適用後にレシピシードを更新する。本番APIワーカーの起動時にテーブル作成・シード投入はしない。
+- 開発ではSQLiteを利用し、起動時に`create_all`と既存SQLite向けの互換列追加を行う。
+- 本番のレート制限はPostgreSQL共有カウンターを使い、IPはHMAC化して保存する。開発ではプロセス内メモリ方式。
+- `GET /api/v1/feedback`は本番で404、開発では未認証の全件取得が可能。公開環境では有効化しない。
+- デプロイ完了、実Geminiキー設定、実環境の動作は未確認。公開前チェックは[deployment.md](deployment.md)と[product-review.md](product-review.md)を参照。
