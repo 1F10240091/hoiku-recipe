@@ -18,7 +18,10 @@ export default function LoginPage() {
     try {
       const res = await api.login(username, password);
       localStorage.setItem("token", res.access_token);
-      router.push("/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      const destination = new URL(next?.startsWith("/") && !next.startsWith("//") ? `.${next}` : "/dashboard", window.location.origin);
+      const isInternal = !destination.pathname.startsWith("//") && !["/login", "/register"].includes(destination.pathname);
+      router.replace(isInternal ? destination.pathname + destination.search + destination.hash : "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "ログインに失敗しました");
     }

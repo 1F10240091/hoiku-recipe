@@ -165,7 +165,7 @@ export default function Home() {
             <aside className={styles.heroPaper} aria-label="提案イメージ">
               <p className={styles.heroPaperHead}>
                 <span className={styles.en}>TODAY&apos;S MENU</span>
-                10/7（火）の夜ごはん
+                提案例 — ある日の夜ごはん
               </p>
               <div className={styles.heroPaperBody}>
                 <div className={styles.lunch}>

@@ -24,8 +24,8 @@ test("all 29 options are available in initially collapsed groups with none selec
   const html = markup();
   assert.equal((html.match(/<button /g) || []).length, 29);
   assert.equal((html.match(/aria-pressed="false"/g) || []).length, 29);
-  assert.match(html, /表示義務の対象（9品目）/);
-  assert.match(html, /表示推奨の対象（20品目）/);
+  assert.match(html, /role="group" aria-label="9品目"/);
+  assert.match(html, /role="group" aria-label="20品目"/);
   assert.match(html, /ピスタチオ/);
   assert.equal((html.match(/<details /g) || []).length, 2);
   assert.equal((html.match(/<summary /g) || []).length, 2);

@@ -1,5 +1,6 @@
 """レシピ検索用の食材表記ゆれ・関連語・誤字補正。安全判定には使用しない。"""
 
+import re
 import unicodedata
 
 
@@ -9,10 +10,31 @@ def normalize(text: str) -> str:
 
 
 _ALIAS_GROUPS = (
-    ("じゃがいも", "じゃが芋", "ジャガイモ"),
-    ("きゃべつ", "キャベツ"),
-    ("にんじん", "人参", "ニンジン"),
-    ("とり", "鶏", "鳥", "鶏肉", "鳥肉", "とりにく"),
+    ("玉ねぎ", "玉葱", "たまねぎ", "オニオン", "onion", "onions"),
+    ("豚肉", "ぶたにく", "ポーク", "pork"),
+    ("牛肉", "ぎゅうにく", "ビーフ", "beef"),
+    ("鮭", "さけ", "しゃけ", "サーモン", "salmon"),
+    ("鯖", "さば", "mackerel"),
+    ("卵", "玉子", "たまご", "エッグ", "egg", "eggs"),
+    ("牛乳", "ぎゅうにゅう", "ミルク", "milk"),
+    ("小麦粉", "こむぎこ", "flour"),
+    ("豆腐", "とうふ", "tofu"),
+    ("ほうれん草", "ほうれんそう", "スピナッチ", "spinach"),
+    ("大根", "だいこん", "daikon"),
+    ("とまと", "tomato", "tomatoes"),
+    ("南瓜", "かぼちゃ", "パンプキン", "pumpkin"),
+    ("醤油", "しょうゆ", "ソイソース", "soy sauce"),
+    ("味噌", "みそ", "miso"),
+    ("唐揚げ", "からあげ", "唐揚", "から揚げ", "karaage", "fried chicken"),
+    ("肉じゃが", "にくじゃが", "nikujaga"),
+    ("カレー", "curry"),
+    ("オムライス", "omurice"),
+    ("ハンバーグ", "hamburg steak"),
+    ("照り焼き", "照焼き", "照焼", "てりやき", "teriyaki"),
+    ("じゃがいも", "じゃが芋", "馬鈴薯", "ポテト", "potato", "potatoes"),
+    ("きゃべつ", "キャベツ", "cabbage"),
+    ("にんじん", "人参", "キャロット", "carrot", "carrots"),
+    ("とり", "鶏", "鳥", "鶏肉", "鳥肉", "とりにく", "チキン", "chicken"),
     ("えび", "海老", "エビ", "シュリンプ", "shrimp"),
 )
 _ALIAS_LOOKUP = {
@@ -78,3 +100,17 @@ def suggestion_score(query: str, ingredient: str) -> int | None:
     if len(needle) >= 4 and _edit_distance_at_most_one(needle, name):
         return 3
     return None
+
+
+_ALIAS_PATTERN = re.compile("|".join(
+    re.escape(alias) for alias in sorted(_ALIAS_LOOKUP, key=len, reverse=True)
+))
+
+
+def _canonical(text: str) -> str:
+    return _ALIAS_PATTERN.sub(lambda match: _ALIAS_LOOKUP[match.group()][0], normalize(text))
+
+
+def keyword_matches(query: str, text: str) -> bool:
+    """Normalize aliases inside dish names as well as standalone search terms."""
+    return normalize(query) in normalize(text) or _canonical(query) in _canonical(text)

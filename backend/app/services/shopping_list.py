@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass, field
+import unicodedata
 
 
 @dataclass
@@ -53,10 +54,11 @@ def build_shopping_list(*, recipe_ids: list[str], recipes_by_id: dict[str, objec
             needed_by_name[key]["quantities"].append(quantity)
             source_by_name[name].append(recipe_name)
 
-    # 在庫にある食材を除外（表記ゆれ対応のため部分一致で判定）
+    # 文字幅と前後の空白だけを正規化し、別の食材を誤って除外しない。
+    inventory_names = {unicodedata.normalize("NFKC", inv).strip().casefold() for inv in inventory if inv}
+
     def in_inventory(name: str) -> bool:
-        lowered = name.lower()
-        return any(lowered in inv.lower() or inv.lower() in lowered for inv in inventory if inv)
+        return unicodedata.normalize("NFKC", name).strip().casefold() in inventory_names
 
     items: list[ShoppingItem] = []
     for (name, _unit), info in needed_by_name.items():

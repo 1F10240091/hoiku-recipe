@@ -13,7 +13,7 @@ from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
 from app.services.allergens import ALLERGEN_CATALOG
 from app.services.ingredients import list_recipe_ingredient_names
-from app.services.ingredient_search import match_score, suggestion_score
+from app.services.ingredient_search import match_score, suggestion_score, keyword_matches
 
 router = APIRouter(prefix="/recipe-master", tags=["recipe-master"])
 
@@ -83,17 +83,17 @@ def search_recipes(
 ) -> RecipeSearchResponse:
     query = db.query(Recipe).filter(_visible_to_user(user.id))
 
-    if keyword:
-        # Escape SQL LIKE wildcards so user input remains a literal substring.
-        escaped = keyword.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        like = f"%{escaped}%"
-        query = query.filter(Recipe.name.ilike(like, escape="\\") | Recipe.instructions.ilike(like, escape="\\"))
     if meal_type:
         query = query.filter(Recipe.meal_type == meal_type)
     if max_cook_time is not None:
         query = query.filter(Recipe.cook_time_minutes <= max_cook_time)
 
     recipes = query.all()
+    if keyword and keyword.strip():
+        recipes = [recipe for recipe in recipes if any(
+            keyword_matches(keyword, text)
+            for text in [recipe.name, recipe.instructions or "", *[ing.get("name", "") for ing in recipe.ingredients]]
+        )]
 
     # 材料は JSON の Unicode エスケープで保存されるため LIKE 不可。
     # デコードしてから Python 側で部分一致フィルタする。

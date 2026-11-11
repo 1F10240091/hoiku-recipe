@@ -62,7 +62,9 @@ async function request<T>(
           window.location.pathname.startsWith(p),
         );
         if (!onAuthPage) {
-          window.location.replace(new URL("/login", window.location.origin).href);
+          const loginUrl = new URL("/login", window.location.origin);
+          loginUrl.searchParams.set("next", window.location.pathname + window.location.search + window.location.hash);
+          window.location.replace(loginUrl.href);
         }
       }
     }
