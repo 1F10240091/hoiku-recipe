@@ -158,7 +158,7 @@ export interface RecipeSearchParams {
   meal_type?: string;
   ingredient?: string;
   max_cook_time?: number;
-  sort?: "name" | "liked";
+  sort?: "relevance" | "name" | "liked";
   page?: number;
   per_page?: number;
 }
@@ -272,6 +272,9 @@ const realApi = {
   },
   listRecipeIngredients(recipeOnly = false) {
     return request<string[]>(`/recipe-master/ingredients${recipeOnly ? "?recipe_only=true" : ""}`);
+  },
+  getIngredientSuggestions(query: string) {
+    return request<string[]>(`/recipe-master/suggestions?query=${encodeURIComponent(query)}`);
   },
   searchRecipes(params: RecipeSearchParams = {}) {
     const sp = new URLSearchParams();

@@ -39,7 +39,9 @@ function RecipeSearchInner() {
       sort:
         searchParams.get("sort") === "liked"
           ? ("liked" as const)
-          : ("name" as const),
+          : searchParams.get("sort") === "name"
+            ? ("name" as const)
+            : ("relevance" as const),
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       per_page: 12,
     };
@@ -63,10 +65,10 @@ function RecipeSearchInner() {
   }, [authReady, searchParams]);
 
   const mealType = searchParams.get("meal_type") ?? "";
-  const sort = searchParams.get("sort") === "liked" ? "liked" : "name";
-  const sortHref = (value: "name" | "liked") => {
+  const sort = searchParams.get("sort") === "liked" ? "liked" : searchParams.get("sort") === "name" ? "name" : "relevance";
+  const sortHref = (value: "relevance" | "name" | "liked") => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "name") params.delete("sort");
+    if (value === "relevance") params.delete("sort");
     else params.set("sort", value);
     params.delete("page");
     const qs = params.toString();
@@ -157,6 +159,13 @@ function RecipeSearchInner() {
               }}
               aria-label="並び順"
             >
+              <Link
+                href={sortHref("relevance")}
+                className={`button button--sm${sort === "relevance" ? "" : " button--secondary"}`}
+                aria-current={sort === "relevance" ? "true" : undefined}
+              >
+                関連度順
+              </Link>
               <Link
                 href={sortHref("name")}
                 className={`button button--sm${sort === "name" ? "" : " button--secondary"}`}

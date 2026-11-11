@@ -1,4 +1,5 @@
 import type { Recipe } from "@/lib/api";
+import { cuisineLabel } from "@/lib/cuisine-label";
 
 const INGREDIENT_COLORS: Array<[RegExp, string]> = [
   [/にんじん|人参|トマト|かぼちゃ|パプリカ|鮭|えび|りんご|みかん/, "#e88a50"],
@@ -68,7 +69,7 @@ export default function RecipeIllustration({ recipe }: { recipe: Pick<Recipe, "n
       {food}
       <path d="M300 43c10-10 26-7 29 4-13 2-20 5-29 12-3-6-3-11 0-16Z" fill="#789b6c" opacity=".9" />
       <path d="M319 47c-7 4-13 9-19 16" fill="none" stroke="#fff" strokeWidth="2" opacity=".7" />
-      <text x="200" y="202" textAnchor="middle" fill="#765f50" fontSize="12" fontWeight="700" letterSpacing="2" opacity=".8">{recipe.cuisine ?? "和"}のおうちごはん</text>
+      <text x="200" y="202" textAnchor="middle" fill="#765f50" fontSize="12" fontWeight="700" letterSpacing="2" opacity=".8">{cuisineLabel(recipe.cuisine)}のおうちごはん</text>
     </svg>
   );
 }

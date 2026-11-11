@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Recipe } from "@/lib/api";
 import { api } from "@/lib/api";
 import RecipePhoto from "@/components/RecipePhoto";
+import { cuisineLabel } from "@/lib/cuisine-label";
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
   main: "主菜",
@@ -55,7 +56,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
       </div>
       <h3>{recipe.name}</h3>
       {favoriteError && <p className="recipe-card__error" role="status">{favoriteError}</p>}
-      {recipe.cuisine && <p className="recipe-card__cuisine">{recipe.cuisine}料理</p>}
+      {recipe.cuisine && <p className="recipe-card__cuisine">{cuisineLabel(recipe.cuisine)}</p>}
       {ingredientNames && (
         <ul className="recipe-card__ingredients">
           <li>{ingredientNames}</li>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
   main: "主菜",
@@ -27,6 +28,23 @@ export default function SearchBar({ initial = {} }: SearchBarProps) {
   const [maxCookTime, setMaxCookTime] = useState(
     initial.max_cook_time ? String(initial.max_cook_time) : "",
   );
+  const [ingredientSuggestions, setIngredientSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    const query = ingredient.trim();
+    if (!query) {
+      setIngredientSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      api.getIngredientSuggestions(query)
+        .then((suggestions) => { if (!cancelled) setIngredientSuggestions(suggestions); })
+        .catch(() => { if (!cancelled) setIngredientSuggestions([]); });
+    }, 180);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [ingredient]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,15 +95,29 @@ export default function SearchBar({ initial = {} }: SearchBarProps) {
           ))}
         </select>
       </div>
-      <div className="search-form__field">
+      <div className="search-form__field search-form__field--ingredient">
         <label htmlFor="search-ingredient">材料</label>
-        <input
-          id="search-ingredient"
-          type="text"
-          value={ingredient}
-          onChange={(e) => setIngredient(e.target.value)}
-          placeholder="例: にんじん, 豚肉"
-        />
+        <div className="ingredient-search-control">
+          <input
+            id="search-ingredient"
+            type="text"
+            value={ingredient}
+            onChange={(e) => setIngredient(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
+            aria-autocomplete="list"
+            aria-expanded={showSuggestions && ingredientSuggestions.length > 0}
+            aria-controls="ingredient-search-suggestions"
+            placeholder="例: にんじん, 豚肉"
+          />
+          {showSuggestions && ingredientSuggestions.length > 0 && <ul className="ingredient-search-suggestions" id="ingredient-search-suggestions" role="listbox" aria-label="材料の検索候補">
+            {ingredientSuggestions.map((suggestion) => <li key={suggestion} role="option" aria-selected="false">
+              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setIngredient(suggestion); setShowSuggestions(false); }}>
+                {suggestion}{normalizeSuggestion(suggestion) !== normalizeSuggestion(ingredient) && <span>（候補）</span>}
+              </button>
+            </li>)}
+          </ul>}
+        </div>
       </div>
       <div className="search-form__field">
         <label htmlFor="search-max-time">調理時間（分以内）</label>
@@ -113,4 +145,8 @@ export default function SearchBar({ initial = {} }: SearchBarProps) {
       </div>
     </form>
   );
+}
+
+function normalizeSuggestion(value: string) {
+  return value.normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0x60));
 }

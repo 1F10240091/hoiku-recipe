@@ -299,16 +299,54 @@ export const demoApi = {
     return delay([...names].sort());
   },
 
+  async getIngredientSuggestions(query: string): Promise<string[]> {
+    const normalize = (value: string) => value.normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0x60));
+    const needle = normalize(query.trim());
+    const aliasGroups = [
+      ["じゃがいも", "じゃが芋", "ジャガイモ"],
+      ["きゃべつ", "キャベツ"],
+      ["にんじん", "人参", "ニンジン"],
+      ["とり", "鶏", "鳥", "鶏肉", "鳥肉", "とりにく"],
+      ["えび", "海老", "エビ", "シュリンプ", "shrimp"],
+    ];
+    const allNames = await this.listRecipeIngredients();
+    const editDistanceAtMostOne = (a: string, b: string) => {
+      if (Math.abs(a.length - b.length) > 1) return false;
+      let i = 0, j = 0, differences = 0;
+      while (i < a.length && j < b.length) {
+        if (a[i] === b[j]) { i++; j++; continue; }
+        if (++differences > 1) return false;
+        if (a.length > b.length) i++;
+        else if (b.length > a.length) j++;
+        else { i++; j++; }
+      }
+      return differences + Number(i < a.length || j < b.length) <= 1;
+    };
+    const scores = allNames.flatMap((name) => {
+      const candidate = normalize(name);
+      const group = aliasGroups.find((aliases) => aliases.some((alias) => normalize(alias) === needle));
+      const terms = group ? group.map(normalize) : [needle];
+      let score: number | undefined;
+      if (terms.some((term) => term === candidate)) score = 0;
+      else if (needle === normalize("トマト") && ["みにとまと", "ぷちとまと"].includes(candidate)) score = 2;
+      else if (terms.some((term) => candidate.includes(term) || term.includes(candidate))) score = 1;
+      else if (needle.length >= 4 && editDistanceAtMostOne(needle, candidate)) score = 3;
+      return score === undefined ? [] : [{name, score}];
+    });
+    return delay(scores.sort((a, b) => a.score - b.score || a.name.localeCompare(b.name)).slice(0, 10).map(({name}) => name));
+  },
+
   async searchRecipes(params: {
     keyword?: string;
     meal_type?: string;
     ingredient?: string;
     max_cook_time?: number;
-    sort?: "name" | "liked";
+    sort?: "relevance" | "name" | "liked";
     page?: number;
     per_page?: number;
   }): Promise<RecipeSearchResponse> {
     let list: Recipe[] = withLikedCounts(allRecipes());
+    const relevance = new Map<string, number>();
     if (params.keyword) {
       const kw = params.keyword.toLowerCase();
       list = list.filter(
@@ -321,10 +359,17 @@ export const demoApi = {
       list = list.filter((r) => r.meal_type === params.meal_type);
     }
     if (params.ingredient) {
-      const ing = params.ingredient.toLowerCase();
-      list = list.filter((r) =>
-        r.ingredients.some((i) => i.name.toLowerCase().includes(ing)),
-      );
+      const normalize = (value: string) => value.normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0x60));
+      const suggestions = await this.getIngredientSuggestions(params.ingredient);
+      const ranked = list.flatMap((recipe) => {
+        const score = Math.min(...recipe.ingredients.map((item) => {
+          const name = normalize(item.name);
+          const matchIndex = suggestions.findIndex((suggestion) => name.includes(normalize(suggestion)) || normalize(suggestion).includes(name));
+          return matchIndex < 0 ? Number.POSITIVE_INFINITY : matchIndex;
+        }));
+        return Number.isFinite(score) ? [{recipe, score}] : [];
+      });
+      list = ranked.map(({recipe, score}) => { relevance.set(recipe.id, score); return recipe; });
     }
     if (params.max_cook_time) {
       list = list.filter(
@@ -339,8 +384,10 @@ export const demoApi = {
           (b.liked_count ?? 0) - (a.liked_count ?? 0) ||
           a.name.localeCompare(b.name, "ja"),
       );
-    } else {
+    } else if (params.sort === "name" || !params.ingredient) {
       list = [...list].sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    } else {
+      list = [...list].sort((a, b) => (relevance.get(a.id) ?? 99) - (relevance.get(b.id) ?? 99) || a.name.localeCompare(b.name, "ja"));
     }
     const per_page = params.per_page ?? 20;
     const page = params.page ?? 1;

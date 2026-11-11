@@ -13,6 +13,7 @@ from app.routers.auth import get_current_user
 from app.schemas import RecipeCreate, RecipeResponse, RecipeSearchResponse, RecipeUpdate
 from app.services.allergens import ALLERGEN_CATALOG
 from app.services.ingredients import list_recipe_ingredient_names
+from app.services.ingredient_search import match_score, suggestion_score
 
 router = APIRouter(prefix="/recipe-master", tags=["recipe-master"])
 
@@ -40,6 +41,22 @@ def _visible_to_user(user_id: str):
     return Recipe.is_official.is_(True) | Recipe.is_public.is_(True) | (Recipe.owner_id == user_id)
 
 
+@router.get("/suggestions", response_model=list[str])
+def ingredient_suggestions(
+    query: str = Query(min_length=1, max_length=100),
+    user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[str]:
+    """入力中の食材候補。あいまい補正は検索支援に限り、安全判定には使わない。"""
+    names = list_recipe_ingredient_names(db, user.id, include_standard=False)
+    ranked = [
+        (score, name.casefold(), name)
+        for name in names
+        if (score := suggestion_score(query, name)) is not None
+    ]
+    return [name for _, _, name in sorted(ranked)[:10]]
+
+
 @router.get("", response_model=list[RecipeResponse])
 def list_recipes(
     meal_type: str | None = None, user=Depends(get_current_user), db: Session = Depends(get_db)
@@ -58,7 +75,7 @@ def search_recipes(
     meal_type: str | None = Query(default=None, description="main | side | soup | staple"),
     ingredient: str | None = Query(default=None, description="材料名の部分一致検索"),
     max_cook_time: int | None = Query(default=None, ge=1, description="最大調理時間（分）"),
-    sort: str = Query(default="name", pattern="^(name|liked)$", description="name | liked（喜ばれた順）"),
+    sort: str = Query(default="relevance", pattern="^(relevance|name|liked)$", description="relevance | name | liked"),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
     user=Depends(get_current_user),
@@ -80,18 +97,26 @@ def search_recipes(
 
     # 材料は JSON の Unicode エスケープで保存されるため LIKE 不可。
     # デコードしてから Python 側で部分一致フィルタする。
+    relevance: dict[str, int] = {}
     if ingredient:
-        needle = ingredient.strip().casefold()
-        recipes = [
-            r
-            for r in recipes
-            if any(needle in ing.get("name", "").casefold() for ing in r.ingredients)
-        ]
+        scored = []
+        for recipe in recipes:
+            scores = [
+                score
+                for ing in recipe.ingredients
+                if (score := match_score(ingredient, ing.get("name", ""))) is not None
+            ]
+            if scores:
+                relevance[recipe.id] = min(scores)
+                scored.append(recipe)
+        recipes = scored
 
     counts = _like_counts(db, user.id)
     favorites = _favorites(db, user.id)
     if sort == "liked":
         recipes.sort(key=lambda r: (-counts.get(r.id, 0), r.name))
+    elif sort == "relevance" and ingredient:
+        recipes.sort(key=lambda r: (relevance.get(r.id, 99), r.name))
     else:
         recipes.sort(key=lambda r: r.name)
 
