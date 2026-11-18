@@ -133,6 +133,7 @@ class NurseryMenuCreate(BaseModel):
 class NurseryMenuUpdate(BaseModel):
     date: date
     menu_text: str
+    foods: list[str] | None = None
 
 
 class NurseryMenuResponse(ORMModel):

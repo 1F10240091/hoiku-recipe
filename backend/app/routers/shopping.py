@@ -30,6 +30,7 @@ class InventoryItemOut(BaseModel):
 
 class ShoppingListResponse(BaseModel):
     items: list[ShoppingItemOut]
+    inventory_checks: list[ShoppingItemOut] = Field(default_factory=list)
     generated_at: datetime
 
 
@@ -60,8 +61,11 @@ def get_shopping_list(user: User = Depends(get_current_user), db: Session = Depe
     inventory = [item.name for item in db.query(InventoryItem).filter(InventoryItem.user_id == user.id).all()]
 
     items = build_shopping_list(recipe_ids=recipe_ids, recipes_by_id=recipes_by_id, inventory=inventory)
+    all_needed = build_shopping_list(recipe_ids=recipe_ids, recipes_by_id=recipes_by_id, inventory=[])
+    missing_names = {i.name for i in items}
     return ShoppingListResponse(
         items=[ShoppingItemOut(name=i.name, quantity=i.quantity, unit=i.unit, needed=i.needed, source_recipes=i.source_recipes) for i in items],
+        inventory_checks=[ShoppingItemOut(name=i.name, quantity=i.quantity, unit=i.unit, needed=i.needed, source_recipes=i.source_recipes) for i in all_needed if i.name not in missing_names],
         generated_at=datetime.now(timezone.utc),
     )
 

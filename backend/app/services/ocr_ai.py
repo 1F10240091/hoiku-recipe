@@ -41,6 +41,7 @@ class AIMenuEntry:
     date: str | None
     meal_type: str | None
     dishes: list[str] = field(default_factory=list)
+    ingredients: list[str] = field(default_factory=list)
 
 
 _PROMPT = """あなたは保育園の献立表を読み取るアシスタントです。
@@ -51,6 +52,7 @@ _PROMPT = """あなたは保育園の献立表を読み取るアシスタント�
 - 表題にある年・月を使い、各日を YYYY-MM-DD で返す。日付欄に「4・18」のように複数日が並ぶ場合は、同じ献立をそれぞれの日付に分ける。
 - 日付・曜日・朝おやつ/給食/昼食/夕食/午後おやつなどの区分を読み取る。1日に複数区分がある場合は、区分名を「朝おやつ・給食・3時おやつ」のように1つにまとめ、日ごとに1件だけ返す。
 - 料理名は献立表の表記のまま、1品ずつに分ける。
+- 材料欄がある場合だけ、記載された食材名を ingredients に抜き出す。料理名から推測せず、材料欄がない場合は空配列にする。
 - 箇条書きの記号や栄養値・アレルギー表記は料理名に含めない。
 - イラスト、写真、園のロゴ、季節のコラムは無視し、献立の表を優先する。
 - 読み取れない項目は推測せず null にする。
@@ -133,6 +135,7 @@ def parse_menus_json(text: str) -> list[AIMenuEntry]:
                 date=menu_date,
                 meal_type=_clean_text(item.get("meal_type")),
                 dishes=dishes,
+                ingredients=_normalize_dishes(item.get("ingredients")),
             )
         )
     return entries
@@ -214,6 +217,7 @@ def _request_gemini(api_key: str, prompt: str, images: list[bytes]) -> str:
                                 "date": {"type": "STRING", "description": "YYYY-MM-DD; unknown dates are empty strings"},
                                 "meal_type": {"type": "STRING"},
                                 "dishes": {"type": "ARRAY", "items": {"type": "STRING"}},
+                                "ingredients": {"type": "ARRAY", "items": {"type": "STRING"}},
                             },
                             "required": ["date", "meal_type", "dishes"],
                         },

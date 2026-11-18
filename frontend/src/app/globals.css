@@ -2003,3 +2003,9 @@ h4 {
 .ingredient-autocomplete__footer { position: sticky; bottom: -6px; background: #fffdfa; }
 
 .ingredient-browser__related { font-size: 11px; line-height: 1.6; color: #8a6344; }
+
+.menu-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 16px; }
+.menu-calendar__day { min-height: 90px; padding: 8px; border: 1px solid #d8dfd6; border-radius: 8px; background: #fff; color: #26382b; text-align: left; cursor: pointer; min-width: 0; }
+.menu-calendar__day[aria-pressed="true"] { outline: 3px solid #527d52; background: #edf5e9; }
+.menu-calendar__day span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .menu-calendar__day { min-height: 70px; padding: 4px; } .menu-calendar__day span { font-size: 10px; -webkit-line-clamp: 2; } }

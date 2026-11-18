@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMutation } from "@/lib/useMutation";
 import MutationStatus from "@/components/MutationStatus";
+import AllergyScope from "@/components/AllergyScope";
 import AppNav from "@/components/AppNav";
 import LikeButton from "@/components/LikeButton";
 import {
@@ -153,7 +154,7 @@ export default function MealPlanPage() {
                 <ul className="list">
                   {inventory.map((item) => (
                     <li key={item.id ?? item.name} className="list__item" style={{ justifyContent: "space-between" }}>
-                      <span>{item.name}</span>
+                      <span>{item.name}：{item.quantity || "数量未登録"}</span>
                       <button
                         disabled={Boolean(inventoryMutation.pending)}
                         onClick={() => handleDeleteInventory(item.id!)}
@@ -174,7 +175,8 @@ export default function MealPlanPage() {
           <div className="card"><p>献立を提案するため、お子さんの情報を登録してください。</p>
             <Link href="/dashboard" className="button">お子さんを登録する</Link></div>
         )}
-        {/* 献立生成フォーム */}
+        <AllergyScope />
+{/* 献立生成フォーム */}
         <div className="card" style={{ marginBottom: 16 }}>
           <label className="form-field">
             <span className="form-field__label">お子様</span>

@@ -23,6 +23,30 @@ export default function MyRecipesPage() {
   const imageInput = useRef<HTMLInputElement>(null);
   const imageVersion = useRef(0);
   const [saveError, setSaveError] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const resetForm = () => {
+    setEditingId(null);
+    setName(""); setIngredients(""); setInstructions("");
+    setMealType("main"); setCuisine("和"); setTime("20");
+    setSaveError("");
+    removeImage();
+  };
+
+  const startEdit = (recipe: Recipe) => {
+    if (saving) return;
+    setEditingId(recipe.id);
+    setName(recipe.name);
+    setMealType(recipe.meal_type);
+    setCuisine(recipe.cuisine || "和");
+    setTime(String(recipe.cook_time_minutes || ""));
+    setIngredients(recipe.ingredients.map((item) => [item.name, item.quantity || "", item.unit || "", (item.components || []).join("|")].join(",")).join("\n"));
+    setInstructions(recipe.instructions || "");
+    setMessage(""); setSaveError("");
+    removeImage();
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const selectImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const version = ++imageVersion.current;
@@ -65,20 +89,22 @@ export default function MyRecipesPage() {
     setSaveError("");
     setMessage("");
     try {
-      await api.createRecipe({
-        image_data: imageData,
+      const payload = {
         name: name.trim(), meal_type: mealType, cuisine,
-        age_min_months: 12, age_max_months: 72,
         cook_time_minutes: Number(time) || undefined,
         ingredients: ingredients.split("\n").map((line) => {
           const parts = line.split(",");
           return { name: (parts[0] || "").trim(), quantity: (parts[1] || "").trim(), unit: (parts[2] || "").trim(), components: (parts[3] || "").split("|").map((item) => item.trim()).filter(Boolean) };
         }).filter((item) => item.name),
-        instructions: instructions.trim(), is_public: false,
-      });
-      setMessage("マイレシピに保存しました。");
-      setName(""); setIngredients(""); setInstructions("");
-      removeImage();
+        instructions: instructions.trim(),
+      };
+      if (editingId) {
+        await api.updateRecipe(editingId, payload);
+      } else {
+        await api.createRecipe({ ...payload, image_data: imageData, age_min_months: 12, age_max_months: 72, is_public: false });
+      }
+      setMessage(editingId ? "レシピを更新しました。" : "マイレシピに保存しました。");
+      resetForm();
       await reload();
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "保存に失敗しました");
@@ -100,6 +126,7 @@ export default function MyRecipesPage() {
     setActionError("");
     try {
       await api.deleteRecipe(recipe.id);
+      if (editingId === recipe.id) resetForm();
       setMine((items) => items.filter((item) => item.id !== recipe.id));
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "レシピを削除できませんでした。");
@@ -109,9 +136,10 @@ export default function MyRecipesPage() {
   if (!ready) return null;
   return <main className="main"><AppNav /><div className="container" style={{ paddingBottom: 80 }}>
     <div className="page-header"><p className="page-header__en">MY RECIPES</p><h1 className="page-header__title">マイレシピを追加</h1><p className="page-header__subtitle">家庭の料理を登録すると、献立提案の候補に加えられます。</p></div>
-    <form className="card" onSubmit={submit}>
+    <form ref={formRef} className="card" onSubmit={submit}>
+      {editingId && <h2>レシピを編集</h2>}
       <fieldset disabled={saving} className="recipe-post-fields">
-      <div className="form-field">
+      {!editingId && <div className="form-field">
         <label htmlFor="recipe-photo" className="form-field__label">料理の写真（任意・1枚）</label>
         <p id="recipe-photo-hint" className="note">JPEG・PNG・WebP／4MB以下。写真はレシピと同じ公開範囲で保存されます。</p>
         <input id="recipe-photo" ref={imageInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={selectImage} aria-describedby="recipe-photo-hint" />
@@ -122,20 +150,21 @@ export default function MyRecipesPage() {
           <img className="recipe-photo" src={imageData} alt="投稿する料理の写真プレビュー" />
         </div>}
         {(imageData || imageError) && <button type="button" className="button button--secondary button--sm" onClick={removeImage}>写真を外す</button>}
-      </div>
+      </div>}
       <label className="form-field"><span className="form-field__label">料理名</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></label>
       <div className="form-grid"><label className="form-field"><span className="form-field__label">分類</span><select className="select" value={mealType} onChange={(e) => setMealType(e.target.value)}><option value="main">主菜</option><option value="side">副菜</option><option value="soup">汁物</option><option value="staple">主食</option></select></label><label className="form-field"><span className="form-field__label">料理ジャンル</span><select className="select" value={cuisine} onChange={(e) => setCuisine(e.target.value)}><option value="和">和食</option><option value="洋">洋食</option><option value="中">中華</option></select></label><label className="form-field"><span className="form-field__label">所要時間（分）</span><input className="input" type="number" min="1" value={time} onChange={(e) => setTime(e.target.value)} /></label></div>
       <label className="form-field"><span className="form-field__label">材料（材料名,分量,単位,原材料 ※任意）</span><textarea className="textarea" rows={6} value={ingredients} onChange={(e) => setIngredients(e.target.value)} placeholder={"鶏もも肉,200,g\n調味ソース,10,g,小麦|大豆"} required /></label>
       <p className="note">加工品の原材料は商品の表示を確認し、複数ある場合は「|」で区切って記録できます。未入力の原材料は判定できません。</p>
       <label className="form-field"><span className="form-field__label">調理方法</span><textarea className="textarea" rows={7} value={instructions} onChange={(e) => setInstructions(e.target.value)} required /></label>
       {saveError && <div className="alert alert--error" role="alert">{saveError}</div>}
-      {message && <div className="alert alert--success" role="status">{message}</div>}<button className="button" disabled={saving || preparingImage || Boolean(imageError)}>{saving ? "保存中..." : "マイレシピに保存"}</button>
+      {message && <div className="alert alert--success" role="status">{message}</div>}<button className="button" disabled={saving || preparingImage || Boolean(imageError)}>{saving ? "保存中..." : editingId ? "変更を保存" : "マイレシピに保存"}</button>
+      {editingId && <button type="button" className="button button--secondary" onClick={() => { resetForm(); setMessage(""); }}>編集をキャンセル</button>}
       </fieldset>
     </form>
     <section className="recipe-library-section">
       <h2 className="home-section-title">自分が投稿したレシピ（{mine.length}）</h2>
       {actionError && <div className="alert alert--error" role="alert">{actionError}</div>}
-      {mine.length === 0 ? <div className="card"><p>まだ登録したレシピはありません。</p></div> : <div className="recipe-grid">{mine.map((recipe) => <div key={recipe.id}><RecipeCard recipe={recipe} /><div className="recipe-owner-actions"><button className="button button--secondary button--sm" onClick={() => togglePublic(recipe)}>{recipe.is_public ? "公開中・非公開にする" : "非公開・公開する"}</button><button className="button button--danger button--sm" onClick={() => removeRecipe(recipe)}>削除</button></div></div>)}</div>}
+      {mine.length === 0 ? <div className="card"><p>まだ登録したレシピはありません。</p></div> : <div className="recipe-grid">{mine.map((recipe) => <div key={recipe.id}><RecipeCard recipe={recipe} /><div className="recipe-owner-actions"><button type="button" className="button button--secondary button--sm" disabled={saving} onClick={() => startEdit(recipe)}>編集</button><button className="button button--secondary button--sm" disabled={saving} onClick={() => togglePublic(recipe)}>{recipe.is_public ? "公開中・非公開にする" : "非公開・公開する"}</button><button className="button button--danger button--sm" disabled={saving} onClick={() => removeRecipe(recipe)}>削除</button></div></div>)}</div>}
     </section>
     <section className="recipe-library-section">
       <h2 className="home-section-title">お気に入り（{favorites.length}）</h2>

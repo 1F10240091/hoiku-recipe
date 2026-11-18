@@ -212,6 +212,15 @@ export const demoApi = {
   async listMenus(): Promise<NurseryMenu[]> {
     return delay(load<NurseryMenu[]>("demo_menus", DEMO_NURSERY_MENUS));
   },
+  async previewMenus(_file: File) {
+    return delay([{ date: new Date().toISOString().slice(0, 10), meal_type: "昼食（サンプル）", dishes: ["ごはん", "鶏の唐揚げ", "みそ汁"], ingredients: ["鶏肉", "米", "みそ"] }]);
+  },
+  async confirmMenus(entries: import("./api").MenuDraft[]) {
+    const list = load<NurseryMenu[]>("demo_menus", DEMO_NURSERY_MENUS);
+    const saved = entries.map(entry => ({ id: uid("m"), date: entry.date, menu_text: entry.meal_type + "\n" + entry.dishes.join("・"), ingredients: { foods: entry.ingredients, dishes: entry.dishes } }));
+    save("demo_menus", [...list.filter(m => !entries.some(e => e.date === m.date)), ...saved]);
+    return delay(saved);
+  },
 
   async updateMenu(id: string, payload: { date: string; menu_text: string }): Promise<NurseryMenu> {
     const list = load<NurseryMenu[]>("demo_menus", DEMO_NURSERY_MENUS);

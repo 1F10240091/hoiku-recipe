@@ -15,6 +15,8 @@ export default function ShoppingPage() {
   const [inventory, setInventory] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [newItem, setNewItem] = useState("");
+  const [newQuantity, setNewQuantity] = useState("");
+  const [checks, setChecks] = useState<ShoppingItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = () => {
@@ -22,6 +24,7 @@ export default function ShoppingPage() {
     Promise.all([api.getShoppingList(), api.listInventory()])
       .then(([list, inv]) => {
         setItems(list.items);
+        setChecks(list.inventory_checks || []);
         setInventory(inv);
       })
       .catch((err) =>
@@ -38,9 +41,10 @@ export default function ShoppingPage() {
     const name = newItem.trim();
     if (!name) return;
     await mutation.run("在庫を追加中", async () => {
-      const added = await api.addInventory(name);
+      const added = await api.addInventory(name, newQuantity.trim() || undefined);
+      setNewQuantity("");
       setInventory((items) => [...items, added]); setNewItem("");
-      try { setItems((await api.getShoppingList()).items); }
+      try { const list = await api.getShoppingList(); setItems(list.items); setChecks(list.inventory_checks || []); }
       catch { setError("在庫は追加しましたが、買い物リストを更新できませんでした。再読み込みしてください。"); }
     }, "在庫を追加しました。");
   };
@@ -48,7 +52,7 @@ export default function ShoppingPage() {
     await mutation.run("在庫を削除中", async () => {
       await api.deleteInventory(id);
       setInventory((items) => items.filter((item) => item.id !== id));
-      try { setItems((await api.getShoppingList()).items); }
+      try { const list = await api.getShoppingList(); setItems(list.items); setChecks(list.inventory_checks || []); }
       catch { setError("在庫は削除しましたが、買い物リストを更新できませんでした。再読み込みしてください。"); }
     }, "在庫を削除しました。");
   };
@@ -101,6 +105,12 @@ export default function ShoppingPage() {
           </div>
         )}
 
+        <section className="card">
+          <h2>在庫量の確認</h2>
+          <p>在庫がある食材も必要量に足りるか確認してください。数量の自動差し引きは行っていません。不足分は買い足してください。</p>
+          {checks.map(item => <p key={item.name}>{item.name}：必要量 {item.needed || "不明"} ／ 在庫 {inventory.filter(inv => inv.name.normalize("NFKC").trim().toLowerCase() === item.name.normalize("NFKC").trim().toLowerCase()).map(inv => inv.quantity || "数量未登録").join("、")}</p>)}
+          {!checks.length && <p>在庫と一致する必要食材はありません。</p>}
+        </section>
         <h2 style={{ marginTop: 40 }}>冷蔵庫の在庫</h2>
         <div className="card">
           <div className="input-row" style={{ marginBottom: 8 }}>
@@ -111,6 +121,7 @@ export default function ShoppingPage() {
               placeholder="食材名（例: 玉ねぎ）"
               className="input"
             />
+            <input className="input" aria-label="在庫量" placeholder="在庫量（例：2個、200g）" value={newQuantity} onChange={e => setNewQuantity(e.target.value)} maxLength={50} />
             <button
               className="button"
               onClick={handleAdd}
@@ -125,7 +136,7 @@ export default function ShoppingPage() {
             <ul className="list">
               {inventory.map((item) => (
                 <li key={item.id ?? item.name} className="list__item">
-                  <span>{item.name}</span>
+                  <span>{item.name}：{item.quantity || "数量未登録"}</span>
                   <button
                     disabled={Boolean(mutation.pending)}
                     onClick={() => handleDelete(item.id!)}

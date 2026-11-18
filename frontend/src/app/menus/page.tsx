@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppNav from "@/components/AppNav";
-import { api, type NurseryMenu } from "@/lib/api";
+import { api, type NurseryMenu, type MenuDraft } from "@/lib/api";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function MenusPage() {
@@ -17,7 +17,23 @@ export default function MenusPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDate, setEditDate] = useState("");
   const [editText, setEditText] = useState("");
+  const [editFoods, setEditFoods] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<MenuDraft[]>([]);
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState("");
+  const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
+  const changeDraft = (index: number, patch: Partial<MenuDraft>) => setDrafts(current => current.map((item, i) => i === index ? { ...item, ...patch } : item));
+  const confirmDrafts = async () => {
+    setUploading(true); setError(null);
+    try {
+      await api.confirmMenus(drafts);
+      const first = drafts[0]?.date;
+      if (first) { setMonth(new Date(first + "T00:00:00")); setSelectedDate(first); }
+      setDrafts([]); setUploadStatus("saved"); loadMenus();
+    } catch (err) { setError(err instanceof Error ? err.message : "保存に失敗しました"); }
+    finally { setUploading(false); }
+  };
 
   const loadMenus = () => {
     api
@@ -36,7 +52,7 @@ export default function MenusPage() {
   }, [authReady]);
 
   const uploadFile = async (file?: File) => {
-    if (!file || uploading) return;
+    if (!file || uploading || drafts.length) return;
     const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
     if (!allowed.includes(file.type)) {
       setError("PDF・PNG・JPEG・WebPのファイルを選択してください");
@@ -50,9 +66,8 @@ export default function MenusPage() {
     setUploadStatus("uploading");
     setError(null);
     try {
-      await api.uploadMenu(file);
-      setUploadStatus("saved");
-      loadMenus();
+      setDrafts(await api.previewMenus(file));
+      setUploadStatus("idle");
     } catch (err) {
       setUploadStatus("idle");
       setError(
@@ -81,6 +96,7 @@ export default function MenusPage() {
     setEditingId(menu.id);
     setEditDate(menu.date);
     setEditText(menu.menu_text);
+    setEditFoods(Array.isArray(menu.ingredients.foods) ? menu.ingredients.foods.join("\n") : "");
   };
 
   const saveEdit = async (menuId: string) => {
@@ -88,7 +104,7 @@ export default function MenusPage() {
     setSavingId(menuId);
     setError(null);
     try {
-      const updated = await api.updateMenu(menuId, { date: editDate, menu_text: editText.trim() });
+      const updated = await api.updateMenu(menuId, { date: editDate, menu_text: editText.trim(), foods: editFoods.split("\n").map(s => s.trim()).filter(Boolean) });
       setMenus((current) => current.map((menu) => menu.id === menuId ? updated : menu).sort((a, b) => a.date.localeCompare(b.date)));
       setEditingId(null);
     } catch (err) {
@@ -149,7 +165,7 @@ export default function MenusPage() {
               type="file"
               accept=".pdf,image/png,image/jpeg,image/webp"
               onChange={handleUpload}
-              disabled={uploading}
+              disabled={uploading || drafts.length > 0}
               hidden
             />
           </label>
@@ -167,7 +183,8 @@ export default function MenusPage() {
           <div className="upload-status" aria-live="polite">
             <span className={uploadStatus === "uploading" ? "is-active" : ""}>1. アップロード</span>
             <span className={uploadStatus === "uploading" ? "is-active" : uploadStatus === "saved" ? "is-done" : ""}>2. AI解析</span>
-            <span className={uploadStatus === "saved" ? "is-done" : ""}>3. 保存</span>
+            <span className={drafts.length ? "is-active" : ""}>3. 確認・修正</span>
+            <span className={uploadStatus === "saved" ? "is-done" : ""}>4. 保存</span>
           </div>
           {uploadStatus === "saved" && (
             <div className="alert alert--success">献立表を解析して保存しました。</div>
@@ -176,6 +193,42 @@ export default function MenusPage() {
           </div>
         </div>
 
+        {drafts.length > 0 && <form className="card" onSubmit={e => { e.preventDefault(); void confirmDrafts(); }}>
+          <h2>読み取り結果の確認（まだ保存されていません）</h2>
+          <p>元の献立表と照らして日付・料理名・材料を確認してください。同じ日付の保存済み献立は置き換わります。</p>
+          <fieldset disabled={uploading}>
+          {drafts.map((draft, index) => <div className="card" key={index}>
+            <label className="form-field">日付<input className="input" type="date" required value={draft.date || ""} onChange={e => changeDraft(index, { date: e.target.value })} /></label>
+            {menus.some(m => m.date === draft.date) && <p role="note">この日付の献立は上書きされます。</p>}
+            <label className="form-field">食事区分<input className="input" value={draft.meal_type} onChange={e => changeDraft(index, { meal_type: e.target.value })} /></label>
+            <label className="form-field">料理名（1行に1品）<textarea className="textarea" required value={draft.dishes.join("\n")} onChange={e => changeDraft(index, { dishes: e.target.value.split("\n") })} /></label>
+            <label className="form-field">材料欄から読み取った食材（1行に1つ）<textarea className="textarea" value={draft.ingredients.join("\n")} onChange={e => changeDraft(index, { ingredients: e.target.value.split("\n") })} /></label>
+            <p className="note">材料欄がない場合は空欄です。空欄は「食材が含まれない」という意味ではありません。</p>
+            <button className="button button--secondary" type="button" onClick={() => setDrafts(items => items.filter((_, i) => i !== index))}>この日を保存対象から外す</button>
+          </div>)}
+          <button className="button" disabled={uploading}>確認した献立を保存</button>
+          <button className="button button--secondary" type="button" onClick={() => setDrafts([])}>読み取りを破棄</button>
+          </fieldset>
+        </form>}
+        <section className="card" aria-label="献立カレンダー">
+          <div className="child-card-actions">
+            <button className="button button--secondary" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>前月</button>
+            <h2>{month.getFullYear()}年{month.getMonth() + 1}月</h2>
+            <button className="button button--secondary" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>翌月</button>
+          </div>
+          <div className="menu-calendar">
+            {["日", "月", "火", "水", "木", "金", "土"].map(day => <div key={day}>{day}</div>)}
+            {Array.from({ length: new Date(month.getFullYear(), month.getMonth(), 1).getDay() }, (_, i) => <div key={`blank-${i}`} />)}
+            {Array.from({ length: new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate() }, (_, i) => {
+              const day = `${monthKey}-${String(i + 1).padStart(2, "0")}`;
+              const entries = menus.filter(m => m.date === day);
+              return <button type="button" key={day} className="menu-calendar__day" aria-pressed={selectedDate === day} aria-label={`${day} ${entries.length ? "献立あり" : "献立なし"}`} onClick={() => setSelectedDate(day)}>
+                <strong>{i + 1}</strong><span>{entries.length ? entries.map(m => m.menu_text).join(" / ") : "—"}</span>
+              </button>;
+            })}
+          </div>
+          <p className="note">日付を選ぶと、その日の献立の編集・削除ができます。</p>
+        </section>
         {loading ? (
           <div className="loading">読み込み中...</div>
         ) : menus.length === 0 ? (
@@ -187,11 +240,14 @@ export default function MenusPage() {
         ) : (
           <>
             <p className="section-caption">保存済みの献立（{menus.length}件）</p>
-          {menus.map((menu) => (
+          {!selectedDate && <p>カレンダーから日付を選んでください。</p>}
+          {selectedDate && !menus.some(m => m.date === selectedDate) && <p>{selectedDate} の献立はありません。</p>}
+          {menus.filter(menu => menu.date === selectedDate).map((menu) => (
             <div className="card menu-entry" key={menu.id}>
               {editingId === menu.id ? <div className="menu-edit-form">
                 <label className="form-field"><span>日付</span><input type="date" className="input" value={editDate} onChange={(event) => setEditDate(event.target.value)} /></label>
                 <label className="form-field"><span>献立内容</span><textarea className="textarea" rows={5} value={editText} onChange={(event) => setEditText(event.target.value)} /></label>
+                <label className="form-field"><span>材料（1行に1つ）</span><textarea className="textarea" value={editFoods} onChange={e => setEditFoods(e.target.value)} /></label>
                 <div className="child-card-actions">
                   <button className="button" type="button" disabled={savingId === menu.id || !editText.trim()} onClick={() => void saveEdit(menu.id)}>{savingId === menu.id ? "保存中…" : "保存"}</button>
                   <button className="button button--secondary" type="button" disabled={savingId === menu.id} onClick={() => setEditingId(null)}>取り消し</button>
@@ -202,6 +258,7 @@ export default function MenusPage() {
                   <button className="button button--danger button--sm" type="button" disabled={Boolean(savingId)} onClick={() => void deleteMenu(menu)}>削除</button>
                 </div></div>
                 <pre className="menu-entry__text">{menu.menu_text}</pre>
+                <p className="note">読み取り材料：{Array.isArray(menu.ingredients.foods) && menu.ingredients.foods.length ? menu.ingredients.foods.join("・") : "未登録"}</p>
               </>}
             </div>
           ))}

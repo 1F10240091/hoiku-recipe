@@ -13,6 +13,7 @@ from datetime import date, timedelta
 
 from app.models import Recipe
 from app.services.allergens import matches_allergen
+from app.services.meal_overlap import lunch_groups, main_groups
 
 
 @dataclass
@@ -55,6 +56,7 @@ def generate_menus(
     allergies: list[str],
     preferences: list[str],
     nursery_menus: list[str],
+    nursery_menus_by_date: dict[date, str] | None = None,
     yesterday_menu: str | None = None,
     inventory: list[str] | None = None,
     recipes: list[Recipe] | None = None,
@@ -79,6 +81,22 @@ def generate_menus(
     """
     inventory = inventory or []
     recipe_list = recipes if recipes is not None else []
+
+    if nursery_menus_by_date is not None:
+        result = []
+        previous = yesterday_menu
+        for offset in range(days):
+            day = start_date + timedelta(days=offset)
+            daily = _generate_rule_based(
+                child_name=child_name, start_date=day, days=1,
+                allergies=allergies, preferences=preferences,
+                nursery_menus=[nursery_menus_by_date.get(day, "")],
+                yesterday_menu=previous, recipes=recipe_list,
+                inventory=inventory, child_age_months=child_age_months,
+            )
+            result.extend(daily)
+            previous = daily[0].menu_text if daily else previous
+        return result
 
     return _generate_rule_based(
         child_name=child_name,
@@ -117,6 +135,7 @@ def _generate_rule_based(
     inventory_lower = {inv.lower() for inv in inventory}
     allergens = [a.lower() for a in allergies + preferences]
     nursery_text = " ".join(nursery_menus)
+    lunch_ingredients = lunch_groups(nursery_text, recipes)
     yesterday_dishes = _extract_dishes(yesterday_menu) if yesterday_menu else []
 
     age_eligible = [
@@ -142,7 +161,7 @@ def _generate_rule_based(
             continue
         score = _uses_inventory(main)
         scored_mains.append((score, main))
-    scored_mains.sort(key=lambda x: -x[0])  # 在庫使用数が多い順
+    scored_mains.sort(key=lambda x: (bool(main_groups(x[1]) & lunch_ingredients), -x[0]))
 
     selected: list[list[Recipe]] = []
     for _, main in scored_mains:

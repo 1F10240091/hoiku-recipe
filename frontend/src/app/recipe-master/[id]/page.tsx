@@ -83,6 +83,11 @@ export default function RecipeDetailPage({
             </section>
 
             <h2>材料</h2>
+            <details>
+              <summary>このレシピのアレルギー照合範囲</summary>
+              <p>献立提案では、以下の食材名と登録済み原材料を照合します。商品の成分や調理中の混入は確認できません。</p>
+              <ul>{recipe.ingredients.map((ing, i) => <li key={i}>{ing.name}：{ing.components?.length ? `登録済み原材料 ${ing.components.join("、")}` : "食材名のみ（原材料の内訳は未登録）"}</li>)}</ul>
+            </details>
             <ul className="recipe-detail__ingredients">
               {recipe.ingredients.map((ing, i) => (
                 <li key={i}>

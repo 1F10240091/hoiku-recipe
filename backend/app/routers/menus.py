@@ -6,6 +6,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.database import get_db
@@ -24,10 +25,10 @@ def list_menus(user: User = Depends(get_current_user), db: Session = Depends(get
     return db.query(NurseryMenu).filter(NurseryMenu.user_id == user.id).order_by(NurseryMenu.date.asc()).all()
 
 
-@router.post("/upload", response_model=NurseryMenuResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/upload", response_model=NurseryMenuResponse | list[dict], status_code=status.HTTP_201_CREATED)
 async def upload_menu(
-    file: UploadFile = File(...), user: User = Depends(get_current_user), db: Session = Depends(get_db)
-) -> NurseryMenu:
+    file: UploadFile = File(...), preview: bool = False, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
     """献立表の PDF/画像をアップロードし、献立として保存する。
 
     Gemini のマルチモーダル API だけで読み取る。
@@ -56,6 +57,10 @@ async def upload_menu(
                 detail="Geminiの解析に時間がかかっています。画像の解像度を下げるか、PDFを数ページずつに分けて再度お試しください。",
             ) from exc
         raise HTTPException(status_code=422, detail="献立表を解析できませんでした") from exc
+    if preview:
+        if not entries:
+            raise HTTPException(status_code=422, detail="献立表から献立を抽出できませんでした")
+        return [{"date": e.date, "meal_type": e.meal_type or "", "dishes": e.dishes, "ingredients": e.ingredients} for e in entries]
     saved = _save_ai_entries(db, user, entries)
     if not saved:
         raise HTTPException(status_code=422, detail="献立表から献立を抽出できませんでした")
@@ -70,7 +75,10 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
     merged: dict[date, dict] = {}
     for entry in entries:
         menu_date = date.fromisoformat(entry.date) if entry.date else date.today()
-        bucket = merged.setdefault(menu_date, {"meal_types": [], "dishes": []})
+        bucket = merged.setdefault(menu_date, {"meal_types": [], "dishes": [], "foods": []})
+        for food in entry.ingredients:
+            if food not in bucket["foods"]:
+                bucket["foods"].append(food)
         if entry.meal_type and entry.meal_type not in bucket["meal_types"]:
             bucket["meal_types"].append(entry.meal_type)
         for dish in entry.dishes:
@@ -88,6 +96,7 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
             "dishes": bucket["dishes"],
             "meal_types": bucket["meal_types"],
             "engine": "gemini",
+            "foods": bucket["foods"],
         }
         menu = (
             db.query(NurseryMenu)
@@ -106,6 +115,25 @@ def _save_ai_entries(db: Session, user: User, entries: list[ocr_ai.AIMenuEntry])
     for menu in saved:
         db.refresh(menu)
     return saved
+
+
+class ConfirmEntry(BaseModel):
+    date: date
+    meal_type: str = Field(default="", max_length=100)
+    dishes: list[str] = Field(min_length=1, max_length=100)
+    ingredients: list[str] = Field(default_factory=list, max_length=200)
+
+
+class ConfirmMenus(BaseModel):
+    entries: list[ConfirmEntry] = Field(min_length=1, max_length=62)
+
+
+@router.post("/confirm", response_model=list[NurseryMenuResponse])
+def confirm_menus(payload: ConfirmMenus, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if any(not any(d.strip() for d in e.dishes) for e in payload.entries):
+        raise HTTPException(status_code=422, detail="料理名を入力してください")
+    return _save_ai_entries(db, user, [ocr_ai.AIMenuEntry(date=e.date.isoformat(), meal_type=e.meal_type,
+        dishes=[d.strip() for d in e.dishes if d.strip()], ingredients=e.ingredients) for e in payload.entries])
 
 
 @router.post("", response_model=NurseryMenuResponse, status_code=status.HTTP_201_CREATED)
@@ -134,7 +162,7 @@ def update_menu(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="献立が見つかりません")
     menu.date = payload.date
     menu.menu_text = payload.menu_text
-    menu.ingredients = {}
+    menu.ingredients = {"foods": payload.foods if payload.foods is not None else (menu.ingredients or {}).get("foods", [])}
     db.commit()
     db.refresh(menu)
     return menu

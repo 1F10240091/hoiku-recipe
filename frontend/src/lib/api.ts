@@ -101,6 +101,7 @@ export interface ChildCreatePayload {
   preferences: { ingredient: string; mode: string }[];
 }
 
+export interface MenuDraft { date: string; meal_type: string; dishes: string[]; ingredients: string[] }
 export interface NurseryMenu {
   id: string;
   date: string;
@@ -130,6 +131,7 @@ export interface ShoppingItem {
 
 export interface ShoppingList {
   items: ShoppingItem[];
+  inventory_checks?: ShoppingItem[];
   generated_at: string;
 }
 
@@ -263,7 +265,14 @@ const realApi = {
       body: formData,
     }, UPLOAD_API_BASE);
   },
-  updateMenu(menuId: string, payload: { date: string; menu_text: string }) {
+  previewMenus(file: File) {
+    const data = new FormData(); data.append("file", file);
+    return request<MenuDraft[]>("/menus/upload?preview=true", { method: "POST", body: data }, UPLOAD_API_BASE);
+  },
+  confirmMenus(entries: MenuDraft[]) {
+    return request<NurseryMenu[]>("/menus/confirm", { method: "POST", body: JSON.stringify({ entries }) });
+  },
+  updateMenu(menuId: string, payload: { date: string; menu_text: string; foods?: string[] }) {
     return request<NurseryMenu>(`/menus/${menuId}`, { method: "PUT", body: JSON.stringify(payload) });
   },
   deleteMenu(menuId: string) {

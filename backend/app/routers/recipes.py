@@ -36,12 +36,12 @@ def generate_recipe(
     preferences = [p.ingredient for p in child.preferences if p.mode == "exclude"]
 
     end_date = payload.menu_date + timedelta(days=payload.days - 1)
-    nursery_menus = [
-        m.menu_text
+    nursery_menus_by_date = {
+        m.date: m.menu_text + "\n" + "・".join((m.ingredients or {}).get("foods", []))
         for m in db.query(NurseryMenu)
         .filter(NurseryMenu.user_id == user.id, NurseryMenu.date >= payload.menu_date, NurseryMenu.date <= end_date)
         .all()
-    ]
+    }
     inventory = [item.name for item in db.query(InventoryItem).filter(InventoryItem.user_id == user.id).all()]
 
     # レシピマスタを DB から取得（アレルゲン照合・選定の真実源）
@@ -69,7 +69,8 @@ def generate_recipe(
         days=payload.days,
         allergies=allergies,
         preferences=preferences,
-        nursery_menus=nursery_menus,
+        nursery_menus=list(nursery_menus_by_date.values()),
+        nursery_menus_by_date=nursery_menus_by_date,
         yesterday_menu=yesterday_menu,
         inventory=inventory,
         recipes=recipes,

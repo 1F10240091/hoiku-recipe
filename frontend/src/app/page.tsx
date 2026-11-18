@@ -153,7 +153,7 @@ export default function Home() {
               園のお昼ごはんと重ならないように、アレルギー・好き嫌い・
               冷蔵庫の中身を見て、夜ごはんの候補をまとめて提案します。
             </p>
-            <div className={styles.ctaRow}>
+            <div className={styles.ctaRow}><Link href="/sample" className={styles.ctaGhost}>登録せずに試す</Link>
               <Link href="/register" className={styles.cta}>
                 はじめてみる ♪
               </Link>
